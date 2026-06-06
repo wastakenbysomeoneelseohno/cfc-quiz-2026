@@ -161,9 +161,17 @@
   .pv-trophy { cursor: default; }
   .pv-jump { position: absolute; inset: 0; z-index: 25; background: rgba(8,12,28,.96); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5vh 6vw; animation: fade .15s; }
   .pv-jump-title { font-size: 22px; font-weight: 800; margin-bottom: 18px; color: #fff; }
-  .pv-jump-list { display: grid; grid-template-columns: repeat(2, minmax(300px, 1fr)); gap: 8px 18px; width: min(940px, 95vw); max-height: 64vh; overflow: auto; padding: 4px; }
-  .pv-jump-item { text-align: left; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 10px 14px; color: #fff; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
-  .pv-jump-item:hover { background: var(--pv-accent); border-color: var(--pv-accent); color: var(--pv-on-accent); }
+  .pv-jump-hint { color: #9fb0d0; font-size: 13px; margin: -8px 0 18px; }
+  .pv-jump-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; width: min(940px, 95vw); max-height: 64vh; overflow: auto; padding: 4px; align-items: start; }
+  .pv-jnum { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; overflow: hidden; }
+  .pv-jnum.open { border-color: var(--pv-accent); }
+  .pv-jnum-head { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: transparent; border: none; color: #fff; cursor: pointer; font-family: inherit; text-align: left; }
+  .pv-jnum-head:hover { background: rgba(255,255,255,.06); }
+  .pv-jnum-n { font-size: 24px; font-weight: 900; min-width: 34px; }
+  .pv-jnum-k { font-size: 11px; color: #9fb0d0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .pv-jnum-body { display: none; padding: 0 16px 14px; }
+  .pv-jnum.open .pv-jnum-body { display: block; }
+  .pv-jnum-q { font-size: 15px; color: #dbe2ee; margin-bottom: 10px; }
 
   @keyframes pop { from { opacity: 0; transform: scale(.96) translateY(-4px); } to { opacity: 1; transform: none; } }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
@@ -504,24 +512,30 @@ const Show = (() => {
   }
 
   /* secret jump-to-any-slide (Ctrl/Cmd-click the 🏆 in the hint) */
-  function slideLabel(sl) {
-    const d = sl.data || {};
-    const txt = d.question || d.statement || d.prompt || d.instruction || d.heading || d.title || d.reference || '';
-    return sl.type.replace(/-/g, ' ') + (txt ? ' — ' + txt : '');
-  }
+  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : (type === 'title' || type === 'answer') ? 'Title' : 'Question'; }
+  function slideText(sl) { const d = sl.data || {}; return d.question || d.statement || d.prompt || d.instruction || d.heading || d.title || d.reference || ''; }
   function gotoSlide(slideId) { const i = steps.findIndex(s => s.slide.id === slideId); if (i >= 0) { idx = i; renderStep(); } }
   function openJump() {
     if (!curStream) return;
     const existing = overlay.querySelector('.pv-jump'); if (existing) { existing.remove(); return; }
     const list = el('div', { class: 'pv-jump-list' });
     const ov = el('div', { class: 'pv-jump' }, [
-      el('div', { class: 'pv-jump-title', text: '⤧ Jump to any slide — ' + curStream.name }),
+      el('div', { class: 'pv-jump-title', text: '⤧ Jump to slide — ' + curStream.name }),
+      el('div', { class: 'pv-jump-hint', text: 'Numbers only — no questions shown. Click a number to peek, then Go.' }),
       list,
       el('button', { class: 'pv-btn2', text: '✕ Close', onclick: () => ov.remove(), style: 'margin-top:16px' }),
     ]);
     curStream.slides.forEach((sl, i) => {
-      const item = el('button', { class: 'pv-jump-item', text: (i + 1) + '. ' + slideLabel(sl) });
-      item.onclick = () => { ov.remove(); gotoSlide(sl.id); };
+      const num = i + 1;
+      const item = el('div', { class: 'pv-jnum' });
+      const head = el('button', { class: 'pv-jnum-head' }, [ el('span', { class: 'pv-jnum-n', text: num }), el('span', { class: 'pv-jnum-k', text: slideKindLabel(sl.type) }) ]);
+      const body = el('div', { class: 'pv-jnum-body' });
+      let shown = false;
+      head.onclick = () => {
+        shown = !shown; item.classList.toggle('open', shown);
+        if (shown) { body.innerHTML = ''; body.append(el('div', { class: 'pv-jnum-q', text: slideText(sl) || '(no text)' }), el('button', { class: 'pv-btn2 sm primary', text: '▶ Go to slide ' + num, onclick: () => { ov.remove(); gotoSlide(sl.id); } })); }
+      };
+      item.append(head, body);
       list.append(item);
     });
     ov.onclick = e => { if (e.target === ov) ov.remove(); };
@@ -576,28 +590,24 @@ const Show = (() => {
     if (!overlay) buildOverlay();
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey);
-    document.addEventListener('keyup', onKeyUp);
     loadStream(stream, null);
   }
   function close() {
     if (stopTimer) { stopTimer(); stopTimer = null; }
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
-    document.removeEventListener('keyup', onKeyUp);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.getElementById('landing').style.display = 'flex';
   }
+  // keyboard: only Esc (close panel / exit) and F (fullscreen). No key advances or goes back — mouse only.
   function onKey(e) {
     if (e.key === 'Escape') {
       const modal = overlay.querySelector('.pv-jump, .pv-board-overlay');
       if (modal) { e.preventDefault(); modal.remove(); return; }
       e.preventDefault(); close();
     }
-    else if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
     else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) overlay.requestFullscreen().catch(() => {}); else document.exitFullscreen().catch(() => {}); }
-    else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); if (advanceCtl) advanceCtl.begin(); }
   }
-  function onKeyUp(e) { if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { if (advanceCtl) advanceCtl.reset(); } }
 
   return { open };
 })();

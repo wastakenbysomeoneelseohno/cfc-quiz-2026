@@ -1693,25 +1693,18 @@ const Present = (() => {
     overlay.classList.toggle('audience', !!(opts && opts.audience)); // audience mode = no controls / no Skip
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey);
-    document.addEventListener('keyup', onKeyUp);
     loadStream(stream, startSlideId);
   }
   function close() {
     if (stopTimer) { stopTimer(); stopTimer = null; }
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
-    document.removeEventListener('keyup', onKeyUp);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   }
-  // Forward = hold Space/Enter (intentional). Back = ←. Nothing advances on a single tap.
+  // keyboard: only Esc (exit) and F (fullscreen). No key advances or goes back — mouse only.
   function onKey(e) {
     if (e.key === 'Escape') { e.preventDefault(); close(); }
-    else if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
     else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) overlay.requestFullscreen().catch(() => {}); else document.exitFullscreen().catch(() => {}); }
-    else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); if (advanceCtl) advanceCtl.begin(); }
-  }
-  function onKeyUp(e) {
-    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { if (advanceCtl) advanceCtl.reset(); }
   }
 
   return { open, renderers, next: () => next(), prev: () => prev(), board: () => openBoard(), switchStream: id => switchStream(id) };
