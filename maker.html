@@ -431,21 +431,80 @@
   .pv-skip:hover { opacity: 1; }
   /* AUDIENCE MODE — the actual display: no operator chrome, no Skip */
   .present.audience .pv-controls { display: none; }
+
+  /* ---- timer clearance + points + option caption ---- */
+  /* the ring is ~250px tall pinned at the top; reserve enough so content never sits under it */
+  .pv-main.has-timer { padding-top: 262px; }
+  .pv-points { display: inline-block; margin: 0 auto 2.6vh; font-weight: 800; font-size: clamp(14px, 1.7vw, 19px);
+    color: var(--pv-on-accent, #fff); background: var(--pv-accent, #4f46e5); padding: 5px 16px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .pv-ocap { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin: 0 auto 1.8vh; }
+  .pv-ocap-pill { font-size: clamp(11px, 1.3vw, 14px); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--pv-ink-soft, #9fb0d0); border: 1px solid var(--pv-tile-border, rgba(255,255,255,.18)); padding: 6px 14px; border-radius: 20px; }
+
+  /* ---- score submit feedback ---- */
+  .pv-trow { position: relative; }
+  .pv-trow.flash-plus { animation: rowPlus .9s ease; }
+  .pv-trow.flash-minus { animation: rowMinus .9s ease; }
+  @keyframes rowPlus { 0% { box-shadow: 0 0 0 0 var(--pv-correct, #2fd39a); } 18% { background: var(--pv-correct-soft, rgba(47,211,154,.2)); box-shadow: 0 0 0 3px var(--pv-correct, #2fd39a); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+  @keyframes rowMinus { 0% { box-shadow: 0 0 0 0 #ff5d73; } 18% { background: rgba(255,93,115,.25); box-shadow: 0 0 0 3px #ff5d73; } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+  /* marking a team: pop the row and light its green/red background (committed on advance) */
+  .pv-trow.plus, .pv-trow.minus { animation: markPop .28s ease; }
+  @keyframes markPop { 0% { transform: scale(.99); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+  /* clean, snappy scroll areas — no chunky OS scrollbar */
+  .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
+  .pv-tally::-webkit-scrollbar, .pv-bgrid::-webkit-scrollbar, .pv-jump-list::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  /* ---- hamburger (mobile nav toggle) ---- */
+  .hamburger { display: none; font-size: 20px; flex: 0 0 auto; }
+  .nav-backdrop { position: fixed; inset: 0; background: rgba(20,28,48,.4); z-index: 65; display: none; }
+  .nav-backdrop.open { display: block; }
+
+  /* ---- mobile: maker app + show ---- */
+  @media (max-width: 860px) {
+    .topbar { flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 8px 10px; -webkit-overflow-scrolling: touch; }
+    .topbar .saved { display: none; }
+    .topbar .btn .lbl { display: none; }
+    .topbar .btn { padding: 8px 10px; flex: 0 0 auto; }
+    .brand { flex: 0 0 auto; } .brand small { display: none; }
+    .deck-name { min-width: 120px; width: 120px; flex: 0 0 auto; }
+    .hamburger { display: inline-flex; }
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: min(330px, 86vw); z-index: 70;
+      transform: translateX(-100%); transition: transform .25s cubic-bezier(.2,.8,.2,1); box-shadow: 6px 0 30px rgba(20,28,48,.3); }
+    .sidebar.open { transform: none; }
+    .editor { padding: 16px 14px; }
+    .card { padding: 16px; max-width: none; }
+  }
+  @media (max-width: 760px) {
+    .pv-main { padding: 3vh 4vw; }
+    .pv-main.has-timer { padding-top: clamp(120px, 22vh, 170px); }
+    .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
+    .pv-options { grid-template-columns: 1fr; }
+    .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
+    .pv-controls { flex-wrap: wrap; gap: 8px; padding: 10px; }
+    .pv-hint { display: none; }
+    .pv-step { min-width: 54px; }
+    .pv-advance, .pv-hold, .pv-locked { min-width: 150px; }
+    .pv-stream-sel { max-width: 120px; }
+    .pv-btn { padding: 9px 12px; }
+  }
 </style>
 </head>
 <body>
 <div class="app">
   <!-- ================= TOP BAR ================= -->
   <header class="topbar">
+    <button class="btn ghost hamburger" id="navToggle" title="Menu" aria-label="Menu">☰</button>
     <div class="brand"><span class="dot"></span> CFC Quiz <small>· Maker</small></div>
     <input id="deckName" class="deck-name" placeholder="Deck name…" title="Deck name — used for the export filename" />
     <div class="spacer"></div>
     <div class="saved" id="savedInd"><span class="pulse"></span> Saved locally</div>
-    <button class="btn" id="resetBtn" title="Clear all local data and reload the fresh sample deck">🗑 Reset</button>
-    <button class="btn" id="themeBtn" title="Edit themes">🎨 Theme</button>
-    <button class="btn" id="presentBtn" title="Preview / present this stream (P)">▶ Present</button>
-    <button class="btn" id="importBtn">⬆ Import</button>
-    <button class="btn primary" id="exportBtn" title="Export">🔒 Export</button>
+    <button class="btn" id="resetBtn" title="Clear all local data and reload the fresh sample deck">🗑 <span class="lbl">Reset</span></button>
+    <button class="btn" id="themeBtn" title="Edit themes">🎨 <span class="lbl">Theme</span></button>
+    <button class="btn" id="presentBtn" title="Preview / present this stream (P)">▶ <span class="lbl">Present</span></button>
+    <button class="btn" id="importBtn">⬆ <span class="lbl">Import</span></button>
+    <button class="btn primary" id="exportBtn" title="Export">🔒 <span class="lbl">Export</span></button>
     <input type="file" id="fileInput" accept="application/json,.json" hidden />
   </header>
 
@@ -1147,6 +1206,12 @@ const Views = (() => {
       const auto = !(slide.options && slide.options.autoStart === false);
       field.append(FieldRenderers.boolean({ trueLabel: 'Auto', falseLabel: 'On button' }, auto, v => Store.updateSlideOption(slide.id, 'autoStart', v)));
       card.append(field);
+
+      const pField = el('div', { class: 'field' });
+      pField.append(el('label', {}, [ 'Points', el('span', { class: 'hint', text: 'awarded for ✓ in scoring (✗ subtracts the same)' }) ]));
+      const pVal = (slide.data.points == null || slide.data.points === '') ? 1 : slide.data.points;
+      pField.append(FieldRenderers.number({ min: 0, placeholder: '1' }, pVal, v => Store.updateSlideData(slide.id, 'points', (v == null || v === '') ? 1 : v)));
+      card.append(pField);
     }
     ed.append(card);
   }
@@ -1339,6 +1404,19 @@ const Present = (() => {
   const q = (t) => el('div', { class: 'pv-q', text: t || '' });
   const media = (src) => src ? el('div', { class: 'pv-media' }, [ el('img', { src }) ]) : null;
   const answer = (t) => el('div', { class: 'pv-answer', text: t });
+  const pointsOf = d => { const p = d && d.points; return (p == null || p === '') ? 1 : Number(p); };
+  const ocap = parts => { const ps = parts.filter(Boolean); return ps.length ? el('div', { class: 'pv-ocap' }, ps.map(t => el('span', { class: 'pv-ocap-pill', text: t }))) : null; };
+  // shrink the stage to fit when content is taller/wider than the available area
+  function fitStage(main) {
+    if (!main) return;
+    const st = main.querySelector('.pv-stage'); if (!st) return;
+    st.style.transform = ''; st.style.animation = '';
+    const cs = getComputedStyle(main);
+    const availH = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const availW = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
+    if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
+  }
 
   function optionsGrid(options, { reveal = false } = {}) {
     const opts = Array.isArray(options) ? options : [];
@@ -1387,8 +1465,8 @@ const Present = (() => {
     } },
 
     'choices': { phases: Q2, render: (d, ctx) => stage([
-      (ctx.phase === 'question' && d.choice && d.choice.multiple) ? badge('Select all that apply') : null,
       media(d.media), q(d.question),
+      ctx.phase === 'question' ? ocap([ d.choice && d.choice.multiple ? 'Select all that apply' : null ]) : null,
       optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
 
     'true-false': { phases: Q2, render: (d, ctx) => {
@@ -1501,6 +1579,9 @@ const Present = (() => {
   /* ---- controller ---- */
   let overlay = null, steps = [], idx = 0, stopTimer = null, curStream = null, advanceCtl = null;
   const positions = {}; // remembers each stream's step index across switches
+  // pending score marks are committed only when you LEAVE the scoring slide (advance / switch / board / exit)
+  let commitMarks = null;
+  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } }
 
   function buildOverlay() {
     overlay = el('div', { class: 'present' }, [
@@ -1564,6 +1645,7 @@ const Present = (() => {
   }
 
   function renderStep() {
+    flushScore(); // leaving a (possibly scoring) step commits any pending marks
     if (stopTimer) { stopTimer(); stopTimer = null; }
     const main = overlay.querySelector('.pv-main'); main.innerHTML = '';
     const tctl = overlay.querySelector('#pvTimerCtl'); if (tctl) tctl.innerHTML = '';
@@ -1573,10 +1655,15 @@ const Present = (() => {
     else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream })
                     : stage([ q('No preview for: ' + step.slide.type) ]);
     main.append(node);
+    // length-aware question width: short = punchy narrow column, long = use the full width (then fit scales font)
+    const qEl = node.querySelector('.pv-q');
+    if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
+    if (step.phase === 'question') { const p = pointsOf(step.slide.data); if (p !== 1) { const qel = node.querySelector('.pv-q, .pv-passage'); if (qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); } }
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
 
     const timed = step.phase === 'question' && Number(step.slide.data.timer) > 0;
+    main.classList.toggle('has-timer', !!timed);
     if (timed) {
       const auto = !(step.slide.options && step.slide.options.autoStart === false);
       const t = makeTimer(main, Number(step.slide.data.timer), () => mountAdvance(), auto);
@@ -1591,7 +1678,10 @@ const Present = (() => {
       mountAdvance();
     }
     if (step.phase === 'reveal') requestAnimationFrame(() => burst(main));
+    main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
+    requestAnimationFrame(() => fitStage(main));
   }
+  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
   function next() { if (idx < steps.length - 1) { idx++; renderStep(); } }
   function prev() { if (idx > 0) { idx--; renderStep(); } }
 
@@ -1615,18 +1705,19 @@ const Present = (() => {
     if (s && s.slides.length) loadStream(s, null); else toast('That stream has no slides');
   }
 
-  /* score phase — mark each team ✓ (+1) or ✗ (−1); blank = no change; Submit applies */
+  /* score phase — tap ✓ (+points) / ✗ (−points) to MARK teams (green/red highlight).
+     Nothing is committed here; marks are applied to the scores only when you LEAVE this
+     slide (hold-to-advance, switch stream, open standings, or exit) — see flushScore(). */
   function renderTally(slide) {
     const n = (curStream && curStream.teamCount) || 8;
     const sid = curStream.id;
+    const points = pointsOf(slide.data);
     const marks = {}; // teamIndex -> 1 | -1
     const wrap = stage([]);
-    wrap.append(badge('Mark ✓ (+1) or ✗ (−1) — leave blank for no change'));
+    wrap.append(badge('Tap ✓ (+' + points + ') or ✗ (−' + points + ') — saved when you advance'));
     wrap.append(q(slide.data.question || slide.data.statement || slide.data.prompt || slide.data.instruction || 'Score this round'));
 
     const list = el('div', { class: 'pv-tally' });
-    const status = el('div', { class: 'pv-award-status' });
-    const cards = [];
     for (let i = 0; i < n; i++) {
       const row = el('div', { class: 'pv-trow' });
       const sc = el('div', { class: 'pv-tscore', text: Scores.get(sid, n)[i] });
@@ -1641,27 +1732,17 @@ const Present = (() => {
       check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); };
       cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); };
       row.append(check, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, cross);
-      cards.push({ sc, i, paint }); list.append(row); paint();
+      list.append(row); paint();
     }
-    const grid = list;
-
-    const submit = el('button', { class: 'pv-submit', text: '✓ Submit marks' });
-    submit.onclick = () => {
-      const keys = Object.keys(marks);
-      if (!keys.length) { status.textContent = 'Mark some teams first.'; return; }
-      let plus = 0, minus = 0;
-      keys.forEach(k => { Scores.add(sid, Number(k), marks[k]); marks[k] === 1 ? plus++ : minus++; delete marks[k]; });
-      cards.forEach(c => { c.sc.textContent = Scores.get(sid, n)[c.i]; c.paint(); });
-      status.textContent = '✓ Applied: ' + plus + ' ×(+1), ' + minus + ' ×(−1). 🏆 to view, or hold to continue.';
-    };
-
-    wrap.append(grid, el('div', { class: 'pv-award' }, [ submit ]), status);
+    commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k] * points); }); };
+    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ / ✗ marks are saved automatically when you move to the next slide.' }));
     return wrap;
   }
 
   /* 🏆 standings overlay — available on every slide */
   function openBoard() {
     if (!curStream) return;
+    flushScore(); // make sure pending marks are reflected in the standings
     const existing = overlay.querySelector('.pv-board-overlay'); if (existing) { existing.remove(); return; }
     const sid = curStream.id, n = curStream.teamCount || 8;
     const teams = Scores.standings(sid, n);
@@ -1693,12 +1774,15 @@ const Present = (() => {
     overlay.classList.toggle('audience', !!(opts && opts.audience)); // audience mode = no controls / no Skip
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
     loadStream(stream, startSlideId);
   }
   function close() {
+    flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   }
   // keyboard: only Esc (exit) and F (fullscreen). No key advances or goes back — mouse only.
@@ -1863,6 +1947,15 @@ function init() {
   document.getElementById('addSlide').onclick = () => { if (!Store.curStream()) { toast('Add a stream first'); return; } openPicker(); };
   document.getElementById('picker').onclick = e => { if (e.target.id === 'picker') closePicker(); };
 
+  // mobile nav: hamburger toggles the streams/slides sidebar as a drawer
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = el('div', { class: 'nav-backdrop' }); document.body.append(backdrop);
+  const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
+  const closeNav = () => { sidebar.classList.remove('open'); backdrop.classList.remove('open'); };
+  document.getElementById('navToggle').onclick = () => { const o = !sidebar.classList.contains('open'); sidebar.classList.toggle('open', o); backdrop.classList.toggle('open', o); };
+  backdrop.onclick = closeNav;
+  ['streamList', 'slideList'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) closeNav(); }));
+
   // export — always the whole deck, encrypted with a password (so answers stay hidden)
   document.getElementById('exportBtn').onclick = () => IO.exportEncrypted();
 
@@ -1890,7 +1983,7 @@ function init() {
   });
 
   // test/automation hook (also handy for debugging)
-  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf };
+  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf, CryptoBox, IO };
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>

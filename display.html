@@ -180,6 +180,46 @@
   @keyframes buzzPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   @keyframes tick { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
   @keyframes timesupPop { from { opacity: 0; transform: translateX(-50%) scale(.7); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+  /* ---- timer clearance + auto-fit ---- */
+  /* the ring is ~250px tall pinned at the top; reserve enough so content never sits under it */
+  .pv-main.has-timer { padding-top: 262px; }
+
+  /* ---- points + option caption (sit near the options, never under the ring) ---- */
+  .pv-points { display: inline-block; margin: 0 auto 2.6vh; font-weight: 800; font-size: clamp(14px, 1.7vw, 19px);
+    color: var(--pv-on-accent); background: var(--pv-accent); padding: 5px 16px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .pv-ocap { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin: 0 auto 1.8vh; }
+  .pv-ocap-pill { font-size: clamp(11px, 1.3vw, 14px); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--pv-ink-soft); border: 1px solid var(--pv-tile-border); padding: 6px 14px; border-radius: 20px; }
+
+  /* ---- score submit feedback (flash + floating delta + recap) ---- */
+  .pv-trow { position: relative; }
+  .pv-trow.flash-plus { animation: rowPlus .9s ease; }
+  .pv-trow.flash-minus { animation: rowMinus .9s ease; }
+  @keyframes rowPlus { 0% { box-shadow: 0 0 0 0 var(--pv-correct); } 18% { background: var(--pv-correct-soft); box-shadow: 0 0 0 3px var(--pv-correct); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+  @keyframes rowMinus { 0% { box-shadow: 0 0 0 0 #ff5d73; } 18% { background: rgba(255,93,115,.25); box-shadow: 0 0 0 3px #ff5d73; } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+  /* marking a team: pop the row and light its green/red background (committed on advance) */
+  .pv-trow.plus, .pv-trow.minus { animation: markPop .28s ease; }
+  @keyframes markPop { 0% { transform: scale(.99); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+  /* clean, snappy scroll areas — no chunky OS scrollbar */
+  .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
+  .pv-tally::-webkit-scrollbar, .pv-bgrid::-webkit-scrollbar, .pv-jump-list::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  /* ---- mobile ---- */
+  @media (max-width: 760px) {
+    .pv-main { padding: 3vh 4vw; }
+    .pv-main.has-timer { padding-top: clamp(120px, 22vh, 170px); }
+    .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
+    .pv-options { grid-template-columns: 1fr; }
+    .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
+    .pv-controls { flex-wrap: wrap; gap: 8px; padding: 10px; }
+    .pv-hint { display: none; }
+    .pv-step { min-width: 54px; }
+    .pv-advance, .pv-hold, .pv-locked { min-width: 150px; }
+    .pv-stream-sel { max-width: 120px; }
+    .pv-btn2 { padding: 9px 12px; }
+  }
 </style>
 </head>
 <body>
@@ -210,7 +250,7 @@
     <div class="step" id="step2">
       <div class="loaded" id="loaded"></div>
       <div class="field">
-        <label>Stream (age group)</label>
+        <label>Stream (quiz track)</label>
         <select id="streamSel"></select>
       </div>
       <div class="field">
@@ -326,6 +366,19 @@ const Show = (() => {
   const media = src => src ? el('div', { class: 'pv-media' }, [ el('img', { src }) ]) : null;
   const answer = t => el('div', { class: 'pv-answer', text: t });
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pointsOf = d => { const p = d && d.points; return (p == null || p === '') ? 1 : Number(p); };
+  const ocap = parts => { const ps = parts.filter(Boolean); return ps.length ? el('div', { class: 'pv-ocap' }, ps.map(t => el('span', { class: 'pv-ocap-pill', text: t }))) : null; };
+  // shrink the stage to fit when content is taller/wider than the available area (long questions, many options)
+  function fitStage(main) {
+    if (!main) return;
+    const st = main.querySelector('.pv-stage'); if (!st) return;
+    st.style.transform = ''; st.style.animation = '';
+    const cs = getComputedStyle(main);
+    const availH = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const availW = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
+    if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
+  }
   function optionsGrid(options, { reveal = false } = {}) {
     const opts = Array.isArray(options) ? options : [];
     const grid = el('div', { class: 'pv-options' + (opts.length <= 1 ? ' n1' : '') });
@@ -356,7 +409,7 @@ const Show = (() => {
       });
       return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), board ]);
     } },
-    'choices': { phases: Q2, render: (d, ctx) => stage([ (ctx.phase === 'question' && d.choice && d.choice.multiple) ? badge('Select all that apply') : null, media(d.media), q(d.question), optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
+    'choices': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'question' ? ocap([ d.choice && d.choice.multiple ? 'Select all that apply' : null ]) : null, optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
     'true-false': { phases: Q2, render: (d, ctx) => { const opts = [ { text: 'True', correct: d.answer === true }, { text: 'False', correct: d.answer === false } ]; return stage([ q(d.statement), optionsGrid(opts, { reveal: ctx.phase === 'reveal' }) ]); } },
     'fill-blank': { phases: Q2, render: (d, ctx) => stage([ q(d.prompt), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
     'guess-verse': { phases: Q2, render: (d, ctx) => stage([ d.reference ? badge(d.reference) : null, el('div', { class: 'pv-passage', text: d.passage || '' }), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
@@ -423,6 +476,9 @@ const Show = (() => {
   /* ---- controller ---- */
   let project = null, overlay = null, steps = [], idx = 0, stopTimer = null, curStream = null, advanceCtl = null;
   const positions = {};
+  // pending score marks are committed only when you LEAVE the scoring slide (advance / switch / board / exit)
+  let commitMarks = null;
+  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } }
 
   function buildOverlay() {
     overlay = el('div', { class: 'present' }, [
@@ -460,10 +516,11 @@ const Show = (() => {
 
   function renderTally(slide) {
     const n = (curStream && curStream.teamCount) || 8, sid = curStream.id, marks = {};
+    const points = pointsOf(slide.data);
     const wrap = stage([]);
-    wrap.append(badge('Mark ✓ (+1) or ✗ (−1) — leave blank for no change'));
+    wrap.append(badge('Tap ✓ (+' + points + ') or ✗ (−' + points + ') — saved when you advance'));
     wrap.append(q(slide.data.question || slide.data.statement || slide.data.prompt || slide.data.instruction || 'Score this round'));
-    const list = el('div', { class: 'pv-tally' }), status = el('div', { class: 'pv-award-status' }), cards = [];
+    const list = el('div', { class: 'pv-tally' });
     for (let i = 0; i < n; i++) {
       const row = el('div', { class: 'pv-trow' });
       const sc = el('div', { class: 'pv-tscore', text: Scores.get(sid, n)[i] });
@@ -473,22 +530,17 @@ const Show = (() => {
       check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); };
       cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); };
       row.append(check, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, cross);
-      cards.push({ sc, i, paint }); list.append(row); paint();
+      list.append(row); paint();
     }
-    const submit = el('button', { class: 'pv-submit', text: '✓ Submit marks' });
-    submit.onclick = () => {
-      const keys = Object.keys(marks); if (!keys.length) { status.textContent = 'Mark some teams first.'; return; }
-      let plus = 0, minus = 0;
-      keys.forEach(k => { Scores.add(sid, Number(k), marks[k]); marks[k] === 1 ? plus++ : minus++; delete marks[k]; });
-      cards.forEach(c => { c.sc.textContent = Scores.get(sid, n)[c.i]; c.paint(); });
-      status.textContent = '✓ Applied: ' + plus + ' ×(+1), ' + minus + ' ×(−1).';
-    };
-    wrap.append(list, el('div', { class: 'pv-award' }, [ submit ]), status);
+    // commit happens on leave (flushScore). Green/red row highlight is the live "marked" state.
+    commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k] * points); }); };
+    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ / ✗ marks are saved automatically when you move to the next slide.' }));
     return wrap;
   }
 
   function openBoard() {
     if (!curStream) return;
+    flushScore(); // make sure pending marks are reflected in the standings
     const existing = overlay.querySelector('.pv-board-overlay'); if (existing) { existing.remove(); return; }
     const sid = curStream.id, n = curStream.teamCount || 8;
     const teams = Scores.standings(sid, n);
@@ -543,6 +595,7 @@ const Show = (() => {
   }
 
   function renderStep() {
+    flushScore(); // leaving a (possibly scoring) step commits any pending marks
     if (stopTimer) { stopTimer(); stopTimer = null; }
     const main = overlay.querySelector('.pv-main'); main.innerHTML = '';
     const tctl = overlay.querySelector('#pvTimerCtl'); if (tctl) tctl.innerHTML = '';
@@ -551,9 +604,14 @@ const Show = (() => {
     if (step.phase === 'score') node = renderTally(step.slide);
     else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream }) : stage([ q('No renderer for: ' + step.slide.type) ]);
     main.append(node);
+    // length-aware question width: short = punchy narrow column, long = use the full width (then fit scales font)
+    const qEl = node.querySelector('.pv-q');
+    if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
+    if (step.phase === 'question') { const p = pointsOf(step.slide.data); if (p !== 1) { const qel = node.querySelector('.pv-q, .pv-passage'); if (qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); } }
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
     const timed = step.phase === 'question' && Number(step.slide.data.timer) > 0;
+    main.classList.toggle('has-timer', !!timed);
     if (timed) {
       const auto = !(step.slide.options && step.slide.options.autoStart === false);
       const t = makeTimer(main, Number(step.slide.data.timer), () => mountAdvance(), auto);
@@ -566,7 +624,10 @@ const Show = (() => {
       }
     } else { mountAdvance(); }
     if (step.phase === 'reveal') requestAnimationFrame(() => burst(main));
+    main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
+    requestAnimationFrame(() => fitStage(main));
   }
+  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
   function next() { if (idx < steps.length - 1) { idx++; renderStep(); } }
   function prev() { if (idx > 0) { idx--; renderStep(); } }
 
@@ -590,12 +651,15 @@ const Show = (() => {
     if (!overlay) buildOverlay();
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
     loadStream(stream, null);
   }
   function close() {
+    flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.getElementById('landing').style.display = 'flex';
   }
