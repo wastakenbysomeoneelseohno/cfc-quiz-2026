@@ -433,7 +433,6 @@
   .present.audience .pv-controls { display: none; }
 
   /* ---- timer clearance + points + option caption ---- */
-  /* the ring is ~250px tall pinned at the top; reserve enough so content never sits under it */
   .pv-main.has-timer { padding-top: 262px; }
   .pv-points { display: inline-block; margin: 0 auto 2.6vh; font-weight: 800; font-size: clamp(14px, 1.7vw, 19px);
     color: var(--pv-on-accent, #fff); background: var(--pv-accent, #4f46e5); padding: 5px 16px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
@@ -441,15 +440,28 @@
   .pv-ocap-pill { font-size: clamp(11px, 1.3vw, 14px); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--pv-ink-soft, #9fb0d0); border: 1px solid var(--pv-tile-border, rgba(255,255,255,.18)); padding: 6px 14px; border-radius: 20px; }
 
-  /* ---- score submit feedback ---- */
-  .pv-trow { position: relative; }
-  .pv-trow.flash-plus { animation: rowPlus .9s ease; }
-  .pv-trow.flash-minus { animation: rowMinus .9s ease; }
-  @keyframes rowPlus { 0% { box-shadow: 0 0 0 0 var(--pv-correct, #2fd39a); } 18% { background: var(--pv-correct-soft, rgba(47,211,154,.2)); box-shadow: 0 0 0 3px var(--pv-correct, #2fd39a); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
-  @keyframes rowMinus { 0% { box-shadow: 0 0 0 0 #ff5d73; } 18% { background: rgba(255,93,115,.25); box-shadow: 0 0 0 3px #ff5d73; } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
   /* marking a team: pop the row and light its green/red background (committed on advance) */
+  .pv-trow { position: relative; }
   .pv-trow.plus, .pv-trow.minus { animation: markPop .28s ease; }
   @keyframes markPop { 0% { transform: scale(.99); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+  /* question progress label */
+  .pv-progress { position: absolute; top: 2.6vh; left: 3vw; font-size: clamp(12px,1.5vw,16px); font-weight: 700;
+    letter-spacing: 1px; color: var(--pv-ink-soft, #9fb0d0); z-index: 4; font-variant-numeric: tabular-nums; }
+
+  /* podium finale */
+  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(12px,3vw,40px); margin-top: 3vh; }
+  .pv-pod { display: flex; flex-direction: column; align-items: center; }
+  .pv-pod-medal { font-size: clamp(30px,4.5vw,58px); line-height: 1; animation: pop .5s; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 26vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-pod-block { width: clamp(86px,14vw,176px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; padding-top: 14px; font-weight: 900; color: #1a1205;
+    box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
+  .pv-pod-block.gold { background: linear-gradient(180deg,#fde68a,#f59e0b); }
+  .pv-pod-block.silver { background: linear-gradient(180deg,#f1f5f9,#94a3b8); }
+  .pv-pod-block.bronze { background: linear-gradient(180deg,#fcd9b6,#d97706); }
+  .pv-pod-score { font-size: clamp(26px,4vw,52px); }
+  .pv-pod-rank { font-size: 13px; opacity: .8; margin-top: 4px; }
 
   /* clean, snappy scroll areas — no chunky OS scrollbar */
   .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
@@ -797,6 +809,12 @@ SlideTypes.register({ type: 'leaderboard', label: 'Leaderboard', group: 'Content
   fields: [ { key: 'title', label: 'Title', type: 'text', placeholder: 'Standings' } ],
   summary: d => d.title });
 
+SlideTypes.register({ type: 'podium', label: 'Podium (Winners)', group: 'Content', icon: '🏅',
+  desc: 'Top 3 teams on a podium — the grand finale',
+  createDefault: () => ({ title: 'Winners!' }),
+  fields: [ { key: 'title', label: 'Title', type: 'text', placeholder: 'Winners!' } ],
+  summary: d => d.title });
+
 // QUESTIONS (kind: 'question' — switchable formats; answer is built into each)
 SlideTypes.register({ type: 'choices', kind: 'question', label: 'Choices', group: 'Questions', icon: '◆',
   desc: 'Single or multiple correct answers',
@@ -877,7 +895,7 @@ SlideTypes.register({ type: 'buzzer', label: 'Buzzer', group: 'Questions', icon:
 function kindOf(type) {
   const d = SlideTypes.get(type);
   if (d && d.kind) return d.kind;
-  return type === 'leaderboard' ? 'leaderboard' : (type === 'title' || type === 'answer') ? 'title' : 'question';
+  return type === 'leaderboard' ? 'leaderboard' : (type === 'title' || type === 'answer' || type === 'podium') ? 'title' : 'question';
 }
 /* the main-prompt field key per question format — lets you switch format and keep the question text */
 const PROMPT_KEY = { choices: 'question', 'true-false': 'statement', 'fill-blank': 'prompt', 'guess-verse': 'reference', numeric: 'question', 'image-question': 'question', matching: 'instruction', poll: 'question', buzzer: 'question' };
@@ -1229,6 +1247,7 @@ function openPicker() {
     { type: 'choices', icon: '❓', name: 'Question', desc: 'Any format — Choices, Fill-in, Verse, Numeric, Image, Matching, Poll, Buzzer. Switch the format anytime in the editor.' },
     { type: 'title', icon: '🏷️', name: 'Title / Section', desc: 'An intro screen or round divider.' },
     { type: 'leaderboard', icon: '🏆', name: 'Leaderboard', desc: 'Show the current team standings.' },
+    { type: 'podium', icon: '🏅', name: 'Podium (Winners)', desc: 'Top 3 teams on a podium — the grand finale.' },
   ];
   const tiles = el('div', { class: 'ptiles' });
   kinds.forEach(k => {
@@ -1406,7 +1425,6 @@ const Present = (() => {
   const answer = (t) => el('div', { class: 'pv-answer', text: t });
   const pointsOf = d => { const p = d && d.points; return (p == null || p === '') ? 1 : Number(p); };
   const ocap = parts => { const ps = parts.filter(Boolean); return ps.length ? el('div', { class: 'pv-ocap' }, ps.map(t => el('span', { class: 'pv-ocap-pill', text: t }))) : null; };
-  // shrink the stage to fit when content is taller/wider than the available area
   function fitStage(main) {
     if (!main) return;
     const st = main.querySelector('.pv-stage'); if (!st) return;
@@ -1416,6 +1434,17 @@ const Present = (() => {
     const availW = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
     if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
+  }
+  function buildPodium(top) {
+    const wrap = el('div', { class: 'pv-podium' });
+    const meta = [ { medal: '🥇', cls: 'gold', h: '32vh' }, { medal: '🥈', cls: 'silver', h: '23vh' }, { medal: '🥉', cls: 'bronze', h: '16vh' } ];
+    [1, 0, 2].forEach(r => {
+      const t = top[r]; if (!t) return; const m = meta[r];
+      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [ el('div', { class: 'pv-pod-score', text: t.score }), el('div', { class: 'pv-pod-rank', text: '#' + (r + 1) }) ]);
+      wrap.append(el('div', { class: 'pv-pod' }, [ el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }), block ]));
+      setTimeout(() => { block.style.height = m.h; }, 90);
+    });
+    return wrap;
   }
 
   function optionsGrid(options, { reveal = false } = {}) {
@@ -1462,6 +1491,13 @@ const Present = (() => {
         setTimeout(() => { fill.style.width = (t.score / max * 100) + '%'; }, 60 + i * 70);
       });
       return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), board ]);
+    } },
+
+    podium: { phases: SOLO, render: (d, ctx) => {
+      const n = (ctx.stream && ctx.stream.teamCount) || 8;
+      const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
+      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n);
+      return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams.slice(0, 3)) ]);
     } },
 
     'choices': { phases: Q2, render: (d, ctx) => stage([
@@ -1582,6 +1618,7 @@ const Present = (() => {
   // pending score marks are committed only when you LEAVE the scoring slide (advance / switch / board / exit)
   let commitMarks = null;
   function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } }
+  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
 
   function buildOverlay() {
     overlay = el('div', { class: 'present' }, [
@@ -1655,10 +1692,14 @@ const Present = (() => {
     else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream })
                     : stage([ q('No preview for: ' + step.slide.type) ]);
     main.append(node);
-    // length-aware question width: short = punchy narrow column, long = use the full width (then fit scales font)
+    // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
     const qEl = node.querySelector('.pv-q');
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
     if (step.phase === 'question') { const p = pointsOf(step.slide.data); if (p !== 1) { const qel = node.querySelector('.pv-q, .pv-passage'); if (qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); } }
+    // question progress (only on question slides)
+    const qList = curStream.slides.filter(s => kindOf(s.type) === 'question');
+    const qi = qList.findIndex(s => s.id === step.slide.id);
+    if (qi >= 0) main.append(el('div', { class: 'pv-progress', text: 'Q ' + (qi + 1) + ' / ' + qList.length }));
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
 
@@ -1677,11 +1718,10 @@ const Present = (() => {
     } else {
       mountAdvance();
     }
-    if (step.phase === 'reveal') requestAnimationFrame(() => burst(main));
+    if (step.phase === 'reveal' || step.slide.type === 'podium') requestAnimationFrame(() => burst(main));
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
   }
-  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
   function next() { if (idx < steps.length - 1) { idx++; renderStep(); } }
   function prev() { if (idx > 0) { idx--; renderStep(); } }
 
