@@ -228,7 +228,8 @@
   /* timer ring — big & centered */
   .pv-timer { position: absolute; top: 2.5vh; left: 50%; transform: translateX(-50%); width: 230px; height: 230px; z-index: 4; }
   .pv-timer .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 82px; }
+    font-weight: 800; font-size: 82px; font-variant-numeric: tabular-nums; }
+  .pv-timer .num.long { font-size: 58px; }
   .pv-timer .prog { transition: none; }
   .pv-timer.warn .prog { stroke: #ff6b81 !important; }
   .pv-timer.warn .num { color: #ff6b81; animation: tick .5s infinite; }
@@ -610,9 +611,10 @@ const FieldRenderers = {
     el('input', { type: 'number', value: val ?? '', min: def.min ?? '', max: def.max ?? '',
       placeholder: def.placeholder || '', oninput: e => onChange(e.target.value === '' ? null : Number(e.target.value)) }),
 
-  /* timer: snaps to an allowed value (10..60 by 5, then 75/90/105/120). 0 = off. */
+  /* timer: snaps to an allowed value (10..60 by 5, 75/90/105/120, then 2m..7m by 30s). 0 = off. */
   timer: (def, val, onChange) => {
-    const STEPS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120];
+    const STEPS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420];
+    const lab = s => s < 60 ? s + 's' : Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '');
     const nearest = n => STEPS.reduce((a, b) => Math.abs(b - n) < Math.abs(a - n) ? b : a, STEPS[0]);
     let v = Number(val) || 0;
     const wrap = el('div', { class: 'timerfield' });
@@ -620,7 +622,7 @@ const FieldRenderers = {
     const onBtn = el('button', { type: 'button', text: 'On' });
     const offBtn = el('button', { type: 'button', text: 'Off' });
     const sel = el('select', { class: 'tsel' });
-    STEPS.forEach(s => sel.append(el('option', { value: s, text: s + 's' })));
+    STEPS.forEach(s => sel.append(el('option', { value: s, text: lab(s) })));
     const paint = () => {
       const on = v > 0;
       wrap.classList.toggle('off', !on);
@@ -1230,6 +1232,11 @@ const Views = (() => {
       const pVal = (slide.data.points == null || slide.data.points === '') ? 1 : slide.data.points;
       pField.append(FieldRenderers.number({ min: 0, placeholder: '1' }, pVal, v => Store.updateSlideData(slide.id, 'points', (v == null || v === '') ? 1 : v)));
       card.append(pField);
+
+      const aField = el('div', { class: 'field' });
+      aField.append(el('label', {}, [ 'Audience question', el('span', { class: 'hint', text: 'for the audience, not the teams — the scoring page is skipped' }) ]));
+      aField.append(FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, !!(slide.options && slide.options.audience), v => Store.updateSlideOption(slide.id, 'audience', v)));
+      card.append(aField);
     }
     ed.append(card);
   }
@@ -1339,16 +1346,18 @@ const IO = (() => {
     return Store.project().name;
   }
   const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 1, name: Store.project().name, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
+  // every export carries its creation timestamp — Display tags scores/session per deck with it
+  const stamped = p => { p.exportedAt = Date.now(); return p; };
 
   return {
     downloadObj: download,
-    async exportContent() { if (!ensureName()) return; const p = await embedImages(Store.project()); download(fname('', '.json'), p); toast('Exported deck (all streams)', 'ok'); },
+    async exportContent() { if (!ensureName()) return; const p = stamped(await embedImages(Store.project())); download(fname('', '.json'), p); toast('Exported deck (all streams)', 'ok'); },
     async exportStream() {
       if (!ensureName()) return;
       const s = Store.curStream(); if (!s) { toast('No stream selected'); return; }
-      const p = await embedImages(streamProject(s));
+      const p = stamped(await embedImages(streamProject(s)));
       download(fname(s.name, '.json'), p);
-      toast('Exported “' + s.name + '”', 'ok');
+      toast('Exported “' + s.name + '” — note: a per-stream file gets its OWN scoreboard in Display. Export the whole deck to carry scores across streams.', 'ok');
     },
     async exportEncrypted() {
       if (!CryptoBox.available) { toast('Encryption not supported by this browser'); return; }
@@ -1356,7 +1365,7 @@ const IO = (() => {
       const pw = prompt('Set a password to encrypt the whole deck.\nThe Display will need it to open the show:');
       if (!pw) return;
       toast('Encrypting…');
-      const p = await embedImages(Store.project());
+      const p = stamped(await embedImages(Store.project()));
       try { const encd = await CryptoBox.encrypt(p, pw); download(fname('', '.cfcq.json'), encd); toast('🔒 Encrypted deck saved', 'ok'); }
       catch (e) { console.error(e); toast('Encryption failed'); }
     },
@@ -1366,8 +1375,8 @@ const IO = (() => {
       const s = Store.curStream(); if (!s) { toast('No stream selected'); return; }
       const pw = prompt('Set a password to encrypt this stream:'); if (!pw) return;
       toast('Encrypting…');
-      const p = await embedImages(streamProject(s));
-      try { const encd = await CryptoBox.encrypt(p, pw); download(fname(s.name, '.cfcq.json'), encd); toast('🔒 Encrypted stream saved', 'ok'); }
+      const p = stamped(await embedImages(streamProject(s)));
+      try { const encd = await CryptoBox.encrypt(p, pw); download(fname(s.name, '.cfcq.json'), encd); toast('🔒 Encrypted stream saved — note: a per-stream file gets its OWN scoreboard in Display. Export the whole deck to carry scores across streams.', 'ok'); }
       catch (e) { console.error(e); toast('Encryption failed'); }
     },
     importFile(file) {
@@ -1393,17 +1402,24 @@ const IO = (() => {
 })();
 
 /* ================================================================
-   SCORES — per-stream team scores, persisted (separate from content).
+   SCORES — ONE shared scoreboard, persisted (separate from content).
+   Streams are parallel tracks of the same event played by the SAME
+   teams, so scores carry forward from stream to stream. The streamId
+   argument is kept on the API so call sites don't care.
    ================================================================ */
 const Scores = (() => {
-  const KEY = 'cfc-quiz-scores-v1';
-  let data = {};
-  try { data = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { data = {}; }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
-  function get(streamId, n) { const src = data[streamId] || []; const a = []; for (let i = 0; i < n; i++) a.push(src[i] || 0); return a; }
-  function add(streamId, i, delta) { const a = data[streamId] || (data[streamId] = []); a[i] = (a[i] || 0) + delta; save(); } // negatives allowed
-  function set(streamId, i, value) { const a = data[streamId] || (data[streamId] = []); a[i] = value | 0; save(); }
-  function reset(streamId) { delete data[streamId]; save(); }
+  // v2 store, same as Display's (v1 had per-stream buckets; left untouched).
+  // The Maker only ever uses its own 'shared' preview bucket — saves merge into
+  // the live store so a Display tab's deck buckets are never rolled back.
+  const KEY = 'cfc-quiz-scores-v2';
+  const BUCKET = 'shared';
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  let data = read();
+  const save = () => { try { const cur = read(); if (data[BUCKET] === undefined) delete cur[BUCKET]; else cur[BUCKET] = data[BUCKET]; data = cur; localStorage.setItem(KEY, JSON.stringify(cur)); } catch (e) {} };
+  function get(streamId, n) { const src = data[BUCKET] || []; const a = []; for (let i = 0; i < n; i++) a.push(src[i] || 0); return a; }
+  function add(streamId, i, delta) { const a = data[BUCKET] || (data[BUCKET] = []); a[i] = (a[i] || 0) + delta; save(); } // negatives allowed
+  function set(streamId, i, value) { const a = data[BUCKET] || (data[BUCKET] = []); a[i] = value | 0; save(); }
+  function reset(streamId) { delete data[BUCKET]; save(); }
   function standings(streamId, n) { return get(streamId, n).map((score, i) => ({ name: 'Team ' + (i + 1), score, idx: i })).sort((a, b) => b.score - a.score); }
   return { get, add, set, reset, standings };
 })();
@@ -1553,6 +1569,8 @@ const Present = (() => {
   }
 
   /* ---- timer ring ---- */
+  // long countdowns read as minutes (2:30); under a minute stays a big plain number
+  const fmtClock = s => { s = Math.ceil(Math.max(0, s)); return s >= 60 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : String(s); };
   // a controllable countdown: start(), addTime(±s), stop(); fires onDone at 0
   function makeTimer(host, seconds, onDone, autoStart) {
     const size = 230, r = 104, C = 2 * Math.PI * r;
@@ -1562,12 +1580,13 @@ const Present = (() => {
       '<circle cx="115" cy="115" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="13" fill="none"/>' +
       '<circle class="prog" cx="115" cy="115" r="' + r + '" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" ' +
       'stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 115 115)"/></svg>' +
-      '<div class="num">' + Math.ceil(seconds) + '</div>';
+      '<div class="num"></div>';
     host.append(wrap);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
     let remaining = seconds, displayMax = seconds, running = false, raf = null, last = null, fired = false;
     function paint() {
-      num.textContent = Math.ceil(Math.max(0, remaining));
+      const txt = fmtClock(remaining);
+      num.textContent = txt; num.classList.toggle('long', txt.length > 3);
       prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString();
       wrap.classList.toggle('warn', remaining <= 5 && running);
     }
@@ -1667,13 +1686,28 @@ const Present = (() => {
     return { el: btn, begin, reset };
   }
 
+  /* the hold label always names the page you are about to land on — no surprises */
+  function advanceLabel() {
+    const hasNext = idx < steps.length - 1;
+    if (!hasNext) return 'Hold to finish';
+    const nx = steps[idx + 1];
+    if (nx.phase === 'reveal') return 'Hold to reveal answer';
+    if (nx.phase === 'score') return 'Hold for scoring';
+    const sl = nx.slide;
+    if (kindOf(sl.type) === 'question') {
+      const qList = curStream.slides.filter(s => kindOf(s.type) === 'question');
+      const qi = qList.findIndex(s => s.id === sl.id);
+      return 'Hold for next — Q' + (qi + 1);
+    }
+    if (sl.type === 'leaderboard') return 'Hold for next — Leaderboard';
+    if (sl.type === 'podium') return 'Hold for next — Podium';
+    if (sl.type === 'answer') return 'Hold for next — Answer';
+    return 'Hold for next — Title';
+  }
   function mountAdvance() {
     const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null;
-    const hasNext = idx < steps.length - 1, nextStep = hasNext ? steps[idx + 1] : null;
-    const label = !hasNext ? 'Hold to finish'
-      : (nextStep.phase === 'reveal' ? 'Hold to reveal answer'
-         : (nextStep.slide.id !== steps[idx].slide.id ? 'Hold for next' : 'Hold to continue'));
-    advanceCtl = holdControl(label, () => { if (hasNext) next(); else close(); });
+    const hasNext = idx < steps.length - 1;
+    advanceCtl = holdControl(advanceLabel(), () => { if (hasNext) next(); else close(); });
     host.append(advanceCtl.el);
   }
   function lockAdvance(msg) {
@@ -1695,7 +1729,11 @@ const Present = (() => {
     // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
     const qEl = node.querySelector('.pv-q');
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
-    if (step.phase === 'question') { const p = pointsOf(step.slide.data); if (p !== 1) { const qel = node.querySelector('.pv-q, .pv-passage'); if (qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); } }
+    if (step.phase === 'question') {
+      const qel = node.querySelector('.pv-q, .pv-passage');
+      if (step.slide.options && step.slide.options.audience) { if (qel) qel.after(el('div', { class: 'pv-points', text: '🎤 Audience question' })); }
+      else { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
+    }
     // question progress (only on question slides)
     const qList = curStream.slides.filter(s => kindOf(s.type) === 'question');
     const qi = qList.findIndex(s => s.id === step.slide.id);
@@ -1728,7 +1766,8 @@ const Present = (() => {
   function loadStream(stream, startSlideId) {
     curStream = stream; steps = [];
     Theme.apply(overlay, Theme.resolve(stream));
-    stream.slides.forEach(sl => { const r = renderers[sl.type]; (r ? r.phases : SOLO).forEach(ph => steps.push({ slide: sl, phase: ph })); });
+    // audience questions are not scored — drop their score phase (default: scored, as before)
+    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; if (sl.options && sl.options.audience) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
     idx = 0;
     if (startSlideId) { const i = steps.findIndex(s => s.slide.id === startSlideId); if (i >= 0) idx = i; }
     else if (positions[stream.id] != null) idx = Math.max(0, Math.min(positions[stream.id], steps.length - 1));
@@ -1820,6 +1859,7 @@ const Present = (() => {
   function close() {
     flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
+    overlay.querySelectorAll('.pv-board-overlay, .pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);

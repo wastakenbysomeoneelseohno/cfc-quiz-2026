@@ -39,6 +39,9 @@
   .errline { color: #ff8da3; font-size: 13px; min-height: 18px; margin-top: 6px; }
   .loaded { background: rgba(47,211,154,.14); border: 1px solid #2fd39a; border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; }
   .loaded b { color: #7ef0bf; }
+  .resume { background: rgba(79,70,229,.16); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; margin-bottom: 18px; animation: pop .3s; }
+  .resume .r-title { font-weight: 700; margin-bottom: 4px; }
+  .resume .r-sub { color: #9fb0d0; font-size: 13px; margin-bottom: 12px; }
 
   /* ============================================================
      SHOW (the live screen) — mirrors the Maker engine.
@@ -78,7 +81,8 @@
 
   /* timer */
   .pv-timer { position: absolute; top: 2.5vh; left: 50%; transform: translateX(-50%); width: 230px; height: 230px; z-index: 4; }
-  .pv-timer .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 82px; }
+  .pv-timer .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 82px; font-variant-numeric: tabular-nums; }
+  .pv-timer .num.long { font-size: 58px; }
   .pv-timer .prog { stroke: var(--pv-ink); }
   .pv-timer.warn .prog { stroke: #ff6b81 !important; }
   .pv-timer.warn .num { color: #ff6b81; animation: tick .5s infinite; }
@@ -262,6 +266,7 @@
     <!-- step 2: teams -->
     <div class="step" id="step2">
       <div class="loaded" id="loaded"></div>
+      <div class="resume" id="resumeBox" style="display:none;"></div>
       <div class="field">
         <label>Stream (quiz track)</label>
         <select id="streamSel"></select>
@@ -270,7 +275,7 @@
         <label>Number of teams</label>
         <input type="number" id="teamCount" min="1" max="99" value="20" />
       </div>
-      <label class="check" style="margin-bottom:20px;"><input type="checkbox" id="resetScores" checked /> Start scores from 0</label>
+      <label class="check" style="margin-bottom:20px;"><input type="checkbox" id="resetScores" checked /> Start scores from 0 — uncheck to keep the running scoreboard</label>
       <div class="row">
         <button class="btn block primary" id="startBtn">▶ Start show</button>
         <button class="btn" id="backBtn" title="Load a different file">↺</button>
@@ -356,17 +361,42 @@ const CryptoBox = (() => {
   return { decrypt, available: !!subtle };
 })();
 
-/* ---------- scores ---------- */
+/* ---------- scores ----------
+   ONE scoreboard PER DECK (config file): all streams in a deck are parallel
+   tracks played by the SAME teams, so scores carry across streams — but a
+   different deck gets its own untouched scoreboard. use(deckKey) selects the
+   bucket when a file is loaded; the streamId argument is kept on the API so
+   call sites don't care. */
 const Scores = (() => {
-  const KEY = 'cfc-quiz-scores-v1';
-  let data = {};
-  try { data = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { data = {}; }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
-  function get(streamId, n) { const src = data[streamId] || []; const a = []; for (let i = 0; i < n; i++) a.push(src[i] || 0); return a; }
-  function add(streamId, i, delta) { const a = data[streamId] || (data[streamId] = []); a[i] = (a[i] || 0) + delta; save(); }
-  function reset(streamId) { delete data[streamId]; save(); }
+  // v2: deck-keyed buckets. v1 held per-stream buckets with no deck identity — it
+  // cannot be migrated meaningfully, so it is left untouched for older app copies.
+  const KEY = 'cfc-quiz-scores-v2';
+  let bucket = 'shared';
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  let data = read();
+  // read-merge-write: only this tab's bucket is replaced, so decks written by a parallel tab survive
+  const save = () => { try { const cur = read(); if (data[bucket] === undefined) delete cur[bucket]; else cur[bucket] = data[bucket]; data = cur; localStorage.setItem(KEY, JSON.stringify(cur)); } catch (e) {} };
+  function use(deckKey) { bucket = deckKey || 'shared'; data = read(); }
+  function get(streamId, n) { const src = data[bucket] || []; const a = []; for (let i = 0; i < n; i++) a.push(src[i] || 0); return a; }
+  function add(streamId, i, delta) { const a = data[bucket] || (data[bucket] = []); a[i] = (a[i] || 0) + delta; save(); }
+  function reset(streamId) { delete data[bucket]; save(); }
+  function hasAny() { return (data[bucket] || []).some(v => v); }
   function standings(streamId, n) { return get(streamId, n).map((score, i) => ({ name: 'Team ' + (i + 1), score, idx: i })).sort((a, b) => b.score - a.score); }
-  return { get, add, reset, standings };
+  return { use, get, add, reset, hasAny, standings };
+})();
+
+/* ---------- sessions — where each deck's show left off, keyed per deck,
+   so reloading any known config file can offer to resume it ---------- */
+const Session = (() => {
+  const KEY = 'cfc-quiz-sessions-v1';
+  // read fresh on every operation and only touch our own deck's entry,
+  // so parallel tabs running other decks are never rolled back
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  const write = m => { try { localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {} };
+  function save(deckKey, s) { if (!deckKey) return; const m = read(); m[deckKey] = s; write(m); }
+  function load(deckKey) { return (deckKey && read()[deckKey]) || null; }
+  function clear(deckKey) { if (!deckKey) return; const m = read(); delete m[deckKey]; write(m); }
+  return { save, load, clear };
 })();
 
 /* ================================================================
@@ -469,14 +499,16 @@ const Show = (() => {
       setTimeout(() => p.remove(), 1100);
     }
   }
+  // long countdowns read as minutes (2:30); under a minute stays a big plain number
+  const fmtClock = s => { s = Math.ceil(Math.max(0, s)); return s >= 60 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : String(s); };
   function makeTimer(host, seconds, onDone, autoStart) {
     const size = 230, r = 104, C = 2 * Math.PI * r;
     const wrap = el('div', { class: 'pv-timer' });
-    wrap.innerHTML = '<svg width="' + size + '" height="' + size + '"><circle cx="115" cy="115" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="13" fill="none"/><circle class="prog" cx="115" cy="115" r="' + r + '" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 115 115)"/></svg><div class="num">' + Math.ceil(seconds) + '</div>';
+    wrap.innerHTML = '<svg width="' + size + '" height="' + size + '"><circle cx="115" cy="115" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="13" fill="none"/><circle class="prog" cx="115" cy="115" r="' + r + '" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 115 115)"/></svg><div class="num"></div>';
     host.append(wrap);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
     let remaining = seconds, displayMax = seconds, running = false, raf = null, last = null, fired = false;
-    function paint() { num.textContent = Math.ceil(Math.max(0, remaining)); prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString(); wrap.classList.toggle('warn', remaining <= 5 && running); }
+    function paint() { const txt = fmtClock(remaining); num.textContent = txt; num.classList.toggle('long', txt.length > 3); prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString(); wrap.classList.toggle('warn', remaining <= 5 && running); }
     function tick(ts) { if (last == null) last = ts; const dt = (ts - last) / 1000; last = ts; if (running) remaining -= dt; if (remaining <= 0) { remaining = 0; running = false; raf = null; paint(); if (!fired) { fired = true; wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); } return; } paint(); raf = requestAnimationFrame(tick); }
     function loop() { if (raf == null) { last = null; raf = requestAnimationFrame(tick); } }
     function start() { if (fired || running) return; running = true; loop(); }
@@ -534,11 +566,22 @@ const Show = (() => {
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
   }
 
+  /* the hold label always names the page you are about to land on — no surprises */
+  function advanceLabel() {
+    const hasNext = idx < steps.length - 1;
+    if (!hasNext) return 'Hold to finish';
+    const nx = steps[idx + 1];
+    if (nx.phase === 'reveal') return 'Hold to reveal answer';
+    if (nx.phase === 'score') return 'Hold for scoring';
+    const sl = nx.slide;
+    if (isQuestionType(sl.type)) return 'Hold for next — Q' + (qIndexOf(sl) + 1);
+    return 'Hold for next — ' + slideKindLabel(sl.type);
+  }
   function mountAdvance() {
     const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null;
-    const hasNext = idx < steps.length - 1, nextStep = hasNext ? steps[idx + 1] : null;
-    const label = !hasNext ? 'Hold to finish' : (nextStep.phase === 'reveal' ? 'Hold to reveal answer' : (nextStep.slide.id !== steps[idx].slide.id ? 'Hold for next' : 'Hold to continue'));
-    advanceCtl = holdControl(label, () => { if (hasNext) next(); else close(); });
+    const hasNext = idx < steps.length - 1;
+    // finishing the deck ends its session — no "continue where you left off" for a completed show
+    advanceCtl = holdControl(advanceLabel(), () => { if (hasNext) next(); else { Session.clear(loadedDeckKey); close(); } });
     host.append(advanceCtl.el);
   }
   function lockAdvance(msg) { const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null; host.append(el('div', { class: 'pv-locked', text: msg })); }
@@ -593,8 +636,10 @@ const Show = (() => {
   }
 
   /* secret jump-to-any-slide (Ctrl/Cmd-click the 🏆 in the hint) */
-  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : (type === 'title' || type === 'answer') ? 'Title' : 'Question'; }
+  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : type === 'answer' ? 'Answer' : type === 'title' ? 'Title' : 'Question'; }
   const isQuestionType = t => !['title', 'answer', 'leaderboard', 'podium'].includes(t);
+  const questionsOf = () => curStream ? curStream.slides.filter(s => isQuestionType(s.type)) : [];
+  const qIndexOf = sl => questionsOf().findIndex(s => s.id === sl.id);
   function slideText(sl) { const d = sl.data || {}; return d.question || d.statement || d.prompt || d.instruction || d.heading || d.title || d.reference || ''; }
   function gotoSlide(slideId) { const i = steps.findIndex(s => s.slide.id === slideId); if (i >= 0) { idx = i; renderStep(); } }
   function openJump() {
@@ -637,11 +682,14 @@ const Show = (() => {
     // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
     const qEl = node.querySelector('.pv-q');
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
-    if (step.phase === 'question') { const p = pointsOf(step.slide.data); if (p !== 1) { const qel = node.querySelector('.pv-q, .pv-passage'); if (qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); } }
+    if (step.phase === 'question') {
+      const qel = node.querySelector('.pv-q, .pv-passage');
+      if (step.slide.options && step.slide.options.audience) { if (qel) qel.after(el('div', { class: 'pv-points', text: '🎤 Audience question' })); }
+      else { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
+    }
     // question progress (only on question slides)
-    const qList = curStream.slides.filter(s => isQuestionType(s.type));
-    const qi = qList.findIndex(s => s.id === step.slide.id);
-    if (qi >= 0) main.append(el('div', { class: 'pv-progress', text: 'Q ' + (qi + 1) + ' / ' + qList.length }));
+    const qi = qIndexOf(step.slide);
+    if (qi >= 0) main.append(el('div', { class: 'pv-progress', text: 'Q ' + (qi + 1) + ' / ' + questionsOf().length }));
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
     const timed = step.phase === 'question' && Number(step.slide.data.timer) > 0;
@@ -660,6 +708,20 @@ const Show = (() => {
     if (step.phase === 'reveal' || step.slide.type === 'podium') requestAnimationFrame(() => burst(main));
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
+    saveSession();
+  }
+  /* remember the deck + stream + step after every render so a reload can offer to resume */
+  let loadedFileName = '', loadedDeckKey = '';
+  function saveSession() {
+    if (!curStream || !steps[idx]) return;
+    const step = steps[idx];
+    const qi = qIndexOf(step.slide);
+    Session.save(loadedDeckKey, {
+      fileName: loadedFileName, deckKey: loadedDeckKey, projectName: (project && project.name) || 'Untitled Deck',
+      streamId: curStream.id, streamName: curStream.name, teamCount: curStream.teamCount || 20,
+      idx, label: qi >= 0 ? 'Q' + (qi + 1) + ' of ' + questionsOf().length : slideKindLabel(step.slide.type),
+      savedAt: Date.now(),
+    });
   }
   function next() { if (idx < steps.length - 1) { idx++; renderStep(); } }
   function prev() { if (idx > 0) { idx--; renderStep(); } }
@@ -668,33 +730,41 @@ const Show = (() => {
     const sel = overlay.querySelector('#pvStream'); if (!sel) return; sel.innerHTML = '';
     project.streams.forEach(s => sel.append(el('option', { value: s.id, text: s.name, selected: curStream && s.id === curStream.id })));
   }
-  function loadStream(stream, startSlideId) {
+  function loadStream(stream, startIdx) {
     curStream = stream; steps = [];
     Theme.apply(overlay, Theme.resolve(project, stream));
-    stream.slides.forEach(sl => { const r = renderers[sl.type]; (r ? r.phases : SOLO).forEach(ph => steps.push({ slide: sl, phase: ph })); });
+    // audience questions are not scored — drop their score phase (default: scored, as before)
+    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; if (sl.options && sl.options.audience) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
     idx = 0;
-    if (startSlideId) { const i = steps.findIndex(s => s.slide.id === startSlideId); if (i >= 0) idx = i; }
+    if (startIdx != null) idx = Math.max(0, Math.min(startIdx, steps.length - 1));
     else if (positions[stream.id] != null) idx = Math.max(0, Math.min(positions[stream.id], steps.length - 1));
     fillStreamSel(); renderStep();
   }
-  function switchStream(id) { if (curStream) positions[curStream.id] = idx; const s = project.streams.find(x => x.id === id); if (s && s.slides.length) loadStream(s, null); }
+  function switchStream(id) { if (curStream) positions[curStream.id] = idx; const s = project.streams.find(x => x.id === id); if (s && s.slides.length) loadStream(s); }
 
-  function open(proj, stream) {
+  let onCloseCb = null; // landing hooks this to refresh the resume offer with the LATEST session
+  function open(proj, stream, opts) {
     project = proj;
+    loadedFileName = (opts && opts.fileName) || loadedFileName || '';
+    loadedDeckKey = (opts && opts.deckKey) || loadedDeckKey || '';
+    if (opts && opts.fresh) Object.keys(positions).forEach(k => delete positions[k]); // a clean slate forgets every stream's spot
+    if (opts && opts.startIdx != null) positions[stream.id] = null; // explicit start wins over a remembered spot
     if (!overlay) buildOverlay();
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
-    loadStream(stream, null);
+    loadStream(stream, opts && opts.startIdx != null ? opts.startIdx : null);
   }
   function close() {
     flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
+    overlay.querySelectorAll('.pv-board-overlay, .pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.getElementById('landing').style.display = 'flex';
+    if (onCloseCb) onCloseCb();
   }
   // keyboard: only Esc (close panel / exit) and F (fullscreen). No key advances or goes back — mouse only.
   function onKey(e) {
@@ -706,16 +776,23 @@ const Show = (() => {
     else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) overlay.requestFullscreen().catch(() => {}); else document.exitFullscreen().catch(() => {}); }
   }
 
-  return { open };
+  return { open, next, prev, gotoSlide, openBoard, openJump, setOnClose: fn => { onCloseCb = fn; },
+    info: () => ({ idx, len: steps.length, type: (steps[idx] && steps[idx].slide.type) || null }) };
 })();
+window.__CFCShow = Show; // test/automation hook (mirrors Maker's window.CFC)
+window.__CFCScores = Scores;
 
 /* ================================================================
    LANDING FLOW
    ================================================================ */
 (() => {
-  let project = null;
+  let project = null, fileName = '', deckKey = '';
   const $ = id => document.getElementById(id);
   const show = (s) => { $('step1').classList.toggle('on', s === 1); $('step2').classList.toggle('on', s === 2); };
+  /* the deck's identity = deckname_timestamp: the Maker stamps exportedAt into the
+     config, so the same file always maps to the same cached scores + session here
+     (survives renames, distinguishes re-exports). Old unstamped files: file name. */
+  const keyOf = (p, fn) => p.exportedAt ? (p.name || 'Untitled Deck') + '_' + p.exportedAt : 'file:' + fn;
 
   function migrateSlide(sl) {
     sl.options = sl.options || {};
@@ -738,12 +815,57 @@ const Show = (() => {
     project.streams.forEach(s => sel.append(el('option', { value: s.id, text: s.name + ' (' + s.slides.length + ' slides)' })));
     const syncTeams = () => { const s = project.streams.find(x => x.id === sel.value); $('teamCount').value = (s && s.teamCount) || 20; };
     sel.onchange = syncTeams; syncTeams();
+    deckKey = keyOf(project, fileName);
+    Scores.use(deckKey); // every deck gets its own scoreboard, shared by its streams
     $('loaded').innerHTML = 'Loaded: <b>' + (project.name || 'Untitled Deck') + '</b> · ' + project.streams.length + ' stream(s)';
+    syncReset();
+    renderResume();
     show(2);
   }
 
+  /* protect live data: a deck that already has scores defaults to KEEPING them;
+     only a deck with no scores yet defaults to starting from 0 */
+  function syncReset() { $('resetScores').checked = !Scores.hasAny(); }
+
+  /* known deck? offer to pick up exactly where its show stopped (scores kept) — or start fresh.
+     Re-rendered every time the landing appears (load AND exit), so it never shows a stale spot. */
+  function renderResume() {
+    const box = $('resumeBox'); box.style.display = 'none'; box.innerHTML = '';
+    const sess = Session.load(deckKey);
+    if (!sess || !project) return;
+    const stream = project.streams.find(s => s.id === sess.streamId);
+    if (!stream || !stream.slides.length) return;
+    box.append(
+      el('div', { class: 'r-title', text: '⏯ Continue where you left off?' }),
+      el('div', { class: 'r-sub', text: 'Last time you were on ' + sess.label + ' in “' + sess.streamName + '” — scores are kept.' }),
+      el('div', { class: 'row' }, [
+        el('button', { class: 'btn primary block', id: 'resumeBtn', text: '▶ Continue from ' + sess.label }),
+        el('button', { class: 'btn', id: 'freshBtn', title: 'Start over from slide 1 with scores reset to 0', text: '↺ Start fresh' }),
+      ]),
+    );
+    box.querySelector('#resumeBtn').onclick = () => {
+      const cur = Session.load(deckKey) || sess; // always the LATEST saved spot
+      const st = project.streams.find(s => s.id === cur.streamId) || stream;
+      st.teamCount = Math.max(1, Math.min(99, Number(cur.teamCount) || st.teamCount || 20));
+      document.getElementById('landing').style.display = 'none';
+      Show.open(project, st, { startIdx: cur.idx, fileName, deckKey });
+    };
+    box.querySelector('#freshBtn').onclick = () => {
+      // a real clean slate: slide 1, scoreboard zeroed, old session forgotten
+      const sel = $('streamSel'); const st = project.streams.find(x => x.id === sel.value) || stream;
+      st.teamCount = Math.max(1, Math.min(99, Number($('teamCount').value) || st.teamCount || 20));
+      Scores.reset(st.id);
+      Session.clear(deckKey);
+      document.getElementById('landing').style.display = 'none';
+      Show.open(project, st, { startIdx: 0, fresh: true, fileName, deckKey });
+    };
+    box.style.display = 'block';
+  }
+  Show.setOnClose(() => { syncReset(); renderResume(); }); // exiting a show refreshes the landing
+
   let pendingEncrypted = null;
   function handleFile(f) {
+    fileName = f.name || '';
     $('err1').textContent = ''; $('pwArea').style.display = 'none'; pendingEncrypted = null;
     const rd = new FileReader();
     rd.onload = () => {
@@ -774,7 +896,7 @@ const Show = (() => {
     stream.teamCount = n;
     if ($('resetScores').checked) Scores.reset(stream.id);
     document.getElementById('landing').style.display = 'none';
-    Show.open(project, stream);
+    Show.open(project, stream, { fileName, deckKey });
   };
 })();
 </script>
