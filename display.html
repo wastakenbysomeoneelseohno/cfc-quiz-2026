@@ -59,7 +59,8 @@
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--pv-ink-soft);
     border: 1px solid var(--pv-tile-border); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: clamp(26px, 4.6vw, 54px); font-weight: 800; line-height: 1.16; letter-spacing: -.5px; margin: 0 auto 3vh; max-width: 16ch; font-family: var(--pv-heading-font); }
-  .pv-sub { color: var(--pv-ink-soft); font-size: clamp(16px, 2.2vw, 26px); margin-top: 2vh; }
+  .pv-sub { color: var(--pv-ink-soft); font-size: clamp(16px, 2.2vw, 26px); margin-top: 2vh;
+    white-space: pre-line; line-height: 1.45; max-width: 26em; margin-left: auto; margin-right: auto; text-align: left; }
   .pv-title-huge { font-size: clamp(46px, 9vw, 124px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.02; color: var(--pv-ink); font-family: var(--pv-heading-font); }
   .pv-media { margin: 0 auto 3vh; max-width: min(620px, 64vw); }
   .pv-media img { width: 100%; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
@@ -143,12 +144,17 @@
   .pv-bpm.plus { background: var(--pv-accent); border-color: var(--pv-accent); color: var(--pv-on-accent); }
 
   /* controls */
-  .pv-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px; background: #0c1124; border-top: 1px solid rgba(255,255,255,.08); color: #fff; }
+  .pv-controls { display: flex; align-items: center; justify-content: safe center; gap: 12px; padding: 13px; background: #0c1124; border-top: 1px solid rgba(255,255,255,.08); color: #fff;
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+  .pv-controls::-webkit-scrollbar { display: none; }
+  .pv-controls > * { flex: 0 0 auto; }
   .pv-step { color: #9fb0d0; font-size: 13px; min-width: 86px; text-align: center; font-variant-numeric: tabular-nums; }
   .pv-btn2 { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; padding: 10px 16px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s; }
   .pv-btn2:hover { background: rgba(255,255,255,.2); }
   .pv-btn2.sm { padding: 8px 13px; font-size: 13px; }
   .pv-btn2.primary { background: var(--pv-accent); border-color: var(--pv-accent); color: var(--pv-on-accent); }
+  .pv-btn2.warn { background: rgba(255,107,129,.16); border-color: rgba(255,107,129,.5); }
+  .pv-btn2.warn:hover { background: rgba(255,107,129,.28); }
   .pv-btn2[disabled] { opacity: .55; pointer-events: none; }
   .pv-stream-sel { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; padding: 9px 10px; font-weight: 600; max-width: 190px; font-family: inherit; }
   .pv-stream-sel option { color: #111; }
@@ -205,19 +211,35 @@
   .pv-progress { position: absolute; top: 2.6vh; left: 3vw; font-size: clamp(12px,1.5vw,16px); font-weight: 700;
     letter-spacing: 1px; color: var(--pv-ink-soft); z-index: 4; font-variant-numeric: tabular-nums; }
 
-  /* podium finale */
-  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(12px,3vw,40px); margin-top: 3vh; }
-  .pv-pod { display: flex; flex-direction: column; align-items: center; }
-  .pv-pod-medal { font-size: clamp(30px,4.5vw,58px); line-height: 1; animation: pop .5s; }
-  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 26vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pv-pod-block { width: clamp(86px,14vw,176px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-start; padding-top: 14px; font-weight: 900; color: #1a1205;
+  /* podium finale — top 3 on the podium, the rest of the field beside it */
+  .pv-podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px,4vw,64px); margin-top: 2vh; flex-wrap: wrap; }
+  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(10px,2.4vw,30px); }
+  .pv-pod { display: flex; flex-direction: column; align-items: center; position: relative; }
+  .pv-pod-crown { font-size: clamp(26px,3.6vw,46px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
+  .pv-pod-medal { font-size: clamp(28px,4.2vw,54px); line-height: 1; animation: pop .5s; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 24vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .pv-pod-block { position: relative; width: clamp(86px,13vw,168px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 2px; padding-top: 16px; font-weight: 900; color: #1a1205;
     box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
+  .pv-pod-block::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 42%;
+    background: linear-gradient(180deg, rgba(255,255,255,.5), transparent); pointer-events: none; }
   .pv-pod-block.gold { background: linear-gradient(180deg,#fde68a,#f59e0b); }
   .pv-pod-block.silver { background: linear-gradient(180deg,#f1f5f9,#94a3b8); }
   .pv-pod-block.bronze { background: linear-gradient(180deg,#fcd9b6,#d97706); }
-  .pv-pod-score { font-size: clamp(26px,4vw,52px); }
-  .pv-pod-rank { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .pv-pod-place { font-size: clamp(26px,3.2vw,42px); line-height: 1; opacity: .32; font-weight: 900; }
+  .pv-pod-score { font-size: clamp(22px,3.4vw,46px); line-height: 1.05; }
+  /* the rest of the field — a no-scroll table that grows into columns (filled top-to-bottom) so everyone shows */
+  .pv-pod-rest { text-align: left; display: flex; flex-direction: column; align-self: center; }
+  .pv-pod-rest-head { font-size: clamp(12px,1.4vw,15px); text-transform: uppercase; letter-spacing: 1.5px; color: var(--pv-ink-soft); margin-bottom: 10px; font-weight: 800; }
+  .pv-pod-rest-list { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); gap: 6px 12px; }
+  .pv-pod-rest-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-width: 150px;
+    background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 10px; padding: 7px 12px; animation: optIn .4s both; }
+  .pv-pod-rest-rank { color: var(--pv-ink-soft); font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
+  .pv-pod-rest-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-pod-rest-score { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .pv-pod-rest-row.top { border-color: #fbbf24; }
+  .pv-pod-rest-row.top .pv-pod-rest-rank { color: #fbbf24; }
+  @keyframes podCrown { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
 
   /* clean, snappy scroll areas — no chunky OS scrollbar */
   .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
@@ -230,7 +252,7 @@
     .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
     .pv-options { grid-template-columns: 1fr; }
     .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
-    .pv-controls { flex-wrap: wrap; gap: 8px; padding: 10px; }
+    .pv-controls { gap: 8px; padding: 10px; }
     .pv-hint { display: none; }
     .pv-step { min-width: 54px; }
     .pv-advance, .pv-hold, .pv-locked { min-width: 150px; }
@@ -272,7 +294,7 @@
         <select id="streamSel"></select>
       </div>
       <div class="field">
-        <label>Number of teams</label>
+        <label>Number of teams <span style="font-weight:400;opacity:.7">— shared by all streams</span></label>
         <input type="number" id="teamCount" min="1" max="99" value="20" />
       </div>
       <label class="check" style="margin-bottom:20px;"><input type="checkbox" id="resetScores" checked /> Start scores from 0 — uncheck to keep the running scoreboard</label>
@@ -368,9 +390,9 @@ const CryptoBox = (() => {
    bucket when a file is loaded; the streamId argument is kept on the API so
    call sites don't care. */
 const Scores = (() => {
-  // v2: deck-keyed buckets. v1 held per-stream buckets with no deck identity — it
-  // cannot be migrated meaningfully, so it is left untouched for older app copies.
-  const KEY = 'cfc-quiz-scores-v2';
+  // deck-keyed buckets, Display-owned. d_ = display store; the Maker never
+  // shares a key, so a Reset in the Maker can't touch a live event's scores.
+  const KEY = 'd_cfc-quiz-scores-v1';
   let bucket = 'shared';
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
   let data = read();
@@ -379,16 +401,17 @@ const Scores = (() => {
   function use(deckKey) { bucket = deckKey || 'shared'; data = read(); }
   function get(streamId, n) { const src = data[bucket] || []; const a = []; for (let i = 0; i < n; i++) a.push(src[i] || 0); return a; }
   function add(streamId, i, delta) { const a = data[bucket] || (data[bucket] = []); a[i] = (a[i] || 0) + delta; save(); }
+  function set(streamId, i, value) { const a = data[bucket] || (data[bucket] = []); a[i] = value | 0; save(); }   // negatives allowed
   function reset(streamId) { delete data[bucket]; save(); }
   function hasAny() { return (data[bucket] || []).some(v => v); }
   function standings(streamId, n) { return get(streamId, n).map((score, i) => ({ name: 'Team ' + (i + 1), score, idx: i })).sort((a, b) => b.score - a.score); }
-  return { use, get, add, reset, hasAny, standings };
+  return { use, get, add, set, reset, hasAny, standings };
 })();
 
 /* ---------- sessions — where each deck's show left off, keyed per deck,
    so reloading any known config file can offer to resume it ---------- */
 const Session = (() => {
-  const KEY = 'cfc-quiz-sessions-v1';
+  const KEY = 'd_cfc-quiz-sessions-v1';   // d_ = display-owned resume sessions
   // read fresh on every operation and only touch our own deck's entry,
   // so parallel tabs running other decks are never rolled back
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
@@ -421,16 +444,51 @@ const Show = (() => {
     const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
     if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
   }
-  function buildPodium(top) {
-    const wrap = el('div', { class: 'pv-podium' });
-    const meta = [ { medal: '🥇', cls: 'gold', h: '32vh' }, { medal: '🥈', cls: 'silver', h: '23vh' }, { medal: '🥉', cls: 'bronze', h: '16vh' } ];
-    [1, 0, 2].forEach(r => {
+  function buildPodium(all) {
+    const top = all.slice(0, 3), rest = all.slice(3);
+    const wrap = el('div', { class: 'pv-podium-wrap' });
+    const podium = el('div', { class: 'pv-podium' });
+    const meta = [ { medal: '🥇', cls: 'gold', h: '34vh' }, { medal: '🥈', cls: 'silver', h: '24vh' }, { medal: '🥉', cls: 'bronze', h: '17vh' } ];
+    [1, 0, 2].forEach(r => {           // render order 2nd–1st–3rd so the winner stands in the centre
       const t = top[r]; if (!t) return; const m = meta[r];
-      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [ el('div', { class: 'pv-pod-score', text: t.score }), el('div', { class: 'pv-pod-rank', text: '#' + (r + 1) }) ]);
-      wrap.append(el('div', { class: 'pv-pod' }, [ el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }), block ]));
+      const pod = el('div', { class: 'pv-pod' });
+      if (r === 0) pod.append(el('div', { class: 'pv-pod-crown', text: '👑' }));
+      pod.append(el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }));
+      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [
+        el('div', { class: 'pv-pod-place', text: (r + 1) }),
+        el('div', { class: 'pv-pod-score', text: t.score }) ]);
+      pod.append(block); podium.append(pod);
       setTimeout(() => { block.style.height = m.h; }, 90);
     });
+    wrap.append(podium);
+    if (rest.length) {                 // everyone below 3rd, as a side scoreboard table
+      const side = el('div', { class: 'pv-pod-rest' }, [ el('div', { class: 'pv-pod-rest-head', text: 'The rest of the field' }) ]);
+      side.append(scoreTable(rest, 4)); wrap.append(side);
+    }
     return wrap;
+  }
+  // a ranked rank/name/score table that lays itself out across columns to fit the space (every team shows)
+  function scoreTable(teams, startRank) {
+    startRank = startRank || 1;
+    const list = el('div', { class: 'pv-pod-rest-list' });
+    list.dataset.count = teams.length;
+    teams.forEach((t, i) => {
+      const row = el('div', { class: 'pv-pod-rest-row' + (startRank === 1 && i < 3 ? ' top' : '') }, [
+        el('span', { class: 'pv-pod-rest-rank', text: (i + startRank) }),
+        el('span', { class: 'pv-pod-rest-name', text: t.name }),
+        el('span', { class: 'pv-pod-rest-score', text: t.score }) ]);
+      row.style.animationDelay = (i * 0.04) + 's';
+      list.append(row);
+    });
+    layoutRest(list, teams.length);
+    return list;
+  }
+  // adapt a score table: more vertical space → more rows (fewer, wider columns). Recomputed on resize.
+  function layoutRest(list, count) {
+    if (!list || !count) return;
+    const vh = window.innerHeight || 720;
+    const rows = Math.max(2, Math.min(count, Math.floor((vh * 0.46) / 46)));
+    list.style.gridTemplateRows = 'repeat(' + rows + ', auto)';
   }
   function optionsGrid(options, { reveal = false } = {}) {
     const opts = Array.isArray(options) ? options : [];
@@ -452,26 +510,18 @@ const Show = (() => {
     answer: { phases: SOLO, render: d => stage([ badge('Answer'), el('div', { class: 'pv-q', text: d.heading || '' }), d.body ? el('div', { class: 'pv-passage', text: d.body }) : null ]) },
     leaderboard: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
-      const teams = Scores.standings(ctx.stream.id, n);
-      const max = Math.max(1, ...teams.map(t => t.score));
-      const board = el('div', { class: 'pv-board' });
-      teams.slice(0, 8).forEach((t, i) => {
-        const fill = el('div', { class: 'pv-bar-fill' });
-        board.append(el('div', { class: 'pv-board-row' }, [ el('div', { class: 'pv-rank' + (i === 0 ? ' top' : ''), text: (i + 1) }), el('div', { class: 'pv-team', text: t.name }), el('div', { class: 'pv-bar' }, [ fill ]), el('div', { class: 'pv-score', text: t.score }) ]));
-        setTimeout(() => { fill.style.width = (Math.max(0, t.score) / max * 100) + '%'; }, 60 + i * 70);
-      });
-      return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), board ]);
+      const teams = Scores.standings(ctx.stream.id, n);   // ALL teams, ranked
+      return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), scoreTable(teams, 1) ]);
     } },
     podium: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const teams = Scores.standings(ctx.stream.id, n);
-      return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams.slice(0, 3)) ]);
+      return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams) ]);
     } },
     'choices': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'question' ? ocap([ d.choice && d.choice.multiple ? 'Select all that apply' : null ]) : null, optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
     'true-false': { phases: Q2, render: (d, ctx) => { const opts = [ { text: 'True', correct: d.answer === true }, { text: 'False', correct: d.answer === false } ]; return stage([ q(d.statement), optionsGrid(opts, { reveal: ctx.phase === 'reveal' }) ]); } },
-    'fill-blank': { phases: Q2, render: (d, ctx) => stage([ q(d.prompt), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
-    'guess-verse': { phases: Q2, render: (d, ctx) => stage([ d.reference ? badge(d.reference) : null, el('div', { class: 'pv-passage', text: d.passage || '' }), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
-    numeric: { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'reveal' ? answer(d.answer != null ? String(d.answer) : '—') : null ]) },
+    'short-answer': { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
+    'titled-question': { phases: Q2, render: (d, ctx) => stage([ d.title ? badge(d.title) : null, q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
     'image-question': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
     matching: { phases: Q2, render: (d, ctx) => {
       const pairs = Array.isArray(d.pairs) ? d.pairs : [];
@@ -482,7 +532,7 @@ const Show = (() => {
       }
       const lefts = el('div', { class: 'pv-col' }), rights = el('div', { class: 'pv-col' });
       pairs.forEach(p => lefts.append(el('div', { class: 'pv-mitem', text: p.left })));
-      shuffle(pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));
+      stableShuffle(ctx.slideId, pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));   // fixed order for the run — re-render (← Back) keeps it
       return stage([ q(d.instruction), el('div', { class: 'pv-cols' }, [ lefts, rights ]) ]);
     } },
     poll: { phases: ['question'], render: d => stage([ badge('Poll'), q(d.question), optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
@@ -507,18 +557,33 @@ const Show = (() => {
     wrap.innerHTML = '<svg width="' + size + '" height="' + size + '"><circle cx="115" cy="115" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="13" fill="none"/><circle class="prog" cx="115" cy="115" r="' + r + '" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 115 115)"/></svg><div class="num"></div>';
     host.append(wrap);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
-    let remaining = seconds, displayMax = seconds, running = false, raf = null, last = null, fired = false;
+    // DEADLINE-based clock: remaining is derived from wall-clock (endAt), never from frame deltas,
+    // so an occluded window (rAF suspended — e.g. the score-console popup covering the show) can't
+    // freeze it or make it jump. A setInterval fallback still fires Time's-up while rAF is throttled.
+    const now = () => performance.now();
+    let remaining = seconds, displayMax = seconds, running = false, fired = false, endAt = 0, raf = null, iv = null;
+    function compute() { if (running) remaining = Math.max(0, (endAt - now()) / 1000); return remaining; }
     function paint() { const txt = fmtClock(remaining); num.textContent = txt; num.classList.toggle('long', txt.length > 3); prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString(); wrap.classList.toggle('warn', remaining <= 5 && running); }
-    function tick(ts) { if (last == null) last = ts; const dt = (ts - last) / 1000; last = ts; if (running) remaining -= dt; if (remaining <= 0) { remaining = 0; running = false; raf = null; paint(); if (!fired) { fired = true; wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); } return; } paint(); raf = requestAnimationFrame(tick); }
-    function loop() { if (raf == null) { last = null; raf = requestAnimationFrame(tick); } }
-    function start() { if (fired || running) return; running = true; loop(); }
-    function addTime(d) { if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); running = true; } remaining = Math.max(0, remaining + d); if (remaining > displayMax) displayMax = remaining; paint(); if (running) loop(); }
-    function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+    function stopLoops() { if (raf) { cancelAnimationFrame(raf); raf = null; } if (iv) { clearInterval(iv); iv = null; } }
+    function fire() { running = false; remaining = 0; stopLoops(); paint(); if (!fired) { fired = true; wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); } }
+    function step() { if (!running) return; compute(); if (remaining <= 0) { fire(); return; } paint(); }
+    function frame() { if (!running) return; step(); if (running) raf = requestAnimationFrame(frame); }
+    function loops() { if (raf == null) raf = requestAnimationFrame(frame); if (iv == null) iv = setInterval(step, 500); }   // interval still ticks in a hidden/covered window
+    function start() { if (fired || running) return; running = true; endAt = now() + remaining * 1000; loops(); }
+    function addTime(d) {
+      if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); running = true; remaining = 0; endAt = now(); }
+      if (running) { compute(); remaining = Math.max(0, remaining + d); endAt = now() + remaining * 1000; }
+      else remaining = Math.max(0, remaining + d);   // not started yet → adjust the base
+      if (remaining > displayMax) displayMax = remaining;
+      paint(); if (running) loops();
+    }
+    function stop() { running = false; stopLoops(); }   // pause / teardown
+    function end() { if (fired) return; remaining = 0; fire(); }   // force "time's up" now → unlocks advance
     paint(); if (autoStart) start();
-    return { start, addTime, stop };
+    return { start, addTime, stop, end, isActive: () => running && !fired };
   }
   function holdControl(label, onDone) {
-    const DURATION = 850;
+    const DURATION = 800;   // deliberate press-and-hold (~0.8s) so advancing is never accidental, but snappy
     const btn = el('button', { class: 'pv-hold' });
     const fill = el('span', { class: 'pv-hold-fill' });
     btn.append(fill, el('span', { class: 'pv-hold-label', text: label }));
@@ -530,16 +595,24 @@ const Show = (() => {
     btn.addEventListener('mousedown', begin); btn.addEventListener('mouseup', reset); btn.addEventListener('mouseleave', reset);
     btn.addEventListener('touchstart', e => { e.preventDefault(); begin(); }, { passive: false });
     btn.addEventListener('touchend', e => { e.preventDefault(); reset(); });
-    return { el: btn, begin, reset };
+    btn.addEventListener('touchcancel', () => reset());   // OS stole the touch → cancel, don't keep filling
+    return { el: btn, begin, reset, cancel: stop };        // cancel() kills the rAF even after detaching the button
   }
 
   /* ---- controller ---- */
   let project = null, overlay = null, steps = [], idx = 0, stopTimer = null, curStream = null, advanceCtl = null;
   const positions = {};
+  // stable per-run shuffle (e.g. matching right-column order) so a re-render / ← Back never re-deals
+  let shuffleOrders = {};
+  function stableShuffle(key, arr) { const o = shuffleOrders[key]; if (!o || o.length !== arr.length) shuffleOrders[key] = shuffle(arr.map((_, i) => i)); return shuffleOrders[key].map(i => arr[i]); }
   // pending score marks are committed only when you LEAVE the scoring slide (advance / switch / board / exit)
   let commitMarks = null;
-  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } }
-  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
+  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } renderConsole(); }
+  function onResize() {
+    if (!overlay || !overlay.classList.contains('open')) return;
+    const rl = overlay.querySelector('.pv-pod-rest-list'); if (rl) layoutRest(rl, Number(rl.dataset.count) || 0);
+    fitStage(overlay.querySelector('.pv-main'));
+  }
 
   function buildOverlay() {
     overlay = el('div', { class: 'present' }, [
@@ -552,17 +625,14 @@ const Show = (() => {
         el('div', { class: 'pv-advance', id: 'pvAdvance' }),
         el('div', { class: 'pv-timerctl', id: 'pvTimerCtl' }),
         el('button', { class: 'pv-btn2', id: 'pvBoard', text: '🏆 Scores' }),
-        el('span', { class: 'pv-hint' }, [
-          'Hold to advance · ',
-          el('span', { class: 'pv-trophy', text: '🏆', onclick: e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openJump(); } } }),
-          ' standings · ← back · Esc exit',
-        ]),
       ]),
     ]);
     document.body.append(overlay);
     overlay.querySelector('#pvExit').onclick = close;
     overlay.querySelector('#pvPrev').onclick = prev;
-    overlay.querySelector('#pvBoard').onclick = openBoard;
+    // 🏆 Scores opens the PRIVATE score console (popup on the operator's other screen);
+    // ctrl/⌘-click is the operator's secret jump panel. Nothing renders on the projected window.
+    overlay.querySelector('#pvBoard').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openJump(); } else openConsole(); };
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
   }
 
@@ -578,13 +648,13 @@ const Show = (() => {
     return 'Hold for next — ' + slideKindLabel(sl.type);
   }
   function mountAdvance() {
-    const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null;
+    const host = overlay.querySelector('#pvAdvance'); if (advanceCtl) advanceCtl.cancel(); host.innerHTML = ''; advanceCtl = null;
     const hasNext = idx < steps.length - 1;
     // finishing the deck ends its session — no "continue where you left off" for a completed show
     advanceCtl = holdControl(advanceLabel(), () => { if (hasNext) next(); else { Session.clear(loadedDeckKey); close(); } });
     host.append(advanceCtl.el);
   }
-  function lockAdvance(msg) { const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null; host.append(el('div', { class: 'pv-locked', text: msg })); }
+  function lockAdvance(msg) { const host = overlay.querySelector('#pvAdvance'); if (advanceCtl) advanceCtl.cancel(); advanceCtl = null; host.innerHTML = ''; host.append(el('div', { class: 'pv-locked', text: msg })); }
 
   function renderTally(slide) {
     const n = (curStream && curStream.teamCount) || 8, sid = curStream.id, marks = {};
@@ -599,8 +669,8 @@ const Show = (() => {
       const check = el('button', { class: 'pv-mark check', text: '✓' });
       const cross = el('button', { class: 'pv-mark cross', text: '✗' });
       const paint = () => { check.classList.toggle('on', marks[i] === 1); cross.classList.toggle('on', marks[i] === -1); row.classList.toggle('plus', marks[i] === 1); row.classList.toggle('minus', marks[i] === -1); };
-      check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); };
-      cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); };
+      check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
+      cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
       row.append(check, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, cross);
       list.append(row); paint();
     }
@@ -610,29 +680,93 @@ const Show = (() => {
     return wrap;
   }
 
-  function openBoard() {
+  /* ---------- private score console — a popup window on the operator's OTHER
+     screen, driven by this same script. Nothing renders on the projected window.
+     One named popup, reused; closing the show closes it. Shows COMMITTED scores
+     only (never force-flushes pending tally marks). ---------- */
+  let consoleWin = null, blockMsgT = null, pagehideHooked = false;
+  const CONSOLE_CSS = '<style>'
+    + ':root{color-scheme:dark}*{box-sizing:border-box}'
+    + 'body{margin:0;font:15px -apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0a0e1d;color:#fff;padding:14px}'
+    + '#cc-head{font-size:18px;font-weight:800;margin-bottom:4px}'
+    + '#cc-note{font-size:12px;color:#9fb0d0;margin-bottom:12px}#cc-note.warn{color:#fbbf24;font-weight:700}'
+    + '#cc-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:column;gap:8px}'   /* two columns, filled DOWN (Team 1,2,3… down the left) */
+    + '.cc-row{display:grid;grid-template-columns:1fr 52px 56px 52px 76px;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 10px}'
+    + '.cc-team{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.cc-score{text-align:center;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}'
+    + '.cc-pm{height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:24px;font-weight:800;cursor:pointer}'
+    + '.cc-pm:hover{background:rgba(255,255,255,.2)}'
+    + '.cc-set{height:44px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;text-align:center;font-weight:700;font-size:16px;min-width:0}'
+    + '@media(max-width:560px){#cc-rows{grid-template-columns:1fr!important;grid-auto-flow:row!important;grid-template-rows:none!important}.cc-row{grid-template-columns:1fr 40px 46px 40px 60px;gap:6px}}'   /* narrow popup → one column, no clipping */
+    + '</style>';
+  function pendingMarkCount() { return overlay ? overlay.querySelectorAll('.pv-trow.plus, .pv-trow.minus').length : 0; }
+  function openConsole() {
     if (!curStream) return;
-    flushScore(); // make sure pending marks are reflected in the standings
-    const existing = overlay.querySelector('.pv-board-overlay'); if (existing) { existing.remove(); return; }
-    const sid = curStream.id, n = curStream.teamCount || 8;
-    const teams = Scores.standings(sid, n);
-    const board = el('div', { class: 'pv-bgrid' });
-    teams.forEach((t, i) => {
-      const sc = el('div', { class: 'pv-bscore', text: t.score });
-      const refresh = () => { sc.textContent = Scores.get(sid, n)[t.idx]; };
-      const minus = el('button', { class: 'pv-bpm', text: '−' });
-      const plus = el('button', { class: 'pv-bpm plus', text: '+' });
-      minus.onclick = () => { Scores.add(sid, t.idx, -1); refresh(); };
-      plus.onclick = () => { Scores.add(sid, t.idx, 1); refresh(); };
-      board.append(el('div', { class: 'pv-brow' + (i === 0 ? ' lead' : '') }, [ el('div', { class: 'pv-rank' + (i === 0 ? ' top' : ''), text: (i + 1) }), el('div', { class: 'pv-bteam', text: t.name }), sc, minus, plus ]));
-    });
-    const ov = el('div', { class: 'pv-board-overlay' }, [
-      el('div', { class: 'pv-board-title', text: '🏆 ' + curStream.name + ' — Standings' }),
-      el('div', { class: 'pv-board-hint', text: 'Use − / + to fix scores live · reopen to re-rank' }), board,
-      el('button', { class: 'pv-btn2', text: '✕ Close', onclick: () => ov.remove(), style: 'margin-top:18px' }),
-    ]);
-    ov.onclick = e => { if (e.target === ov) ov.remove(); };
-    overlay.append(ov);
+    if (!pagehideHooked) { pagehideHooked = true; window.addEventListener('pagehide', () => { try { if (consoleWin && !consoleWin.closed) consoleWin.close(); } catch (e) {} }); }
+    if (consoleWin && !consoleWin.closed) { consoleWin.focus(); renderConsole(); return; }
+    consoleWin = window.open('', 'cfcScoreConsoleDisplay', 'width=820,height=640');   // app-unique name so Maker/Display don't hijack each other
+    if (!consoleWin) {                                   // popup blocked — discreet, operator-bar-only notice (no projector toast)
+      const b = overlay && overlay.querySelector('#pvBoard');
+      if (b) { if (blockMsgT) clearTimeout(blockMsgT); else b.dataset.label = b.textContent; b.textContent = '🏆 allow pop-ups'; blockMsgT = setTimeout(() => { b.textContent = b.dataset.label || '🏆 Scores'; blockMsgT = null; }, 3000); }
+      return;
+    }
+    const doc = consoleWin.document;
+    doc.title = 'Score Console';
+    doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1">' + CONSOLE_CSS;
+    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>';
+    doc.body.addEventListener('click', onConsoleClick);
+    doc.body.addEventListener('change', onConsoleChange);
+    renderConsole();
+  }
+  function renderConsole() {
+    if (!consoleWin || consoleWin.closed || !curStream) return;
+    const doc = consoleWin.document; const sid = curStream.id, n = curStream.teamCount || 8;
+    doc.getElementById('cc-head').textContent = ((project && project.name) || 'Deck') + ' — ' + curStream.name;
+    const pend = pendingMarkCount();
+    const note = doc.getElementById('cc-note');
+    note.className = pend ? 'warn' : '';
+    note.textContent = pend ? ('⚠ ' + pend + ' mark' + (pend === 1 ? '' : 's') + ' pending on this slide — they commit when you advance')
+                            : 'Edit any team’s score privately — changes are live.';
+    const scores = Scores.get(sid, n);
+    const rows = doc.getElementById('cc-rows');
+    rows.style.gridTemplateRows = 'repeat(' + Math.ceil(n / 2) + ', auto)';   // fill DOWN the left column first
+    if (rows.children.length === n) {                                          // in-place update — never clobber a set-field being typed in
+      for (let i = 0; i < n; i++) {
+        rows.children[i].querySelector('.cc-score').textContent = scores[i];
+        const set = rows.children[i].querySelector('.cc-set');
+        if (doc.activeElement !== set) set.value = scores[i];
+      }
+    } else {
+      rows.innerHTML = scores.map((sc, i) =>
+        '<div class="cc-row"><span class="cc-team">Team ' + (i + 1) + '</span>'
+        + '<button class="cc-pm" data-act="minus" data-i="' + i + '">−</button>'
+        + '<span class="cc-score">' + sc + '</span>'
+        + '<button class="cc-pm" data-act="plus" data-i="' + i + '">+</button>'
+        + '<input class="cc-set" type="number" data-i="' + i + '" value="' + sc + '" title="Set score" /></div>').join('');
+    }
+  }
+  function onConsoleClick(e) {
+    const b = e.target.closest && e.target.closest('[data-act]'); if (!b || !curStream) return;
+    Scores.add(curStream.id, Number(b.dataset.i), b.dataset.act === 'plus' ? 1 : -1);
+    refreshScoreUIs();
+  }
+  function onConsoleChange(e) {
+    const inp = e.target.closest && e.target.closest('.cc-set'); if (!inp || !curStream) return;
+    const v = inp.value.trim();
+    if (v === '' || !Number.isFinite(+v)) { renderConsole(); return; }   // ignore blank / garbage — restore the shown value, never commit 0
+    Scores.set(curStream.id, Number(inp.dataset.i), Math.round(+v));
+    refreshScoreUIs();
+  }
+  function closeConsole() { if (consoleWin && !consoleWin.closed) consoleWin.close(); consoleWin = null; }
+  // any score change re-renders the console AND any live on-projector score surface (leaderboard/podium slide)
+  function refreshScoreUIs() {
+    renderConsole();
+    const step = steps[idx]; if (!step) return;
+    if (step.slide.type === 'leaderboard' || step.slide.type === 'podium') renderStep({ quiet: true });   // re-render the projected board (no confetti replay)
+    else if (step.phase === 'score' && curStream) {                                          // live-update tally numbers WITHOUT rebuilding (keeps pending marks)
+      const n = curStream.teamCount || 8, sc = Scores.get(curStream.id, n);
+      overlay.querySelectorAll('.pv-tally .pv-tscore').forEach((cell, i) => { cell.textContent = sc[i]; });
+    }
   }
 
   /* secret jump-to-any-slide (Ctrl/Cmd-click the 🏆 in the hint) */
@@ -669,23 +803,24 @@ const Show = (() => {
     overlay.append(ov);
   }
 
-  function renderStep() {
+  function renderStep(opts) {
     flushScore(); // leaving a (possibly scoring) step commits any pending marks
     if (stopTimer) { stopTimer(); stopTimer = null; }
     const main = overlay.querySelector('.pv-main'); main.innerHTML = '';
     const tctl = overlay.querySelector('#pvTimerCtl'); if (tctl) tctl.innerHTML = '';
-    const step = steps[idx]; const def = renderers[step.slide.type];
+    const step = steps[idx];
+    if (!step) { main.append(stage([ q('This stream has no slides.') ])); const ps = overlay.querySelector('#pvStep'); if (ps) ps.textContent = '0 / 0'; lockAdvance('—'); return; }
+    const def = renderers[step.slide.type];
     let node;
     if (step.phase === 'score') node = renderTally(step.slide);
-    else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream }) : stage([ q('No renderer for: ' + step.slide.type) ]);
+    else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream, slideId: step.slide.id }) : stage([ q('No renderer for: ' + step.slide.type) ]);
     main.append(node);
     // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
     const qEl = node.querySelector('.pv-q');
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
     if (step.phase === 'question') {
       const qel = node.querySelector('.pv-q, .pv-passage');
-      if (step.slide.options && step.slide.options.audience) { if (qel) qel.after(el('div', { class: 'pv-points', text: '🎤 Audience question' })); }
-      else { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
+      if (step.slide.type !== 'poll' && !(step.slide.options && step.slide.options.scored === false)) { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
     }
     // question progress (only on question slides)
     const qi = qIndexOf(step.slide);
@@ -696,19 +831,23 @@ const Show = (() => {
     main.classList.toggle('has-timer', !!timed);
     if (timed) {
       const auto = !(step.slide.options && step.slide.options.autoStart === false);
+      const lockMsg = auto ? '⏳ Locked — unlocks when the timer ends' : '⏳ Press ▶ Start to begin';
       const t = makeTimer(main, Number(step.slide.data.timer), () => mountAdvance(), auto);
       stopTimer = () => t.stop();
-      lockAdvance(auto ? '⏳ Locked — unlocks when the timer ends' : '⏳ Press ▶ Start to begin');
+      lockAdvance(lockMsg);
+      // adding time while the clock is live must re-lock advance (extending un-ends a finished timer)
+      const relock = () => { if (t.isActive()) lockAdvance('⏳ Locked — unlocks when the timer ends'); };
       if (tctl) {
         const mk = (txt, fn, cls) => { const b = el('button', { class: 'pv-btn2 sm' + (cls ? ' ' + cls : ''), text: txt }); b.onclick = fn; return b; };
         if (!auto) { const sb = mk('▶ Start', () => { t.start(); sb.remove(); }, 'primary'); tctl.append(sb); }
-        tctl.append(mk('−5s', () => t.addTime(-5)), mk('+5s', () => t.addTime(5)));
+        tctl.append(mk('−5s', () => { t.addTime(-5); relock(); }), mk('+5s', () => { t.addTime(5); relock(); }), mk('⏰ Time’s up', () => t.end(), 'warn'));
       }
     } else { mountAdvance(); }
-    if (step.phase === 'reveal' || step.slide.type === 'podium') requestAnimationFrame(() => burst(main));
+    if ((step.phase === 'reveal' || step.slide.type === 'podium') && !(opts && opts.quiet)) requestAnimationFrame(() => burst(main));   // don't replay confetti on a score-driven refresh
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
     saveSession();
+    renderConsole();   // keep the private console in sync with the current stream/slide (teamCount, pending-marks note)
   }
   /* remember the deck + stream + step after every render so a reload can offer to resume */
   let loadedFileName = '', loadedDeckKey = '';
@@ -733,8 +872,8 @@ const Show = (() => {
   function loadStream(stream, startIdx) {
     curStream = stream; steps = [];
     Theme.apply(overlay, Theme.resolve(project, stream));
-    // audience questions are not scored — drop their score phase (default: scored, as before)
-    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; if (sl.options && sl.options.audience) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
+    // "Scored: No" questions have no scoring page — drop their score phase (default: scored)
+    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; const o = sl.options || {}; if (o.reveal === false) phs = phs.filter(p => p !== 'reveal'); if (o.scored === false) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
     idx = 0;
     if (startIdx != null) idx = Math.max(0, Math.min(startIdx, steps.length - 1));
     else if (positions[stream.id] != null) idx = Math.max(0, Math.min(positions[stream.id], steps.length - 1));
@@ -745,38 +884,30 @@ const Show = (() => {
   let onCloseCb = null; // landing hooks this to refresh the resume offer with the LATEST session
   function open(proj, stream, opts) {
     project = proj;
+    shuffleOrders = {};   // fresh show → re-deal shuffles once (then stable for the run)
     loadedFileName = (opts && opts.fileName) || loadedFileName || '';
     loadedDeckKey = (opts && opts.deckKey) || loadedDeckKey || '';
     if (opts && opts.fresh) Object.keys(positions).forEach(k => delete positions[k]); // a clean slate forgets every stream's spot
     if (opts && opts.startIdx != null) positions[stream.id] = null; // explicit start wins over a remembered spot
     if (!overlay) buildOverlay();
     overlay.classList.add('open');
-    document.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
     loadStream(stream, opts && opts.startIdx != null ? opts.startIdx : null);
   }
   function close() {
     flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
-    overlay.querySelectorAll('.pv-board-overlay, .pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    closeConsole();                                    // the private console belongs to this show
+    overlay.querySelectorAll('.pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
     overlay.classList.remove('open');
-    document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.getElementById('landing').style.display = 'flex';
     if (onCloseCb) onCloseCb();
   }
-  // keyboard: only Esc (close panel / exit) and F (fullscreen). No key advances or goes back — mouse only.
-  function onKey(e) {
-    if (e.key === 'Escape') {
-      const modal = overlay.querySelector('.pv-jump, .pv-board-overlay');
-      if (modal) { e.preventDefault(); modal.remove(); return; }
-      e.preventDefault(); close();
-    }
-    else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) overlay.requestFullscreen().catch(() => {}); else document.exitFullscreen().catch(() => {}); }
-  }
+  // no keyboard shortcuts — every action is an on-screen button click (Esc does NOT exit)
 
-  return { open, next, prev, gotoSlide, openBoard, openJump, setOnClose: fn => { onCloseCb = fn; },
+  return { open, next, prev, gotoSlide, openConsole, openJump, setOnClose: fn => { onCloseCb = fn; },
     info: () => ({ idx, len: steps.length, type: (steps[idx] && steps[idx].slide.type) || null }) };
 })();
 window.__CFCShow = Show; // test/automation hook (mirrors Maker's window.CFC)
@@ -803,18 +934,22 @@ window.__CFCScores = Scores;
     return sl;
   }
   function normalize(p) {
-    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: s.teamCount || 20, themeId: s.themeId || null, slides: (s.slides || []).map(sl => migrateSlide({ id: sl.id || ('sl' + Math.random().toString(36).slice(2)), type: sl.type, data: sl.data || {}, options: sl.options || {} })) }));
+    // deck-level team count (all streams share one scoreboard → one team count), mirrored onto every stream
+    p.teamCount = Math.max(1, Math.min(99, Math.round(p.teamCount || (p.streams && p.streams[0] && p.streams[0].teamCount) || 20)));
+    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: p.teamCount, themeId: s.themeId || null, slides: (s.slides || []).map(sl => migrateSlide({ id: sl.id || ('sl' + Math.random().toString(36).slice(2)), type: sl.type, data: sl.data || {}, options: sl.options || {} })) }));
     p.themes = p.themes || [];
     return p;
   }
+  // set the deck's team count once, for every stream (shared scoreboard)
+  function setDeckTeams(n) { const v = Math.max(1, Math.min(99, Math.round(Number(n) || 20))); project.teamCount = v; project.streams.forEach(s => s.teamCount = v); return v; }
 
   function useProject(p) {
     project = normalize(p);
     if (!project.streams.length) { $('err1').textContent = 'This file has no streams.'; return; }
     const sel = $('streamSel'); sel.innerHTML = '';
     project.streams.forEach(s => sel.append(el('option', { value: s.id, text: s.name + ' (' + s.slides.length + ' slides)' })));
-    const syncTeams = () => { const s = project.streams.find(x => x.id === sel.value); $('teamCount').value = (s && s.teamCount) || 20; };
-    sel.onchange = syncTeams; syncTeams();
+    // teams are deck-level: one value for the whole deck, unchanged by which stream is selected
+    $('teamCount').value = project.teamCount || 20;
     deckKey = keyOf(project, fileName);
     Scores.use(deckKey); // every deck gets its own scoreboard, shared by its streams
     $('loaded').innerHTML = 'Loaded: <b>' + (project.name || 'Untitled Deck') + '</b> · ' + project.streams.length + ' stream(s)';
@@ -846,14 +981,14 @@ window.__CFCScores = Scores;
     box.querySelector('#resumeBtn').onclick = () => {
       const cur = Session.load(deckKey) || sess; // always the LATEST saved spot
       const st = project.streams.find(s => s.id === cur.streamId) || stream;
-      st.teamCount = Math.max(1, Math.min(99, Number(cur.teamCount) || st.teamCount || 20));
+      setDeckTeams(cur.teamCount || project.teamCount);
       document.getElementById('landing').style.display = 'none';
       Show.open(project, st, { startIdx: cur.idx, fileName, deckKey });
     };
     box.querySelector('#freshBtn').onclick = () => {
       // a real clean slate: slide 1, scoreboard zeroed, old session forgotten
       const sel = $('streamSel'); const st = project.streams.find(x => x.id === sel.value) || stream;
-      st.teamCount = Math.max(1, Math.min(99, Number($('teamCount').value) || st.teamCount || 20));
+      setDeckTeams($('teamCount').value);
       Scores.reset(st.id);
       Session.clear(deckKey);
       document.getElementById('landing').style.display = 'none';
@@ -892,8 +1027,8 @@ window.__CFCScores = Scores;
   $('backBtn').onclick = () => { show(1); $('err1').textContent = ''; $('pwArea').style.display = 'none'; $('pw').value = ''; pendingEncrypted = null; };
   $('startBtn').onclick = () => {
     const sel = $('streamSel'); const stream = project.streams.find(x => x.id === sel.value); if (!stream) return;
-    const n = Math.max(1, Math.min(99, Number($('teamCount').value) || 20));
-    stream.teamCount = n;
+    if (!stream.slides || !stream.slides.length) { const b = $('startBtn'), t = b.textContent; b.textContent = 'This stream has no slides'; b.disabled = true; setTimeout(() => { b.textContent = t; b.disabled = false; }, 1800); return; }
+    setDeckTeams($('teamCount').value);
     if ($('resetScores').checked) Scores.reset(stream.id);
     document.getElementById('landing').style.display = 'none';
     Show.open(project, stream, { fileName, deckKey });

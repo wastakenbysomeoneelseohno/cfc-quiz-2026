@@ -1,7 +1,7 @@
 # CFC Quiz — How to use
 
 There are two files. You just open them in a web browser (Chrome works great).
-Nothing to install. Nothing to run.
+Nothing to install. Nothing to run. Nothing leaves your computer.
 
 - **`maker.html`** — where you **build** the quiz.
 - **`display.html`** — where you **run** the quiz on the day.
@@ -10,43 +10,75 @@ Nothing to install. Nothing to run.
 
 ## 1. Build your quiz (maker.html)
 
-1. **Open `maker.html`** in your browser.
-2. **Name your quiz** in the box at the top (this is used for the saved file name).
-3. **Streams** (left side) are **separate quiz tracks** in the same file — for example a
-   **main quiz**, **audience questions**, or a **segue / interlude** round. Add as many as you need.
-   - Each stream has its own slides, **number of teams**, **theme** (colours/look), and scores.
-   - During the show you can **switch between streams** and come back where you left off.
-4. **Add slides** with the **+ Slide** button. You get three kinds:
-   - **Question** — the main one. Pick a **format** (Multiple choice, True/False, Fill in the blank, Guess the verse, Picture, Matching, Poll, Buzzer…) and you can switch the format any time.
-   - **Title** — a heading or round divider.
-   - **Leaderboard** — shows the scores.
-5. **Fill in the question and the answer.** Turn the **timer** on or off, and choose if it
-   **starts on its own** or **when you press Start**.
-6. **Drag slides** to reorder them. The list shows the first lines of each question.
-7. **Preview** any time: press **P** (or the **▶ Present** button) to see how it looks.
-8. **Save it:** click **🔒 Export**, set a **password**, and a locked file is downloaded.
-   The password keeps the answers hidden. Keep the password safe — you need it to open the file.
+The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **Slide options** (right).
 
-> Your work is also saved in the browser automatically. The **🗑 Reset** button wipes it and brings back the sample quiz.
+1. **Open `maker.html`** and **name your quiz** in the box at the top (used for the saved file name).
+2. **Streams** are **separate quiz tracks** in the same file — e.g. a **Main Quiz**, an **Audience Round**,
+   or a **segue / interlude**. **+ Stream** adds one and opens **✎ Stream settings** — name it and set the
+   **defaults new questions start with** (timer, timer-start, points, reveal, scored). Double-click a name for a quick rename.
+   - All streams in a deck **share one scoreboard and one team count** (the same teams play every track).
+   - Set the **👥 Teams** count once, on the Streams panel — it applies to the whole deck.
+   - During the show you can **switch between streams** and come back where you left off.
+3. **Add slides** with **+ Slide**:
+   - **Question** — pick a **format** and switch it any time:
+     **Multiple choice**, **True / False**, **Short Answer** (type a word or a number),
+     **Question with Title**, **Picture**, **Matching**, **Poll**, **Buzzer**.
+   - **Title** — a heading or round divider. Its **subheading** is a multi-line box — good for instructions/rules.
+   - **Leaderboard** — shows every team and its score as a clean table.
+   - **Podium (Winners)** — the finale: top 3 on a gold/silver/bronze podium (with a 👑 crown) and
+     **everyone else in a side table**.
+4. **Fill in the question and answer.** Per question you can set (new questions inherit the stream's defaults):
+   - the **timer** (on/off; 10s up to 7 minutes) and whether it **auto-starts** or **starts on a button**,
+   - the **Points** it's worth (✓ adds them, ✗ subtracts them),
+   - **Reveal answer: Yes / No** — **No** skips the answer slide entirely (the answer is never shown),
+   - **Scored: Yes / No** — set **No** for warm-ups / audience / tie-break questions; they show **no scoring page**.
+5. **Drag slides** to reorder. **Preview** any time with **P** or **▶ Present**.
+6. **Save it:** **🔒 Export** → set a **password** → a locked file downloads. The password hides the answers — keep it safe.
+
+> Your work is auto-saved in the browser. **🗑 Reset** wipes the Maker's own data and reloads the sample deck
+> (it never touches a Display running in the same browser).
+>
+> **On a phone/tablet** the Maker becomes a drill-down: **Streams → tap a stream → its questions → tap a question → edit**, with **← back** buttons.
 
 ---
 
 ## 2. Run your quiz (display.html)
 
-1. **Open `display.html`** on the screen/projector you'll show to everyone.
+1. **Open `display.html`** on the screen/projector everyone sees.
 2. **Load your quiz file** and **type the password** to unlock it.
-3. **Choose the stream** (which quiz track to run) and the **number of teams**, then press **▶ Start show**.
+3. **Choose the stream** and the **number of teams** (shared by all streams), then press **▶ Start show**.
 4. **Move through the quiz:**
-   - **Click and hold** the big button **with your mouse** to move on or to reveal the answer.
-     Holding stops accidental clicks from giving the answer away. (The keyboard does **not** change slides.)
-   - On a timed question, the answer unlocks **after the timer ends**. Use **+5 / −5** to add or remove time.
-   - Use **← Back** to go back. **Esc** exits.
-5. **Give points:** after a question, mark each team **✓ (+1)** or **✗ (−1)**, then press **Submit**.
-6. **See the scores:** press **🏆 Scores** any time. You can fix any score with **− / +**.
-7. **Switch streams** (e.g. main quiz ↔ audience questions) with the dropdown at the bottom — it remembers where you left off in each.
+   - **Click and hold** the big button (~0.8s) **with your mouse** to advance or reveal the answer.
+     Holding prevents accidental clicks. The button always **names the next page**. There are **no keyboard shortcuts** — every action is an on-screen button (Esc does **not** exit).
+   - On a timed question the answer unlocks **after the timer ends**. Use **−5 / +5** to adjust, or **⏰ Time's up** to end it now.
+   - Use **← Back** to step back. A small **Q 3 / 12** label (top-left) shows which question you're on.
+   - The bottom control bar **scrolls left/right** if it's wider than the screen.
+5. **Give points:** after a question, tap each team **✓** or **✗** (worth the question's **Points**) — marked teams light up
+   **green / red**. No submit step: marks are **saved automatically when you move on** (advance, open the console, switch streams, or exit).
+6. **Switch streams** with the dropdown — it remembers where you left off in each; the scoreboard carries across them.
+7. **Resume:** reopening the same file later offers **⏯ Continue where you left off** (scores kept) or **↺ Start fresh**.
 
-> **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click the 🏆** in the bottom hint line.
-> A panel opens showing **slide numbers only** (no questions, so nothing leaks). **Click a number** to peek at that
-> one question, then press **▶ Go** to jump there. **Esc** closes the panel.
+### 🔒 The private Score Console (operator only)
+
+The projector mirrors your screen, so you should **never edit scores on the projected window**. Instead:
+
+> **Click the 🏆 Scores button** → a **separate popup window** opens. Drag it to your **own laptop screen**
+> (the one the audience can't see). It lists **every team in order** with **− / +** and a **set-to-a-number** box,
+> shows the **deck and stream** you're editing, and notes if a question has **marks still pending** (those only
+> count once you advance). Changes are **live** — if a Leaderboard or Podium slide is up, it updates too.
+> Closing the popup is fine — clicking 🏆 again re-opens it. Exiting the show closes it.
+> *(If your browser blocks pop-ups, allow them for this page.)*
+
+> **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click 🏆 Scores**. A panel shows
+> **slide numbers only** (no questions, so nothing leaks). Click a number to peek, then **▶ Go** to jump there.
 
 That's it. Build in the Maker, save with a password, open in the Display, and run the show.
+
+---
+
+## For developers
+
+- **Single-file, no-server** apps; state in `localStorage`, content moves as files. Maker keys are `m_`-prefixed,
+  Display keys `d_`-prefixed — the two never share storage.
+- **Tests** (need Chrome + `npm i puppeteer-core`): `node test.js` runs everything; or `node test.unit.js` /
+  `node test.integration.js` / `node test.e2e.js`. See `SPEC.md` for the design.

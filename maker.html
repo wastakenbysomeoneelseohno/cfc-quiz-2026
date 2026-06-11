@@ -48,10 +48,13 @@
   .saved { font-size: 12px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
   .saved .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
 
-  .main { display: grid; grid-template-columns: 300px 1fr; min-height: 0; }
-  .sidebar { border-right: 1px solid var(--line); background: var(--panel);
-    overflow-y: auto; display: flex; flex-direction: column; }
+  /* three panels: Streams | Slides | Slide options(editor) */
+  .main { display: grid; grid-template-columns: 220px 320px 1fr; min-height: 0; }
+  .sidebar { display: contents; }                       /* its two .col children become grid items */
+  .col { background: var(--panel); border-right: 1px solid var(--line);
+    overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; min-height: 0; }
   .editor { overflow-y: auto; padding: 22px 26px; }
+  .btn.m-back { display: none; margin-bottom: 12px; }   /* mobile-only drill-down back buttons (beats .btn) */
 
   /* ---- Buttons ---- */
   .btn {
@@ -90,6 +93,8 @@
     padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: .4px; }
   .row .tools { display: none; gap: 2px; }
   .row:hover .tools, .row.active .tools { display: flex; }
+  .stream-rename { font: inherit; font-weight: 600; width: 100%; padding: 1px 4px; margin: -1px 0;
+    border: 1px solid var(--accent); border-radius: 5px; background: var(--panel); color: var(--ink); outline: none; }
 
   .empty { color: var(--ink-soft); font-size: 13px; padding: 10px 9px; }
 
@@ -202,7 +207,8 @@
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
     color: #9fb0d0; border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: clamp(26px, 4.6vw, 54px); font-weight: 800; line-height: 1.16; letter-spacing: -.5px; margin: 0 auto 3vh; max-width: 16ch; }
-  .pv-sub { color: #9fb0d0; font-size: clamp(16px, 2.2vw, 26px); margin-top: 2vh; }
+  .pv-sub { color: #9fb0d0; font-size: clamp(16px, 2.2vw, 26px); margin-top: 2vh;
+    white-space: pre-line; line-height: 1.45; max-width: 26em; margin-left: auto; margin-right: auto; text-align: left; }
   .pv-title-huge { font-size: clamp(46px, 9vw, 124px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.02;
     background: linear-gradient(180deg, #ffffff, #aebede); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .pv-media { margin: 0 auto 3vh; max-width: min(620px, 64vw); }
@@ -266,8 +272,11 @@
   .pv-pair-row .ar { color: #2fd39a; font-weight: 900; }
 
   /* controls */
-  .pv-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px;
-    background: #0c1124; border-top: 1px solid rgba(255,255,255,.08); color: #fff; }
+  .pv-controls { display: flex; align-items: center; justify-content: safe center; gap: 12px; padding: 13px;
+    background: #0c1124; border-top: 1px solid rgba(255,255,255,.08); color: #fff;
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+  .pv-controls::-webkit-scrollbar { display: none; }
+  .pv-controls > * { flex: 0 0 auto; }
   .pv-hold-label { color: #fff; }
   .pv-step { color: #9fb0d0; font-size: 13px; min-width: 86px; text-align: center; font-variant-numeric: tabular-nums; }
   .pv-btn { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 10px;
@@ -371,9 +380,11 @@
   .row:hover .drag-handle { color: var(--ink-soft); }
 
   /* ---- per-stream theme picker ---- */
-  .theme-pick { display: flex; align-items: center; gap: 8px; padding: 9px 14px; margin-bottom: 4px;
+  .theme-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 9px 14px; margin-bottom: 4px;
     background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  #deckTeams .theme-pick-note { flex-basis: 100%; }   /* "shared by all streams" drops to its own line, never overflows */
   .theme-pick-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+  .theme-pick-note { font-size: 11px; color: var(--ink-soft); font-style: italic; }
   .theme-pick select { flex: 1; padding: 6px 8px; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 0; }
   .teams-input { width: 58px; padding: 6px 8px; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; font-weight: 700; }
 
@@ -428,6 +439,8 @@
   .pv-timerctl { display: flex; gap: 8px; }
   .pv-btn.sm { padding: 8px 13px; font-size: 13px; }
   .pv-btn.primary { background: var(--pv-accent, #4f46e5); border-color: var(--pv-accent, #4f46e5); color: var(--pv-on-accent, #fff); }
+  .pv-btn.warn { background: rgba(255,107,129,.16); border-color: rgba(255,107,129,.5); }
+  .pv-btn.warn:hover { background: rgba(255,107,129,.28); }
   .pv-skip { opacity: .55; font-size: 13px; }
   .pv-skip:hover { opacity: 1; }
   /* AUDIENCE MODE — the actual display: no operator chrome, no Skip */
@@ -450,19 +463,35 @@
   .pv-progress { position: absolute; top: 2.6vh; left: 3vw; font-size: clamp(12px,1.5vw,16px); font-weight: 700;
     letter-spacing: 1px; color: var(--pv-ink-soft, #9fb0d0); z-index: 4; font-variant-numeric: tabular-nums; }
 
-  /* podium finale */
-  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(12px,3vw,40px); margin-top: 3vh; }
-  .pv-pod { display: flex; flex-direction: column; align-items: center; }
-  .pv-pod-medal { font-size: clamp(30px,4.5vw,58px); line-height: 1; animation: pop .5s; }
-  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 26vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pv-pod-block { width: clamp(86px,14vw,176px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-start; padding-top: 14px; font-weight: 900; color: #1a1205;
+  /* podium finale — top 3 on the podium, the rest of the field beside it */
+  .pv-podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px,4vw,64px); margin-top: 2vh; flex-wrap: wrap; }
+  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(10px,2.4vw,30px); }
+  .pv-pod { display: flex; flex-direction: column; align-items: center; position: relative; }
+  .pv-pod-crown { font-size: clamp(26px,3.6vw,46px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
+  .pv-pod-medal { font-size: clamp(28px,4.2vw,54px); line-height: 1; animation: pop .5s; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 24vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .pv-pod-block { position: relative; width: clamp(86px,13vw,168px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 2px; padding-top: 16px; font-weight: 900; color: #1a1205;
     box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
+  .pv-pod-block::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 42%;
+    background: linear-gradient(180deg, rgba(255,255,255,.5), transparent); pointer-events: none; }
   .pv-pod-block.gold { background: linear-gradient(180deg,#fde68a,#f59e0b); }
   .pv-pod-block.silver { background: linear-gradient(180deg,#f1f5f9,#94a3b8); }
   .pv-pod-block.bronze { background: linear-gradient(180deg,#fcd9b6,#d97706); }
-  .pv-pod-score { font-size: clamp(26px,4vw,52px); }
-  .pv-pod-rank { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .pv-pod-place { font-size: clamp(26px,3.2vw,42px); line-height: 1; opacity: .32; font-weight: 900; }
+  .pv-pod-score { font-size: clamp(22px,3.4vw,46px); line-height: 1.05; }
+  /* the rest of the field — a no-scroll table that grows into columns (filled top-to-bottom) so everyone shows */
+  .pv-pod-rest { text-align: left; display: flex; flex-direction: column; align-self: center; }
+  .pv-pod-rest-head { font-size: clamp(12px,1.4vw,15px); text-transform: uppercase; letter-spacing: 1.5px; color: var(--pv-ink-soft); margin-bottom: 10px; font-weight: 800; }
+  .pv-pod-rest-list { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); gap: 6px 12px; }
+  .pv-pod-rest-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-width: 150px;
+    background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 10px; padding: 7px 12px; animation: optIn .4s both; }
+  .pv-pod-rest-rank { color: var(--pv-ink-soft); font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
+  .pv-pod-rest-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-pod-rest-score { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .pv-pod-rest-row.top { border-color: #fbbf24; }
+  .pv-pod-rest-row.top .pv-pod-rest-rank { color: #fbbf24; }
+  @keyframes podCrown { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
 
   /* clean, snappy scroll areas — no chunky OS scrollbar */
   .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
@@ -482,10 +511,13 @@
     .brand { flex: 0 0 auto; } .brand small { display: none; }
     .deck-name { min-width: 120px; width: 120px; flex: 0 0 auto; }
     .hamburger { display: inline-flex; }
-    .main { grid-template-columns: 1fr; }
-    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: min(330px, 86vw); z-index: 70;
-      transform: translateX(-100%); transition: transform .25s cubic-bezier(.2,.8,.2,1); box-shadow: 6px 0 30px rgba(20,28,48,.3); }
-    .sidebar.open { transform: none; }
+    /* mobile = ONE screen at a time: Streams → Slides(questions) → Edit slide (drill-down) */
+    .main { position: relative; display: block; }
+    .col, .editor { position: absolute; inset: 0; overflow-y: auto; display: none; border-right: none; }
+    .main[data-mview="streams"] .col-streams { display: block; }
+    .main[data-mview="slides"]  .col-slides  { display: block; }
+    .main[data-mview="editor"]  .editor      { display: block; }
+    .btn.m-back { display: inline-flex; }
     .editor { padding: 16px 14px; }
     .card { padding: 16px; max-width: none; }
   }
@@ -495,7 +527,7 @@
     .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
     .pv-options { grid-template-columns: 1fr; }
     .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
-    .pv-controls { flex-wrap: wrap; gap: 8px; padding: 10px; }
+    .pv-controls { gap: 8px; padding: 10px; }
     .pv-hint { display: none; }
     .pv-step { min-width: 54px; }
     .pv-advance, .pv-hold, .pv-locked { min-width: 150px; }
@@ -523,22 +555,27 @@
 
   <!-- ================= MAIN ================= -->
   <div class="main">
-    <aside class="sidebar">
-      <div class="sect">
-        <div class="sect-head">
-          <h3>Streams</h3>
-          <button class="btn sm" id="addStream">+ Stream</button>
+    <div class="sidebar">
+      <aside class="col col-streams">
+        <div class="sect" style="flex:1;">
+          <div class="sect-head">
+            <h3>Streams</h3>
+            <button class="btn sm" id="addStream">+ Stream</button>
+          </div>
+          <div class="list" id="streamList"></div>
         </div>
-        <div class="list" id="streamList"></div>
-      </div>
-      <div class="sect" style="flex:1;">
-        <div class="sect-head">
-          <h3 id="slidesHead">Slides</h3>
-          <button class="btn sm" id="addSlide">+ Slide</button>
+      </aside>
+      <aside class="col col-slides">
+        <div class="sect" style="flex:1;">
+          <div class="sect-head">
+            <button class="btn ghost sm m-back" id="slidesBack">← Streams</button>
+            <h3 id="slidesHead">Slides</h3>
+            <button class="btn sm" id="addSlide">+ Slide</button>
+          </div>
+          <div class="list" id="slideList"></div>
         </div>
-        <div class="list" id="slideList"></div>
-      </div>
-    </aside>
+      </aside>
+    </div>
 
     <section class="editor" id="editor"></section>
   </div>
@@ -795,7 +832,7 @@ SlideTypes.register({ type: 'title', label: 'Title / Section', group: 'Content',
   desc: 'Open the quiz or mark a round',
   createDefault: () => ({ heading: '', subheading: '' }),
   fields: [ { key: 'heading', label: 'Heading', type: 'text', placeholder: 'Round 1: Warm-up' },
-            { key: 'subheading', label: 'Subheading', type: 'text', placeholder: 'optional' } ],
+            { key: 'subheading', label: 'Subheading / instructions', type: 'textarea', placeholder: 'Optional — room for instructions, rules, a verse… line breaks are kept.' } ],
   summary: d => d.heading });
 
 SlideTypes.register({ type: 'answer', label: 'Answer / Reveal', group: 'Content', icon: '💡',
@@ -835,30 +872,23 @@ SlideTypes.register({ type: 'true-false', label: 'True / False', group: 'Questio
             TF ],
   summary: d => d.statement });
 
-SlideTypes.register({ type: 'fill-blank', label: 'Fill in the Blank', group: 'Questions', icon: '＿',
-  desc: 'Type the missing word',
-  createDefault: () => ({ prompt: '', answer: '', timer: T }),
-  fields: [ { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Use ___ for the blank' },
-            { key: 'answer', label: 'Answer', type: 'text' },
-            TF ],
-  summary: d => d.prompt });
-
-SlideTypes.register({ type: 'guess-verse', label: 'Guess the Verse', group: 'Questions', icon: '✝',
-  desc: 'Identify or complete the verse',
-  createDefault: () => ({ reference: '', passage: '', answer: '', timer: T }),
-  fields: [ { key: 'reference', label: 'Reference / clue', type: 'text', placeholder: 'shown to players (optional)' },
-            { key: 'passage', label: 'Passage', type: 'textarea', placeholder: '“For God so loved the world…”' },
-            { key: 'answer', label: 'Answer', type: 'text', placeholder: 'e.g. John 3:16' },
-            TF ],
-  summary: d => d.passage || d.reference });
-
-SlideTypes.register({ type: 'numeric', label: 'Numeric', group: 'Questions', icon: '#',
-  desc: 'Answer is a number (closest wins)',
-  createDefault: () => ({ question: '', answer: null, timer: T }),
-  fields: [ { key: 'question', label: 'Question', type: 'textarea' },
-            { key: 'answer', label: 'Answer (number)', type: 'number' },
+SlideTypes.register({ type: 'short-answer', label: 'Short Answer', group: 'Questions', icon: '✏️',
+  desc: 'Teams type or say the answer — no multiple choice (a word or a number)',
+  createDefault: () => ({ question: '', answer: '', timer: T }),
+  fields: [ { key: 'question', label: 'Question', type: 'textarea', placeholder: 'Ask anything — use ___ for a fill-in blank' },
+            { key: 'answer', label: 'Answer', type: 'text', placeholder: 'a word or a number' },
             TF ],
   summary: d => d.question });
+
+SlideTypes.register({ type: 'titled-question', label: 'Question with Title', group: 'Questions', icon: '📜',
+  desc: 'A question shown under its own title/heading',
+  createDefault: () => ({ title: '', question: '', answer: '', timer: T }),
+  fields: [ { key: 'title', label: 'Title', type: 'text', placeholder: 'shown above the question (optional)' },
+            { key: 'question', label: 'Question', type: 'textarea', placeholder: 'The question / passage to show' },
+            { key: 'answer', label: 'Answer', type: 'text', placeholder: 'e.g. John 3:16' },
+            TF ],
+  summary: d => d.question || d.title });
+
 
 SlideTypes.register({ type: 'image-question', label: 'Image Question', group: 'Questions', icon: '🖼️',
   desc: 'Identify / answer about an image',
@@ -900,7 +930,7 @@ function kindOf(type) {
   return type === 'leaderboard' ? 'leaderboard' : (type === 'title' || type === 'answer' || type === 'podium') ? 'title' : 'question';
 }
 /* the main-prompt field key per question format — lets you switch format and keep the question text */
-const PROMPT_KEY = { choices: 'question', 'true-false': 'statement', 'fill-blank': 'prompt', 'guess-verse': 'reference', numeric: 'question', 'image-question': 'question', matching: 'instruction', poll: 'question', buzzer: 'question' };
+const PROMPT_KEY = { choices: 'question', 'true-false': 'statement', 'short-answer': 'question', 'titled-question': 'question', 'image-question': 'question', matching: 'instruction', poll: 'question', buzzer: 'question' };
 
 /* ================================================================
    THEME DATA — offline-safe font stacks + a starter theme library.
@@ -927,41 +957,59 @@ const cloneThemes = () => JSON.parse(JSON.stringify(THEME_DEFAULTS));
    STORE — single source of truth + persistence + pub/sub
    ================================================================ */
 const Store = (() => {
-  const KEY = 'cfc-quiz-maker-v4';
+  const KEY = 'm_cfc-quiz-maker-v4';   // m_ = maker-owned; Display never shares a key
   const listeners = new Set();
   let state = load();
 
-  function blankProject() { return { app: 'cfc-quiz', kind: 'content', version: 1, name: 'Untitled Deck', themes: cloneThemes(), themeId: THEME_DEFAULTS[0].id, streams: [] }; }
+  // teamCount is a DECK-level setting: all streams share one scoreboard, so they share one team count.
+  function blankProject() { return { app: 'cfc-quiz', kind: 'content', version: 1, name: 'Untitled Deck', teamCount: 20, themes: cloneThemes(), themeId: THEME_DEFAULTS[0].id, streams: [] }; }
 
-  // first-run seed: one stream showcasing EVERY template
+  // first-run seed: a main quiz that shows EVERY current slide type meaningfully
+  // (leaderboard in the middle, podium at the end) + a parallel "Audience Round" stream.
   function buildDemo() {
-    const S = (type, data) => ({ id: uid(), type, data, options: {} });
-    const stream = { id: uid(), name: 'Demo Quiz', teamCount: 20, themeId: null, slides: [
-      S('title', { heading: 'CFC Quiz Night', subheading: 'A taste of every slide type' }),
+    const S = (type, data, options) => ({ id: uid(), type, data, options: options || {} });
+    const main = { id: uid(), name: 'Main Quiz', themeId: null, slides: [
+      S('title', { heading: 'CFC Quiz Night', subheading:
+        'How to play\n• Each team locks in ONE answer per question.\n• Answer before the timer hits zero.\n• Points are tallied after every question — keep an eye on the scoreboard!' }),
+      // multiple choice — single answer
       S('choices', { question: 'Who built the ark?', media: '', timer: 20,
         choice: { multiple: false, options: [ { text: 'Noah', correct: true }, { text: 'Moses', correct: false }, { text: 'David', correct: false }, { text: 'Paul', correct: false } ] } }),
-      S('choices', { question: 'Which of these are Gospels?', media: '', timer: 20,
+      // multiple choice — select-all
+      S('choices', { question: 'Which of these are Gospels? (select all)', media: '', timer: 25,
         choice: { multiple: true, options: [ { text: 'Matthew', correct: true }, { text: 'Mark', correct: true }, { text: 'Acts', correct: false }, { text: 'John', correct: true } ] } }),
+      // true / false
       S('true-false', { statement: 'Jonah was swallowed by a great fish.', answer: true, timer: 15 }),
-      S('fill-blank', { prompt: 'The Lord is my ___.', answer: 'shepherd', timer: 25 }),
-      S('guess-verse', { reference: 'A famous verse about love', passage: '“For God so loved the ___ that he gave his one and only Son.”', answer: 'John 3:16', timer: 30 }),
-      S('numeric', { question: 'How many books are in the New Testament?', answer: 27, timer: 20 }),
-      S('image-question', { question: 'Name this symbol of faith.', media: '', answer: 'The cross', timer: 20 }),
-      S('matching', { instruction: 'Match the person to their role.', timer: 30,
+      // short answer — a word
+      S('short-answer', { question: 'Finish the verse: “The Lord is my ___.”', answer: 'shepherd', timer: 25 }),
+      // short answer — a number
+      S('short-answer', { question: 'How many books are in the New Testament?', answer: '27', timer: 20 }),
+      // question with its own title / heading
+      S('titled-question', { title: 'John 3:16', question: '“For God so loved the ___ that he gave his one and only Son.”', answer: 'world', timer: 30 }),
+      // picture question
+      S('image-question', { question: 'Name this symbol of the faith.', media: '', answer: 'The cross', timer: 20 }),
+      // matching pairs
+      S('matching', { instruction: 'Match each person to their role.', timer: 40,
         pairs: [ { left: 'Moses', right: 'Led the Exodus' }, { left: 'David', right: 'King of Israel' }, { left: 'Mary', right: 'Mother of Jesus' } ] }),
+      // —— leaderboard in the MIDDLE ——
+      S('leaderboard', { title: 'Halftime Standings' }),
+      // poll (no right answer)
       S('poll', { question: 'Which round are you most excited for?', timer: 0,
         options: [ { text: 'Buzzer' }, { text: 'Verses' }, { text: 'Pictures' } ] }),
+      // buzzer round
       S('buzzer', { question: 'First to buzz: name the first book of the Bible.', answer: 'Genesis', timer: 0 }),
+      // a reveal / answer slide
       S('answer', { heading: 'Well done!', body: '“Well done, good and faithful servant.” — Matthew 25:23' }),
-      S('leaderboard', { title: 'Final Standings' }),
+      // —— podium at the END ——
+      S('podium', { title: 'Champions!' }),
     ] };
-    const juniors = { id: uid(), name: 'Juniors (ages 6–9)', teamCount: 12, themeId: 'theme-parchment', slides: [
-      S('title', { heading: 'Juniors Round', subheading: 'Nice and easy!' }),
-      S('choices', { question: 'How many days did creation take?', media: '', timer: 20, choice: { multiple: false, options: [ { text: '7', correct: true }, { text: '3', correct: false }, { text: '40', correct: false } ] } }),
-      S('true-false', { statement: 'Noah built a big boat (an ark).', answer: true, timer: 15 }),
-      S('leaderboard', { title: 'Juniors Standings' }),
+    // a parallel track played by the SAME teams — shows the "Scored: No" option (no scoring page)
+    const audience = { id: uid(), name: 'Audience Round', themeId: 'theme-parchment', slides: [
+      S('title', { heading: 'Audience Round', subheading: 'Just for fun — these don’t affect the scoreboard.' }),
+      S('short-answer', { question: 'Audience: name a fruit of the Spirit.', answer: 'love, joy, peace…', timer: 20 }, { scored: false }),
+      S('true-false', { statement: 'Audience: the Bible has 66 books.', answer: true, timer: 15 }, { scored: false }),
+      S('leaderboard', { title: 'Standings' }),
     ] };
-    const p = blankProject(); p.name = 'CFC Sample Deck'; p.streams.push(stream, juniors); return p;
+    const p = blankProject(); p.name = 'CFC Sample Deck'; p.streams.push(main, audience); return p;
   }
 
   function load() {
@@ -969,11 +1017,11 @@ const Store = (() => {
       const raw = localStorage.getItem(KEY);
       if (raw) { const p = JSON.parse(raw); return { project: normalize(p.project || p), selStream: p.selStream || null, selSlide: p.selSlide || null }; }
     } catch (e) { console.warn('load failed', e); }
-    const p = buildDemo(); const f = p.streams[0];
+    const p = normalize(buildDemo()); const f = p.streams[0];
     return { project: p, selStream: f.id, selSlide: f.slides[0].id };
   }
 
-  // migrate older slide shapes to the current model (e.g. MC/MA → choices)
+  // normalize older slide shapes to the current model (e.g. MC/MA → choices). No data migration of removed types.
   function migrateSlide(sl) {
     if (sl.type === 'multiple-choice' || sl.type === 'multiple-answer') {
       const opts = ((sl.data && sl.data.options) || []).map(o => ({ text: o.text || '', correct: !!o.correct }));
@@ -993,8 +1041,11 @@ const Store = (() => {
       p.themesVersion = 2;
     }
     if (!p.themes.find(t => t.id === p.themeId)) p.themeId = p.themes[0].id;
+    // deck-level team count: take the deck's own value, else the first stream's (older shape), else 20
+    p.teamCount = Math.max(1, Math.min(99, Math.round(p.teamCount || (p.streams && p.streams[0] && p.streams[0].teamCount) || 20)));
     p.streams = (p.streams || []).map(s => ({ id: s.id || uid(), name: s.name || 'Stream',
-      teamCount: s.teamCount || 10, themeId: s.themeId || null,
+      teamCount: p.teamCount, themeId: s.themeId || null,   // mirror the deck count onto every stream
+      defaults: s.defaults || undefined,                    // per-stream new-question defaults (preserved on import/export)
       slides: (s.slides || []).map(sl => migrateSlide({ id: sl.id || uid(), type: sl.type, data: sl.data || {}, options: sl.options || {} })) }));
     return p;
   }
@@ -1016,17 +1067,18 @@ const Store = (() => {
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     get: () => state, project: () => state.project, curStream, curSlide,
     setDeckName(n) { state.project.name = n; persist(); },
-    reset() { try { localStorage.removeItem(KEY); localStorage.removeItem('cfc-quiz-scores-v1'); } catch (e) {} location.reload(); },
+    reset() { try { Object.keys(localStorage).filter(k => k.startsWith('m_')).forEach(k => localStorage.removeItem(k)); } catch (e) {} location.reload(); },
 
     /* streams */
     addStream() {
       const n = state.project.streams.length + 1;
-      const s = { id: uid(), name: 'Stream ' + n, teamCount: 20, slides: [] };
+      const s = { id: uid(), name: 'Stream ' + n, teamCount: state.project.teamCount || 20, slides: [] };
       state.project.streams.push(s); state.selStream = s.id; state.selSlide = null; emit();
     },
     selectStream(id) { state.selStream = id; const s = curStream(); state.selSlide = s && s.slides[0] ? s.slides[0].id : null; emit(); },
     renameStream(id, name) { const s = state.project.streams.find(x => x.id === id); if (s) { s.name = name; emit(); } },
-    setTeamCount(id, n) { const s = state.project.streams.find(x => x.id === id); if (s) { s.teamCount = Math.max(1, Math.min(99, n || 1)); emit(); } },
+    // deck-level: one team count for the whole deck (shared scoreboard), mirrored onto every stream
+    setTeamCount(n) { const v = Math.max(1, Math.min(99, Math.round(n || 1))); state.project.teamCount = v; state.project.streams.forEach(s => s.teamCount = v); emit(); },
     deleteStream(id) {
       state.project.streams = state.project.streams.filter(s => s.id !== id);
       if (state.selStream === id) { const f = state.project.streams[0]; state.selStream = f ? f.id : null; state.selSlide = f && f.slides[0] ? f.slides[0].id : null; }
@@ -1037,11 +1089,21 @@ const Store = (() => {
     addSlide(type) {
       const s = curStream(); if (!s) return;
       const def = SlideTypes.get(type); if (!def) return;
-      const sl = { id: uid(), type, data: def.createDefault() };
+      const sl = { id: uid(), type, data: def.createDefault(), options: {} };
+      // a new QUESTION inherits the stream's default timer / start / points / reveal / scored (where applicable)
+      if (kindOf(type) === 'question' && s.defaults) {
+        const d = s.defaults;
+        if (d.timer != null && 'timer' in sl.data) sl.data.timer = d.timer;
+        if (d.points != null) sl.data.points = d.points;
+        if (d.autoStart === false) sl.options.autoStart = false;
+        if (d.reveal === false) sl.options.reveal = false;
+        if (d.scored === false) sl.options.scored = false;
+      }
       const idx = s.slides.findIndex(x => x.id === state.selSlide);
       if (idx >= 0) s.slides.splice(idx + 1, 0, sl); else s.slides.push(sl);
       state.selSlide = sl.id; emit();
     },
+    setStreamDefaults(id, defaults) { const s = state.project.streams.find(x => x.id === id); if (s) { s.defaults = Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults, defaults); emit(); } },
     selectSlide(id) { state.selSlide = id; emit(); },
     // switch a question's format, preserving the question text + image + timer
     changeType(id, newType) {
@@ -1049,14 +1111,15 @@ const Store = (() => {
       const def = SlideTypes.get(newType); if (!def) return;
       const ok = PROMPT_KEY[sl.type], nk = PROMPT_KEY[newType];
       const prompt = ok ? sl.data[ok] : '';
-      const media = sl.data.media, timer = sl.data.timer;
+      const media = sl.data.media, timer = sl.data.timer, points = sl.data.points;
       const nd = def.createDefault();
       if (nk && prompt) nd[nk] = prompt;
       if ('media' in nd && media != null) nd.media = media;
       if ('timer' in nd && timer != null) nd.timer = timer;
+      if (points != null) nd.points = points;   // keep the points when switching question format
       sl.type = newType; sl.data = nd; emit();
     },
-    updateSlideData(id, key, value) { const s = curStream(); if (!s) return; const sl = s.slides.find(x => x.id === id); if (sl) { sl.data[key] = value; persist(); refreshList(); } },
+    updateSlideData(id, key, value) { const s = curStream(); if (!s) return; const sl = s.slides.find(x => x.id === id); if (sl) { if (key === 'points' && value !== '' && value != null) value = Math.max(0, Math.round(Number(value) || 0)); sl.data[key] = value; persist(); refreshList(); } },
     moveSlide(id, dir) { const s = curStream(); if (!s) return; const i = s.slides.findIndex(x => x.id === id); const j = i + dir;
       if (i < 0 || j < 0 || j >= s.slides.length) return; [s.slides[i], s.slides[j]] = [s.slides[j], s.slides[i]]; emit(); },
     duplicateSlide(id) { const s = curStream(); if (!s) return; const i = s.slides.findIndex(x => x.id === id); if (i < 0) return;
@@ -1105,6 +1168,7 @@ function refreshList() { Views.renderSlides(Store.get()); }
 function renderForm(slide) {
   const def = SlideTypes.get(slide.type);
   const form = el('div');
+  if (!def) { form.append(el('div', { class: 'empty', text: 'Unknown slide type “' + slide.type + '”. Use 🗑 Reset to load the fresh sample deck.' })); return form; }
   def.fields.forEach(f => {
     const field = el('div', { class: 'field' });
     const lab = el('label', {}, [ f.label ]);
@@ -1127,38 +1191,81 @@ const Views = (() => {
   const $ = id => document.getElementById(id);
   let dragId = null;
 
+  // ✎ Stream settings — rename + the defaults a NEW question inherits (live-applied)
+  function openStreamSettings(id) {
+    const s = Store.get().project.streams.find(x => x.id === id); if (!s) return;
+    const d = () => Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults);
+    const field = (label, hint, widget) => { const f = el('div', { class: 'field' }); const lab = el('label', {}, [label]); if (hint) lab.append(el('span', { class: 'hint', text: hint })); f.append(lab, widget); return f; };
+    const sheet = el('div', { class: 'sheet' });
+    sheet.append(el('h3', { text: 'Stream settings' }));
+    sheet.append(el('p', { class: 'muted', text: 'Name this track and set the defaults a NEW question starts with (existing questions are left as-is).' }));
+    const nameInp = el('input', { type: 'text', value: s.name });
+    nameInp.oninput = () => Store.renameStream(id, nameInp.value.trim() || s.name);
+    sheet.append(field('Name', '', nameInp));
+    sheet.append(el('p', { class: 'muted', text: 'New-question defaults', style: 'margin:8px 0 4px' }));
+    sheet.append(field('Default timer', '', FieldRenderers.timer({}, d().timer, v => Store.setStreamDefaults(id, { timer: v }))));
+    sheet.append(field('Timer start', '"On button" = press ▶ Start in the show', FieldRenderers.boolean({ trueLabel: 'Auto', falseLabel: 'On button' }, d().autoStart !== false, v => Store.setStreamDefaults(id, { autoStart: v }))));
+    sheet.append(field('Default points', '', FieldRenderers.number({ min: 0, placeholder: '1' }, d().points, v => Store.setStreamDefaults(id, { points: (v == null || v === '') ? 1 : v }))));
+    sheet.append(field('Default reveal answer', 'No = skip the “hold to show answer” step', FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, d().reveal !== false, v => Store.setStreamDefaults(id, { reveal: v }))));
+    sheet.append(field('Default scored', 'No = no scoring page', FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, d().scored !== false, v => Store.setStreamDefaults(id, { scored: v }))));
+    const done = el('button', { class: 'btn primary', text: 'Done', style: 'margin-top:6px' });
+    const ov = el('div', { class: 'picker open', id: 'streamDlg' }, [ sheet ]);
+    done.onclick = () => ov.remove(); sheet.append(done);
+    ov.onclick = e => { if (e.target === ov) ov.remove(); };
+    document.body.append(ov);
+  }
+
   function renderStreams(state) {
-    const wrap = $('streamList'); wrap.innerHTML = '';
+    const wrap = $('streamList');
+    // deck-level team count: one shared scoreboard → ONE team count for every stream
+    const oldBar = $('deckTeams'); if (oldBar) oldBar.remove();
+    const bar = el('div', { class: 'theme-pick', id: 'deckTeams' });
+    const teams = el('input', { type: 'number', min: 1, max: 99, value: state.project.teamCount || 20, class: 'teams-input',
+      title: 'Teams playing this whole deck — they share one scoreboard across every stream' });
+    teams.onchange = () => Store.setTeamCount(Number(teams.value));
+    bar.append(el('span', { class: 'theme-pick-label', text: '👥 Teams' }), teams,
+               el('span', { class: 'theme-pick-note', text: 'shared by all streams' }));
+    wrap.parentElement.insertBefore(bar, wrap);
+    wrap.innerHTML = '';
     if (!state.project.streams.length) { wrap.append(el('div', { class: 'empty', text: 'No streams yet. Add one →' })); return; }
     state.project.streams.forEach(s => {
       const active = s.id === state.selStream;
       const row = el('div', { class: 'row' + (active ? ' active' : ''), onclick: () => Store.selectStream(s.id) });
       const grow = el('div', { class: 'grow' });
-      grow.append(el('div', { class: 'title', text: s.name }));
-      grow.append(el('div', { class: 'sub', text: s.slides.length + ' slide' + (s.slides.length === 1 ? '' : 's') + ' · ' + s.teamCount + ' teams' }));
+      const title = el('div', { class: 'title', text: s.name });
+      grow.append(title);
+      grow.append(el('div', { class: 'sub', text: s.slides.length + ' slide' + (s.slides.length === 1 ? '' : 's') }));
       const tools = el('div', { class: 'tools' });
+      const beginRename = () => {
+        const inp = el('input', { class: 'stream-rename', value: s.name });
+        const commit = () => { const v = inp.value.trim(); if (v && v !== s.name) Store.renameStream(s.id, v); else renderStreams(Store.get()); };
+        inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } else if (e.key === 'Escape') { e.preventDefault(); inp.value = s.name; inp.blur(); } };
+        inp.onblur = commit;
+        inp.onclick = e => e.stopPropagation();
+        title.replaceWith(inp); inp.focus(); inp.select();
+      };
+      const ren = el('button', { class: 'icon-btn', title: 'Stream settings — name & new-question defaults', html: '✎' });
+      ren.onclick = e => { e.stopPropagation(); openStreamSettings(s.id); };
+      title.ondblclick = e => { e.stopPropagation(); beginRename(); };   // double-click name = quick inline rename
       const del = el('button', { class: 'icon-btn', title: 'Delete stream', html: '🗑' });
       del.onclick = e => { e.stopPropagation(); if (confirm('Delete stream “' + s.name + '” and all its slides?')) Store.deleteStream(s.id); };
-      tools.append(del);
+      tools.append(ren, del);
       row.append(grow, tools);
       wrap.append(row);
     });
   }
 
-  function renderThemePicker(s) { // per-stream settings bar: team count + which theme this stream uses
+  function renderThemePicker(s) { // per-stream settings bar: which theme THIS stream uses (teams are deck-level, set on the Streams panel)
     const old = document.getElementById('streamThemePick'); if (old) old.remove();
     if (!s) return;
     const slideList = $('slideList');
     const bar = el('div', { class: 'theme-pick', id: 'streamThemePick' });
-    const teams = el('input', { type: 'number', min: 1, max: 99, value: s.teamCount, class: 'teams-input', title: 'Number of teams in this stream' });
-    teams.onchange = () => Store.setTeamCount(s.id, Number(teams.value));
     const sel = el('select');
     const defName = (Store.themes().find(t => t.id === Store.projectThemeId()) || {}).name || 'default';
     sel.append(el('option', { value: '', text: 'Project default (' + defName + ')', selected: !s.themeId }));
     Store.themes().forEach(t => sel.append(el('option', { value: t.id, text: t.name, selected: s.themeId === t.id })));
     sel.onchange = () => Store.setStreamTheme(s.id, sel.value || null);
-    bar.append(el('span', { class: 'theme-pick-label', text: '👥 Teams' }), teams,
-               el('span', { class: 'theme-pick-label', text: '🎨 Theme' }), sel);
+    bar.append(el('span', { class: 'theme-pick-label', text: '🎨 Theme' }), sel);
     slideList.parentElement.insertBefore(bar, slideList);
   }
 
@@ -1197,6 +1304,10 @@ const Views = (() => {
 
   function renderEditor(state) {
     const ed = $('editor'); ed.innerHTML = '';
+    // mobile drill-down: a back button to return from "edit slide" to the questions list
+    const back = el('button', { class: 'm-back btn ghost', html: '← Questions' });
+    back.onclick = () => { const nav = window.__makerNav; if (nav) nav.setMView('slides'); };
+    ed.append(back);
     const slide = Store.curSlide();
     if (!slide) {
       ed.append(el('div', { class: 'empty-editor' }, [
@@ -1205,7 +1316,7 @@ const Views = (() => {
       ]));
       return;
     }
-    const def = SlideTypes.get(slide.type);
+    const def = SlideTypes.get(slide.type) || { icon: '?', label: slide.type, desc: 'Unknown slide type — use 🗑 Reset to load the fresh sample deck.' };
     const isQuestion = kindOf(slide.type) === 'question';
     const head = el('div', { class: 'ed-head' }, [
       el('span', { class: 'type-chip', text: (isQuestion ? '❓ Question' : def.icon + ' ' + def.label) }),
@@ -1227,22 +1338,30 @@ const Views = (() => {
       field.append(FieldRenderers.boolean({ trueLabel: 'Auto', falseLabel: 'On button' }, auto, v => Store.updateSlideOption(slide.id, 'autoStart', v)));
       card.append(field);
 
-      const pField = el('div', { class: 'field' });
-      pField.append(el('label', {}, [ 'Points', el('span', { class: 'hint', text: 'awarded for ✓ in scoring (✗ subtracts the same)' }) ]));
-      const pVal = (slide.data.points == null || slide.data.points === '') ? 1 : slide.data.points;
-      pField.append(FieldRenderers.number({ min: 0, placeholder: '1' }, pVal, v => Store.updateSlideData(slide.id, 'points', (v == null || v === '') ? 1 : v)));
-      card.append(pField);
+      // a poll has only a 'question' phase — Points / Reveal / Scored are meaningless there, so hide them
+      if (slide.type !== 'poll') {
+        const pField = el('div', { class: 'field' });
+        pField.append(el('label', {}, [ 'Points', el('span', { class: 'hint', text: 'awarded for ✓ in scoring (✗ subtracts the same)' }) ]));
+        const pVal = (slide.data.points == null || slide.data.points === '') ? 1 : slide.data.points;
+        pField.append(FieldRenderers.number({ min: 0, placeholder: '1' }, pVal, v => Store.updateSlideData(slide.id, 'points', (v == null || v === '') ? 1 : Math.max(0, Math.round(v)))));
+        card.append(pField);
 
-      const aField = el('div', { class: 'field' });
-      aField.append(el('label', {}, [ 'Audience question', el('span', { class: 'hint', text: 'for the audience, not the teams — the scoring page is skipped' }) ]));
-      aField.append(FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, !!(slide.options && slide.options.audience), v => Store.updateSlideOption(slide.id, 'audience', v)));
-      card.append(aField);
+        const rField = el('div', { class: 'field' });
+        rField.append(el('label', {}, [ 'Reveal answer', el('span', { class: 'hint', text: 'No = skip the answer slide — the answer is never shown to anyone' }) ]));
+        rField.append(FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, !(slide.options && slide.options.reveal === false), v => Store.updateSlideOption(slide.id, 'reveal', v)));
+        card.append(rField);
+
+        const aField = el('div', { class: 'field' });
+        aField.append(el('label', {}, [ 'Scored', el('span', { class: 'hint', text: 'No = no scoring page (warm-ups, audience questions, tie-breakers)' }) ]));
+        aField.append(FieldRenderers.boolean({ trueLabel: 'Yes', falseLabel: 'No' }, !(slide.options && slide.options.scored === false), v => Store.updateSlideOption(slide.id, 'scored', v)));
+        card.append(aField);
+      }
     }
     ed.append(card);
   }
 
   function renderAll(state) { renderStreams(state); renderSlides(state); renderEditor(state); }
-  return { renderStreams, renderSlides, renderEditor, renderAll };
+  return { renderStreams, renderSlides, renderEditor, renderAll, openStreamSettings };
 })();
 
 /* ================================================================
@@ -1345,7 +1464,7 @@ const IO = (() => {
     }
     return Store.project().name;
   }
-  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 1, name: Store.project().name, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
+  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 1, name: Store.project().name, teamCount: Store.project().teamCount, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
   // every export carries its creation timestamp — Display tags scores/session per deck with it
   const stamped = p => { p.exportedAt = Date.now(); return p; };
 
@@ -1388,8 +1507,12 @@ const IO = (() => {
           try { data = await CryptoBox.decrypt(data, pw); } catch (e) { toast('Wrong password or corrupted file'); return; }
         }
         if (data.app !== 'cfc-quiz' || !Array.isArray(data.streams)) { toast('Not a CFC Quiz content file'); return; }
-        if (Store.project().streams.length && !confirm('Import ' + data.streams.length + ' stream(s).\n\nOK = Replace everything\nCancel = Add to current project')) {
-          Store.mergeStreams(data);
+        if (Store.project().streams.length) {
+          // explicit, abortable choice — the destructive REPLACE is never the accidental default
+          const choice = (prompt('Import ' + data.streams.length + ' stream(s):\n\n• type  M  to MERGE them into your current deck\n• type  R  to REPLACE the whole deck (deletes it)\n• Cancel to abort', 'M') || '').trim().toLowerCase();
+          if (choice === 'r') Store.replaceProject(data);
+          else if (choice === 'm') Store.mergeStreams(data);
+          else { toast('Import cancelled'); return; }
         } else {
           Store.replaceProject(data);
         }
@@ -1408,10 +1531,9 @@ const IO = (() => {
    argument is kept on the API so call sites don't care.
    ================================================================ */
 const Scores = (() => {
-  // v2 store, same as Display's (v1 had per-stream buckets; left untouched).
-  // The Maker only ever uses its own 'shared' preview bucket — saves merge into
-  // the live store so a Display tab's deck buckets are never rolled back.
-  const KEY = 'cfc-quiz-scores-v2';
+  // Maker preview scoring is a dry run; it only ever uses its own 'shared'
+  // bucket. Nothing here is shared with Display — Display keeps a d_ store.
+  const KEY = 'm_cfc-quiz-scores-v1';   // m_ = maker preview scores only
   const BUCKET = 'shared';
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
   let data = read();
@@ -1451,16 +1573,51 @@ const Present = (() => {
     const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
     if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
   }
-  function buildPodium(top) {
-    const wrap = el('div', { class: 'pv-podium' });
-    const meta = [ { medal: '🥇', cls: 'gold', h: '32vh' }, { medal: '🥈', cls: 'silver', h: '23vh' }, { medal: '🥉', cls: 'bronze', h: '16vh' } ];
-    [1, 0, 2].forEach(r => {
+  function buildPodium(all) {
+    const top = all.slice(0, 3), rest = all.slice(3);
+    const wrap = el('div', { class: 'pv-podium-wrap' });
+    const podium = el('div', { class: 'pv-podium' });
+    const meta = [ { medal: '🥇', cls: 'gold', h: '34vh' }, { medal: '🥈', cls: 'silver', h: '24vh' }, { medal: '🥉', cls: 'bronze', h: '17vh' } ];
+    [1, 0, 2].forEach(r => {           // render order 2nd–1st–3rd so the winner stands in the centre
       const t = top[r]; if (!t) return; const m = meta[r];
-      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [ el('div', { class: 'pv-pod-score', text: t.score }), el('div', { class: 'pv-pod-rank', text: '#' + (r + 1) }) ]);
-      wrap.append(el('div', { class: 'pv-pod' }, [ el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }), block ]));
+      const pod = el('div', { class: 'pv-pod' });
+      if (r === 0) pod.append(el('div', { class: 'pv-pod-crown', text: '👑' }));
+      pod.append(el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }));
+      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [
+        el('div', { class: 'pv-pod-place', text: (r + 1) }),
+        el('div', { class: 'pv-pod-score', text: t.score }) ]);
+      pod.append(block); podium.append(pod);
       setTimeout(() => { block.style.height = m.h; }, 90);
     });
+    wrap.append(podium);
+    if (rest.length) {                 // everyone below 3rd, as a side scoreboard table
+      const side = el('div', { class: 'pv-pod-rest' }, [ el('div', { class: 'pv-pod-rest-head', text: 'The rest of the field' }) ]);
+      side.append(scoreTable(rest, 4)); wrap.append(side);
+    }
     return wrap;
+  }
+  // a ranked rank/name/score table that lays itself out across columns to fit the space (every team shows)
+  function scoreTable(teams, startRank) {
+    startRank = startRank || 1;
+    const list = el('div', { class: 'pv-pod-rest-list' });
+    list.dataset.count = teams.length;
+    teams.forEach((t, i) => {
+      const row = el('div', { class: 'pv-pod-rest-row' + (startRank === 1 && i < 3 ? ' top' : '') }, [
+        el('span', { class: 'pv-pod-rest-rank', text: (i + startRank) }),
+        el('span', { class: 'pv-pod-rest-name', text: t.name }),
+        el('span', { class: 'pv-pod-rest-score', text: t.score }) ]);
+      row.style.animationDelay = (i * 0.04) + 's';
+      list.append(row);
+    });
+    layoutRest(list, teams.length);
+    return list;
+  }
+  // adapt a score table: more vertical space → more rows (fewer, wider columns). Recomputed on resize.
+  function layoutRest(list, count) {
+    if (!list || !count) return;
+    const vh = window.innerHeight || 720;
+    const rows = Math.max(2, Math.min(count, Math.floor((vh * 0.46) / 46)));
+    list.style.gridTemplateRows = 'repeat(' + rows + ', auto)';
   }
 
   function optionsGrid(options, { reveal = false } = {}) {
@@ -1493,27 +1650,15 @@ const Present = (() => {
     leaderboard: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
-      const teams = (real && real.some(t => t.score > 0)) ? real : demoStandings(n);
-      const max = Math.max(1, ...teams.map(t => t.score));
-      const board = el('div', { class: 'pv-board' });
-      teams.slice(0, 8).forEach((t, i) => {
-        const fill = el('div', { class: 'pv-bar-fill' });
-        board.append(el('div', { class: 'pv-board-row' }, [
-          el('div', { class: 'pv-rank' + (i === 0 ? ' top' : ''), text: (i + 1) }),
-          el('div', { class: 'pv-team', text: t.name }),
-          el('div', { class: 'pv-bar' }, [ fill ]),
-          el('div', { class: 'pv-score', text: t.score }),
-        ]));
-        setTimeout(() => { fill.style.width = (t.score / max * 100) + '%'; }, 60 + i * 70);
-      });
-      return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), board ]);
+      const teams = (real && real.some(t => t.score > 0)) ? real : demoStandings(n);   // ALL teams, ranked
+      return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), scoreTable(teams, 1) ]);
     } },
 
     podium: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
       const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n);
-      return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams.slice(0, 3)) ]);
+      return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams) ]);
     } },
 
     'choices': { phases: Q2, render: (d, ctx) => stage([
@@ -1526,16 +1671,13 @@ const Present = (() => {
       return stage([ q(d.statement), optionsGrid(opts, { reveal: ctx.phase === 'reveal' }) ]);
     } },
 
-    'fill-blank': { phases: Q2, render: (d, ctx) => stage([
-      q(d.prompt), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
+    'short-answer': { phases: Q2, render: (d, ctx) => stage([
+      q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
 
-    'guess-verse': { phases: Q2, render: (d, ctx) => stage([
-      d.reference ? badge(d.reference) : null,
-      el('div', { class: 'pv-passage', text: d.passage || '' }),
+    'titled-question': { phases: Q2, render: (d, ctx) => stage([
+      d.title ? badge(d.title) : null,
+      q(d.question),
       ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
-
-    numeric: { phases: Q2, render: (d, ctx) => stage([
-      q(d.question), ctx.phase === 'reveal' ? answer(d.answer != null ? String(d.answer) : '—') : null ]) },
 
     'image-question': { phases: Q2, render: (d, ctx) => stage([
       media(d.media), q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
@@ -1551,7 +1693,7 @@ const Present = (() => {
       }
       const lefts = el('div', { class: 'pv-col' }), rights = el('div', { class: 'pv-col' });
       pairs.forEach(p => lefts.append(el('div', { class: 'pv-mitem', text: p.left })));
-      shuffle(pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));
+      stableShuffle(ctx.slideId, pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));   // fixed order for the run — re-render (← Back) keeps it
       return stage([ q(d.instruction), el('div', { class: 'pv-cols' }, [ lefts, rights ]) ]);
     } },
 
@@ -1583,35 +1725,36 @@ const Present = (() => {
       '<div class="num"></div>';
     host.append(wrap);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
-    let remaining = seconds, displayMax = seconds, running = false, raf = null, last = null, fired = false;
+    // DEADLINE-based clock (wall-clock, not frame deltas) + setInterval fallback, so an occluded
+    // window (rAF suspended — e.g. the score-console popup covering the show) can't freeze it,
+    // make it jump on uncover, or skip Time's-up. Kept in sync with display.html.
+    const now = () => performance.now();
+    let remaining = seconds, displayMax = seconds, running = false, fired = false, endAt = 0, raf = null, iv = null;
+    function compute() { if (running) remaining = Math.max(0, (endAt - now()) / 1000); return remaining; }
     function paint() {
       const txt = fmtClock(remaining);
       num.textContent = txt; num.classList.toggle('long', txt.length > 3);
       prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString();
       wrap.classList.toggle('warn', remaining <= 5 && running);
     }
-    function tick(ts) {
-      if (last == null) last = ts;
-      const dt = (ts - last) / 1000; last = ts;
-      if (running) remaining -= dt;
-      if (remaining <= 0) {
-        remaining = 0; running = false; raf = null; paint();
-        if (!fired) { fired = true; wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); }
-        return;
-      }
-      paint(); raf = requestAnimationFrame(tick);
-    }
-    function loop() { if (raf == null) { last = null; raf = requestAnimationFrame(tick); } }
-    function start() { if (fired || running) return; running = true; loop(); }
+    function stopLoops() { if (raf) { cancelAnimationFrame(raf); raf = null; } if (iv) { clearInterval(iv); iv = null; } }
+    function fire() { running = false; remaining = 0; stopLoops(); paint(); if (!fired) { fired = true; wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); } }
+    function step() { if (!running) return; compute(); if (remaining <= 0) { fire(); return; } paint(); }
+    function frame() { if (!running) return; step(); if (running) raf = requestAnimationFrame(frame); }
+    function loops() { if (raf == null) raf = requestAnimationFrame(frame); if (iv == null) iv = setInterval(step, 500); }
+    function start() { if (fired || running) return; running = true; endAt = now() + remaining * 1000; loops(); }
     function addTime(d) {
-      if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); running = true; }
-      remaining = Math.max(0, remaining + d); if (remaining > displayMax) displayMax = remaining;
-      paint(); if (running) loop();
+      if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); running = true; remaining = 0; endAt = now(); }
+      if (running) { compute(); remaining = Math.max(0, remaining + d); endAt = now() + remaining * 1000; }
+      else remaining = Math.max(0, remaining + d);
+      if (remaining > displayMax) displayMax = remaining;
+      paint(); if (running) loops();
     }
-    function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+    function stop() { running = false; stopLoops(); }
+    function end() { if (fired) return; remaining = 0; fire(); }   // force "time's up" now → unlocks advance
     paint();
     if (autoStart) start();
-    return { start, addTime, stop, isRunning: () => running, isDone: () => fired };
+    return { start, addTime, stop, end, isRunning: () => running, isDone: () => fired, isActive: () => running && !fired };
   }
 
   /* ---- confetti burst ---- */
@@ -1634,10 +1777,17 @@ const Present = (() => {
   /* ---- controller ---- */
   let overlay = null, steps = [], idx = 0, stopTimer = null, curStream = null, advanceCtl = null;
   const positions = {}; // remembers each stream's step index across switches
+  // stable per-run shuffle (e.g. matching right-column order) so a re-render / ← Back never re-deals
+  let shuffleOrders = {};
+  function stableShuffle(key, arr) { const o = shuffleOrders[key]; if (!o || o.length !== arr.length) shuffleOrders[key] = shuffle(arr.map((_, i) => i)); return shuffleOrders[key].map(i => arr[i]); }
   // pending score marks are committed only when you LEAVE the scoring slide (advance / switch / board / exit)
   let commitMarks = null;
-  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } }
-  function onResize() { if (overlay && overlay.classList.contains('open')) fitStage(overlay.querySelector('.pv-main')); }
+  function flushScore() { if (commitMarks) { const fn = commitMarks; commitMarks = null; fn(); } renderConsole(); }
+  function onResize() {
+    if (!overlay || !overlay.classList.contains('open')) return;
+    const rl = overlay.querySelector('.pv-pod-rest-list'); if (rl) layoutRest(rl, Number(rl.dataset.count) || 0);
+    fitStage(overlay.querySelector('.pv-main'));
+  }
 
   function buildOverlay() {
     overlay = el('div', { class: 'present' }, [
@@ -1651,20 +1801,19 @@ const Present = (() => {
         el('div', { class: 'pv-timerctl', id: 'pvTimerCtl' }),
         el('button', { class: 'pv-btn', id: 'pvBoard', text: '🏆 Scores', title: 'Show standings (any time)' }),
         el('button', { class: 'pv-btn pv-skip', id: 'pvSkip', text: '⤳ Skip', title: 'Operator override — jump straight to next (presenter only)' }),
-        el('span', { class: 'pv-hint', text: 'Hold to advance · 🏆 standings · ⤳ skip · ← back · Esc exit' }),
       ]),
     ]);
     document.body.append(overlay);
     overlay.querySelector('#pvExit').onclick = close;
     overlay.querySelector('#pvPrev').onclick = prev;
     overlay.querySelector('#pvSkip').onclick = next;
-    overlay.querySelector('#pvBoard').onclick = openBoard;
+    overlay.querySelector('#pvBoard').onclick = openConsole;   // private score console (popup); preview mirrors Display
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
   }
 
   /* press-and-hold control — fills over DURATION; releasing early cancels. NO plain click advances. */
   function holdControl(label, onDone) {
-    const DURATION = 850;
+    const DURATION = 800;   // deliberate press-and-hold (~0.8s) so advancing is never accidental, but snappy
     const btn = el('button', { class: 'pv-hold' });
     const fill = el('span', { class: 'pv-hold-fill' });
     btn.append(fill, el('span', { class: 'pv-hold-label', text: label }));
@@ -1683,7 +1832,8 @@ const Present = (() => {
     btn.addEventListener('mouseleave', reset);
     btn.addEventListener('touchstart', e => { e.preventDefault(); begin(); }, { passive: false });
     btn.addEventListener('touchend', e => { e.preventDefault(); reset(); });
-    return { el: btn, begin, reset };
+    btn.addEventListener('touchcancel', () => reset());   // OS stole the touch → cancel, don't keep filling
+    return { el: btn, begin, reset, cancel: stop };        // cancel() kills the rAF even after the button is detached
   }
 
   /* the hold label always names the page you are about to land on — no surprises */
@@ -1705,25 +1855,27 @@ const Present = (() => {
     return 'Hold for next — Title';
   }
   function mountAdvance() {
-    const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null;
+    const host = overlay.querySelector('#pvAdvance'); if (advanceCtl) advanceCtl.cancel(); host.innerHTML = ''; advanceCtl = null;
     const hasNext = idx < steps.length - 1;
     advanceCtl = holdControl(advanceLabel(), () => { if (hasNext) next(); else close(); });
     host.append(advanceCtl.el);
   }
   function lockAdvance(msg) {
-    const host = overlay.querySelector('#pvAdvance'); host.innerHTML = ''; advanceCtl = null;
+    const host = overlay.querySelector('#pvAdvance'); if (advanceCtl) advanceCtl.cancel(); advanceCtl = null; host.innerHTML = '';
     host.append(el('div', { class: 'pv-locked', text: msg }));
   }
 
-  function renderStep() {
+  function renderStep(opts) {
     flushScore(); // leaving a (possibly scoring) step commits any pending marks
     if (stopTimer) { stopTimer(); stopTimer = null; }
     const main = overlay.querySelector('.pv-main'); main.innerHTML = '';
     const tctl = overlay.querySelector('#pvTimerCtl'); if (tctl) tctl.innerHTML = '';
-    const step = steps[idx]; const def = renderers[step.slide.type];
+    const step = steps[idx];
+    if (!step) { main.append(stage([ q('This stream has no slides.') ])); const ps = overlay.querySelector('#pvStep'); if (ps) ps.textContent = '0 / 0'; lockAdvance('—'); return; }
+    const def = renderers[step.slide.type];
     let node;
     if (step.phase === 'score') node = renderTally(step.slide);
-    else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream })
+    else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream, slideId: step.slide.id })
                     : stage([ q('No preview for: ' + step.slide.type) ]);
     main.append(node);
     // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
@@ -1731,8 +1883,7 @@ const Present = (() => {
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
     if (step.phase === 'question') {
       const qel = node.querySelector('.pv-q, .pv-passage');
-      if (step.slide.options && step.slide.options.audience) { if (qel) qel.after(el('div', { class: 'pv-points', text: '🎤 Audience question' })); }
-      else { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
+      if (step.slide.type !== 'poll' && !(step.slide.options && step.slide.options.scored === false)) { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
     }
     // question progress (only on question slides)
     const qList = curStream.slides.filter(s => kindOf(s.type) === 'question');
@@ -1748,17 +1899,19 @@ const Present = (() => {
       const t = makeTimer(main, Number(step.slide.data.timer), () => mountAdvance(), auto);
       stopTimer = () => t.stop();
       lockAdvance(auto ? '⏳ Locked — unlocks when the timer ends' : '⏳ Press ▶ Start to begin');
+      const relock = () => { if (t.isActive()) lockAdvance('⏳ Locked — unlocks when the timer ends'); };   // extending un-ends a finished timer → re-lock
       if (tctl) {
         const mk = (txt, fn, cls) => { const b = el('button', { class: 'pv-btn sm' + (cls ? ' ' + cls : ''), text: txt }); b.onclick = fn; return b; };
         if (!auto) { const sb = mk('▶ Start', () => { t.start(); sb.remove(); }, 'primary'); tctl.append(sb); }
-        tctl.append(mk('−5s', () => t.addTime(-5)), mk('+5s', () => t.addTime(5)));
+        tctl.append(mk('−5s', () => { t.addTime(-5); relock(); }), mk('+5s', () => { t.addTime(5); relock(); }), mk('⏰ Time’s up', () => t.end(), 'warn'));
       }
     } else {
       mountAdvance();
     }
-    if (step.phase === 'reveal' || step.slide.type === 'podium') requestAnimationFrame(() => burst(main));
+    if ((step.phase === 'reveal' || step.slide.type === 'podium') && !(opts && opts.quiet)) requestAnimationFrame(() => burst(main));
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
+    renderConsole();   // keep the private console in sync with the current stream/slide
   }
   function next() { if (idx < steps.length - 1) { idx++; renderStep(); } }
   function prev() { if (idx > 0) { idx--; renderStep(); } }
@@ -1766,8 +1919,8 @@ const Present = (() => {
   function loadStream(stream, startSlideId) {
     curStream = stream; steps = [];
     Theme.apply(overlay, Theme.resolve(stream));
-    // audience questions are not scored — drop their score phase (default: scored, as before)
-    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; if (sl.options && sl.options.audience) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
+    // "Scored: No" questions have no scoring page — drop their score phase (default: scored)
+    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; const o = sl.options || {}; if (o.reveal === false) phs = phs.filter(p => p !== 'reveal'); if (o.scored === false) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
     idx = 0;
     if (startSlideId) { const i = steps.findIndex(s => s.slide.id === startSlideId); if (i >= 0) idx = i; }
     else if (positions[stream.id] != null) idx = Math.max(0, Math.min(positions[stream.id], steps.length - 1));
@@ -1808,8 +1961,8 @@ const Present = (() => {
         row.classList.toggle('plus', marks[i] === 1);
         row.classList.toggle('minus', marks[i] === -1);
       };
-      check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); };
-      cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); };
+      check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
+      cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
       row.append(check, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, cross);
       list.append(row); paint();
     }
@@ -1818,60 +1971,114 @@ const Present = (() => {
     return wrap;
   }
 
-  /* 🏆 standings overlay — available on every slide */
-  function openBoard() {
+  /* ---------- private score console — a popup window on the operator's OTHER
+     screen, driven by this same script. Nothing renders on the projected window.
+     Identical to display.html's console (kept in sync). Committed scores only. ---------- */
+  let consoleWin = null, blockMsgT = null, pagehideHooked = false;
+  const CONSOLE_CSS = '<style>'
+    + ':root{color-scheme:dark}*{box-sizing:border-box}'
+    + 'body{margin:0;font:15px -apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0a0e1d;color:#fff;padding:14px}'
+    + '#cc-head{font-size:18px;font-weight:800;margin-bottom:4px}'
+    + '#cc-note{font-size:12px;color:#9fb0d0;margin-bottom:12px}#cc-note.warn{color:#fbbf24;font-weight:700}'
+    + '#cc-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:column;gap:8px}'   /* two columns, filled DOWN */
+    + '.cc-row{display:grid;grid-template-columns:1fr 52px 56px 52px 76px;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 10px}'
+    + '.cc-team{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.cc-score{text-align:center;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}'
+    + '.cc-pm{height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:24px;font-weight:800;cursor:pointer}'
+    + '.cc-pm:hover{background:rgba(255,255,255,.2)}'
+    + '.cc-set{height:44px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;text-align:center;font-weight:700;font-size:16px;min-width:0}'
+    + '@media(max-width:560px){#cc-rows{grid-template-columns:1fr!important;grid-auto-flow:row!important;grid-template-rows:none!important}.cc-row{grid-template-columns:1fr 40px 46px 40px 60px;gap:6px}}'
+    + '</style>';
+  function pendingMarkCount() { return overlay ? overlay.querySelectorAll('.pv-trow.plus, .pv-trow.minus').length : 0; }
+  function openConsole() {
     if (!curStream) return;
-    flushScore(); // make sure pending marks are reflected in the standings
-    const existing = overlay.querySelector('.pv-board-overlay'); if (existing) { existing.remove(); return; }
-    const sid = curStream.id, n = curStream.teamCount || 8;
-    const teams = Scores.standings(sid, n);
-    const board = el('div', { class: 'pv-bgrid' });
-    teams.forEach((t, i) => {
-      const sc = el('div', { class: 'pv-bscore', text: t.score });
-      const refresh = () => { sc.textContent = Scores.get(sid, n)[t.idx]; };
-      const minus = el('button', { class: 'pv-bpm', text: '−' });
-      const plus = el('button', { class: 'pv-bpm plus', text: '+' });
-      minus.onclick = () => { Scores.add(sid, t.idx, -1); refresh(); };
-      plus.onclick = () => { Scores.add(sid, t.idx, 1); refresh(); };
-      board.append(el('div', { class: 'pv-brow' + (i === 0 ? ' lead' : '') }, [
-        el('div', { class: 'pv-rank' + (i === 0 ? ' top' : ''), text: (i + 1) }),
-        el('div', { class: 'pv-bteam', text: t.name }), sc, minus, plus,
-      ]));
-    });
-    const ov = el('div', { class: 'pv-board-overlay' }, [
-      el('div', { class: 'pv-board-title', text: '🏆 ' + curStream.name + ' — Standings' }),
-      el('div', { class: 'pv-board-hint', text: 'Use − / + to fix scores live · reopen to re-rank' }), board,
-      el('button', { class: 'pv-btn', text: '✕ Close', onclick: () => ov.remove(), style: 'margin-top:18px' }),
-    ]);
-    ov.onclick = e => { if (e.target === ov) ov.remove(); };
-    overlay.append(ov);
+    if (!pagehideHooked) { pagehideHooked = true; window.addEventListener('pagehide', () => { try { if (consoleWin && !consoleWin.closed) consoleWin.close(); } catch (e) {} }); }
+    if (consoleWin && !consoleWin.closed) { consoleWin.focus(); renderConsole(); return; }
+    consoleWin = window.open('', 'cfcScoreConsoleMaker', 'width=820,height=640');   // app-unique name so Maker/Display don't hijack each other
+    if (!consoleWin) {                                   // popup blocked — discreet, operator-bar-only notice
+      const b = overlay && overlay.querySelector('#pvBoard');
+      if (b) { if (blockMsgT) clearTimeout(blockMsgT); else b.dataset.label = b.textContent; b.textContent = '🏆 allow pop-ups'; blockMsgT = setTimeout(() => { b.textContent = b.dataset.label || '🏆 Scores'; blockMsgT = null; }, 3000); }
+      return;
+    }
+    const doc = consoleWin.document;
+    doc.title = 'Score Console';
+    doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1">' + CONSOLE_CSS;
+    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>';
+    doc.body.addEventListener('click', onConsoleClick);
+    doc.body.addEventListener('change', onConsoleChange);
+    renderConsole();
+  }
+  function renderConsole() {
+    if (!consoleWin || consoleWin.closed || !curStream) return;
+    const doc = consoleWin.document; const sid = curStream.id, n = curStream.teamCount || 8;
+    doc.getElementById('cc-head').textContent = (Store.project().name || 'Deck') + ' — ' + curStream.name;
+    const pend = pendingMarkCount();
+    const note = doc.getElementById('cc-note');
+    note.className = pend ? 'warn' : '';
+    note.textContent = pend ? ('⚠ ' + pend + ' mark' + (pend === 1 ? '' : 's') + ' pending on this slide — they commit when you advance')
+                            : 'Edit any team’s score privately — changes are live.';
+    const scores = Scores.get(sid, n);
+    const rows = doc.getElementById('cc-rows');
+    rows.style.gridTemplateRows = 'repeat(' + Math.ceil(n / 2) + ', auto)';   // fill DOWN the left column first
+    if (rows.children.length === n) {                                          // in-place update — never clobber a set-field being typed in
+      for (let i = 0; i < n; i++) {
+        rows.children[i].querySelector('.cc-score').textContent = scores[i];
+        const set = rows.children[i].querySelector('.cc-set');
+        if (doc.activeElement !== set) set.value = scores[i];
+      }
+    } else {
+      rows.innerHTML = scores.map((sc, i) =>
+        '<div class="cc-row"><span class="cc-team">Team ' + (i + 1) + '</span>'
+        + '<button class="cc-pm" data-act="minus" data-i="' + i + '">−</button>'
+        + '<span class="cc-score">' + sc + '</span>'
+        + '<button class="cc-pm" data-act="plus" data-i="' + i + '">+</button>'
+        + '<input class="cc-set" type="number" data-i="' + i + '" value="' + sc + '" title="Set score" /></div>').join('');
+    }
+  }
+  function onConsoleClick(e) {
+    const b = e.target.closest && e.target.closest('[data-act]'); if (!b || !curStream) return;
+    Scores.add(curStream.id, Number(b.dataset.i), b.dataset.act === 'plus' ? 1 : -1);
+    refreshScoreUIs();
+  }
+  function onConsoleChange(e) {
+    const inp = e.target.closest && e.target.closest('.cc-set'); if (!inp || !curStream) return;
+    const v = inp.value.trim();
+    if (v === '' || !Number.isFinite(+v)) { renderConsole(); return; }   // ignore blank / garbage — restore the shown value, never commit 0
+    Scores.set(curStream.id, Number(inp.dataset.i), Math.round(+v));
+    refreshScoreUIs();
+  }
+  function closeConsole() { if (consoleWin && !consoleWin.closed) consoleWin.close(); consoleWin = null; }
+  function refreshScoreUIs() {
+    renderConsole();
+    const step = steps[idx]; if (!step) return;
+    if (step.slide.type === 'leaderboard' || step.slide.type === 'podium') renderStep({ quiet: true });   // re-render board, no confetti replay
+    else if (step.phase === 'score' && curStream) {                                                       // live-update tally numbers WITHOUT rebuilding (keeps pending marks)
+      const n = curStream.teamCount || 8, sc = Scores.get(curStream.id, n);
+      overlay.querySelectorAll('.pv-tally .pv-tscore').forEach((cell, i) => { cell.textContent = sc[i]; });
+    }
   }
 
   function open(stream, startSlideId, opts) {
     if (!stream || !stream.slides.length) { toast('Add a slide to preview'); return; }
+    shuffleOrders = {};   // fresh preview → re-deal shuffles once (then stable for the run)
     if (!overlay) buildOverlay();
     overlay.classList.toggle('audience', !!(opts && opts.audience)); // audience mode = no controls / no Skip
     overlay.classList.add('open');
-    document.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
     loadStream(stream, startSlideId);
   }
   function close() {
     flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
-    overlay.querySelectorAll('.pv-board-overlay, .pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    closeConsole();                                    // the private console belongs to this show
+    overlay.querySelectorAll('.pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
     overlay.classList.remove('open');
-    document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   }
-  // keyboard: only Esc (exit) and F (fullscreen). No key advances or goes back — mouse only.
-  function onKey(e) {
-    if (e.key === 'Escape') { e.preventDefault(); close(); }
-    else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) overlay.requestFullscreen().catch(() => {}); else document.exitFullscreen().catch(() => {}); }
-  }
+  // no keyboard shortcuts in the show — every action is an on-screen button click (Esc does NOT exit)
 
-  return { open, renderers, next: () => next(), prev: () => prev(), board: () => openBoard(), switchStream: id => switchStream(id) };
+  return { open, renderers, next: () => next(), prev: () => prev(), console: () => openConsole(), switchStream: id => switchStream(id) };
 })();
 
 /* ================================================================
@@ -2023,18 +2230,21 @@ function init() {
   Store.subscribe(s => Views.renderAll(s));
   Views.renderAll(Store.get());
 
-  document.getElementById('addStream').onclick = () => { Store.addStream(); toast('Stream added'); };
+  document.getElementById('addStream').onclick = () => { Store.addStream(); Views.openStreamSettings(Store.curStream().id); };   // name + set its defaults right away
   document.getElementById('addSlide').onclick = () => { if (!Store.curStream()) { toast('Add a stream first'); return; } openPicker(); };
   document.getElementById('picker').onclick = e => { if (e.target.id === 'picker') closePicker(); };
 
-  // mobile nav: hamburger toggles the streams/slides sidebar as a drawer
-  const sidebar = document.querySelector('.sidebar');
-  const backdrop = el('div', { class: 'nav-backdrop' }); document.body.append(backdrop);
+  // mobile drill-down: ONE screen at a time — Streams → Slides(questions) → Edit slide
+  const main = document.querySelector('.main');
   const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
-  const closeNav = () => { sidebar.classList.remove('open'); backdrop.classList.remove('open'); };
-  document.getElementById('navToggle').onclick = () => { const o = !sidebar.classList.contains('open'); sidebar.classList.toggle('open', o); backdrop.classList.toggle('open', o); };
-  backdrop.onclick = closeNav;
-  ['streamList', 'slideList'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) closeNav(); }));
+  const setMView = v => main.setAttribute('data-mview', v);
+  setMView('streams');
+  window.__makerNav = { setMView, isMobile };   // back buttons in the editor use this
+  document.getElementById('navToggle').onclick = () => setMView('streams');   // hamburger = jump to Streams
+  document.getElementById('slidesBack').onclick = () => setMView('streams');
+  // tap a STREAM → its questions; tap a QUESTION → edit that slide
+  document.getElementById('streamList').addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) setMView('slides'); });
+  document.getElementById('slideList').addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) setMView('editor'); });
 
   // export — always the whole deck, encrypted with a password (so answers stay hidden)
   document.getElementById('exportBtn').onclick = () => IO.exportEncrypted();
