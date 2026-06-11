@@ -1,18 +1,25 @@
 # CFC Quiz — How to use
 
-There are two files. You just open them in a web browser (Chrome works great).
+Two apps, each a single page in your browser (Chrome works great).
 Nothing to install. Nothing to run. Nothing leaves your computer.
 
-- **`maker.html`** — where you **build** the quiz.
-- **`display.html`** — where you **run** the quiz on the day.
+| App | What it's for | Link |
+|---|---|---|
+| **Maker** | **Build** the question deck | https://wastakenbysomeoneelseohno.github.io/cfc-quiz-2026/maker.html |
+| **Display** | **Run** the quiz on the day | https://wastakenbysomeoneelseohno.github.io/cfc-quiz-2026/display.html |
+
+> ⚠ **Always Export to save your changes.** The browser auto-saves your work locally, but that lives only in
+> *that* browser on *that* device — it can be lost by clearing site data, switching machines, or another person
+> using the link. The **exported file is the real save**: Export after every editing session and keep the file.
+> (You can also download `maker.html` / `display.html` and open them straight from a folder — they work offline.)
 
 ---
 
-## 1. Build your quiz (maker.html)
+## 1. Build your quiz (Maker)
 
 The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **Slide options** (right).
 
-1. **Open `maker.html`** and **name your quiz** in the box at the top (used for the saved file name).
+1. **Open the Maker** (link above) and **name your quiz** in the box at the top (used for the saved file name).
 2. **Streams** are **separate quiz tracks** in the same file — e.g. a **Main Quiz**, an **Audience Round**,
    or a **segue / interlude**. **+ Stream** adds one and opens **✎ Stream settings** — name it and set the
    **defaults new questions start with** (timer, timer-start, points, reveal, scored). Double-click a name for a quick rename.
@@ -33,7 +40,7 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
    - **Reveal answer: Yes / No** — **No** skips the answer slide entirely (the answer is never shown),
    - **Scored: Yes / No** — set **No** for warm-ups / audience / tie-break questions; they show **no scoring page**.
 5. **Drag slides** to reorder. **Preview** any time with **P** or **▶ Present**.
-6. **Save it:** **🔒 Export** → set a **password** → a locked file downloads. The password hides the answers — keep it safe.
+6. **Save it — always Export:** **Export** offers two formats — **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **CSV** (a spreadsheet file you can edit in Excel/Sheets; carries questions, defaults and themes — answers are visible). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several CSVs and re-import after edits without duplicates. In the CSV, each thing is a **heading row then a value row** (`[DECK]`, `[STREAM]`, `[SLIDES]`); a question's blank timer/points/reveal/scored takes the **stream's default**, and the correct option is marked with `*`.
 
 > Your work is auto-saved in the browser. **🗑 Reset** wipes the Maker's own data and reloads the sample deck
 > (it never touches a Display running in the same browser).
@@ -42,9 +49,9 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 
 ---
 
-## 2. Run your quiz (display.html)
+## 2. Run your quiz (Display)
 
-1. **Open `display.html`** on the screen/projector everyone sees.
+1. **Open the Display** (link above) on the screen/projector everyone sees.
 2. **Load your quiz file** and **type the password** to unlock it.
 3. **Choose the stream** and the **number of teams** (shared by all streams), then press **▶ Start show**.
 4. **Move through the quiz:**
@@ -54,7 +61,7 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
    - Use **← Back** to step back. A small **Q 3 / 12** label (top-left) shows which question you're on.
    - The bottom control bar **scrolls left/right** if it's wider than the screen.
 5. **Give points:** after a question, tap each team **✓** or **✗** (worth the question's **Points**) — marked teams light up
-   **green / red**. No submit step: marks are **saved automatically when you move on** (advance, open the console, switch streams, or exit).
+   **green / red**. No submit step: marks are **saved automatically when you move on** (advance, switch streams, or exit). The score console shows committed scores only — it notes when marks are still pending on the current slide.
 6. **Switch streams** with the dropdown — it remembers where you left off in each; the scoreboard carries across them.
 7. **Resume:** reopening the same file later offers **⏯ Continue where you left off** (scores kept) or **↺ Start fresh**.
 
@@ -72,7 +79,7 @@ The projector mirrors your screen, so you should **never edit scores on the proj
 > **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click 🏆 Scores**. A panel shows
 > **slide numbers only** (no questions, so nothing leaks). Click a number to peek, then **▶ Go** to jump there.
 
-That's it. Build in the Maker, save with a password, open in the Display, and run the show.
+That's it. Build in the Maker, **Export** (your real save), open the file in the Display, and run the show.
 
 ---
 

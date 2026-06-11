@@ -72,6 +72,11 @@
   .btn.sm { padding: 4px 9px; font-size: 12.5px; }
   .icon-btn { border: none; background: transparent; padding: 4px; border-radius: 6px; color: var(--ink-soft); line-height: 0; }
   .icon-btn:hover { background: var(--accent-soft); color: var(--accent); }
+  /* import/export format dropdown */
+  .io-menu { position: absolute; z-index: 80; background: #fff; border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--shadow); padding: 5px; min-width: 170px; }
+  .io-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: 9px 12px; border-radius: 7px; font: inherit; color: var(--ink); cursor: pointer; }
+  .io-menu button:hover { background: var(--accent-soft); }
+  .io-menu .io-sub { font-size: 11.5px; color: var(--ink-soft); padding: 4px 12px 6px; }
 
   /* ---- Sidebar sections ---- */
   .sect { padding: 14px 14px 8px; }
@@ -549,7 +554,7 @@
     <button class="btn" id="themeBtn" title="Edit themes">🎨 <span class="lbl">Theme</span></button>
     <button class="btn" id="presentBtn" title="Preview / present this stream (P)">▶ <span class="lbl">Present</span></button>
     <button class="btn" id="importBtn">⬆ <span class="lbl">Import</span></button>
-    <button class="btn primary" id="exportBtn" title="Export">🔒 <span class="lbl">Export</span></button>
+    <button class="btn primary" id="exportBtn" title="Export — Encrypted / JSON / CSV">⬇ <span class="lbl">Export</span></button>
     <input type="file" id="fileInput" accept="application/json,.json" hidden />
   </header>
 
@@ -986,7 +991,7 @@ const Store = (() => {
       // question with its own title / heading
       S('titled-question', { title: 'John 3:16', question: '“For God so loved the ___ that he gave his one and only Son.”', answer: 'world', timer: 30 }),
       // picture question
-      S('image-question', { question: 'Name this symbol of the faith.', media: '', answer: 'The cross', timer: 20 }),
+      S('image-question', { question: 'Name this symbol of the faith.', media: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTUwIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2ZkZjZlMyIvPjxyZWN0IHg9IjUyIiB5PSIxNSIgd2lkdGg9IjE2IiBoZWlnaHQ9IjEyMCIgcng9IjMiIGZpbGw9IiNiNDUzMDkiLz48cmVjdCB4PSIyNSIgeT0iNDUiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNiIgcng9IjMiIGZpbGw9IiNiNDUzMDkiLz48L3N2Zz4=', answer: 'The cross', timer: 20 }),
       // matching pairs
       S('matching', { instruction: 'Match each person to their role.', timer: 40,
         pairs: [ { left: 'Moses', right: 'Led the Exodus' }, { left: 'David', right: 'King of Israel' }, { left: 'Mary', right: 'Mother of Jesus' } ] }),
@@ -1093,7 +1098,7 @@ const Store = (() => {
       // a new QUESTION inherits the stream's default timer / start / points / reveal / scored (where applicable)
       if (kindOf(type) === 'question' && s.defaults) {
         const d = s.defaults;
-        if (d.timer != null && 'timer' in sl.data) sl.data.timer = d.timer;
+        if (d.timer != null && 'timer' in sl.data && sl.data.timer !== 0) sl.data.timer = d.timer;   // buzzer/poll ship timer:0 by design — don't clobber
         if (d.points != null) sl.data.points = d.points;
         if (d.autoStart === false) sl.options.autoStart = false;
         if (d.reveal === false) sl.options.reveal = false;
@@ -1103,7 +1108,13 @@ const Store = (() => {
       if (idx >= 0) s.slides.splice(idx + 1, 0, sl); else s.slides.push(sl);
       state.selSlide = sl.id; emit();
     },
-    setStreamDefaults(id, defaults) { const s = state.project.streams.find(x => x.id === id); if (s) { s.defaults = Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults, defaults); emit(); } },
+    setStreamDefaults(id, defaults) {
+      const s = state.project.streams.find(x => x.id === id); if (!s) return;
+      const d = Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults, defaults);
+      d.timer = Math.max(0, Math.round(Number(d.timer) || 0));            // same clamping as per-slide values
+      d.points = Math.max(0, Math.round(Number(d.points) || 0));
+      s.defaults = d; emit();
+    },
     selectSlide(id) { state.selSlide = id; emit(); },
     // switch a question's format, preserving the question text + image + timer
     changeType(id, newType) {
@@ -1123,7 +1134,8 @@ const Store = (() => {
     moveSlide(id, dir) { const s = curStream(); if (!s) return; const i = s.slides.findIndex(x => x.id === id); const j = i + dir;
       if (i < 0 || j < 0 || j >= s.slides.length) return; [s.slides[i], s.slides[j]] = [s.slides[j], s.slides[i]]; emit(); },
     duplicateSlide(id) { const s = curStream(); if (!s) return; const i = s.slides.findIndex(x => x.id === id); if (i < 0) return;
-      const copy = { id: uid(), type: s.slides[i].type, data: JSON.parse(JSON.stringify(s.slides[i].data)) };
+      const src = s.slides[i];
+      const copy = { id: uid(), type: src.type, data: JSON.parse(JSON.stringify(src.data)), options: JSON.parse(JSON.stringify(src.options || {})) };   // keep timer-start / reveal / scored
       s.slides.splice(i + 1, 0, copy); state.selSlide = copy.id; emit(); },
     deleteSlide(id) { const s = curStream(); if (!s) return; const i = s.slides.findIndex(x => x.id === id);
       s.slides = s.slides.filter(x => x.id !== id); if (state.selSlide === id) { const n = s.slides[Math.max(0, i - 1)]; state.selSlide = n ? n.id : null; } emit(); },
@@ -1155,7 +1167,35 @@ const Store = (() => {
 
     /* import */
     replaceProject(p) { state.project = normalize(p); const f = state.project.streams[0]; state.selStream = f ? f.id : null; state.selSlide = f && f.slides[0] ? f.slides[0].id : null; emit(); },
-    mergeStreams(p) { const inc = normalize(p); inc.streams.forEach(s => { s.id = uid(); state.project.streams.push(s); }); emit(); },
+    mergeStreams(p) {
+      const inc = normalize(p);
+      // bring the incoming streams' themes along. Same id (built-in / re-import) → UPSERT content, so an
+      // edited built-in from the file wins. Same NAME with a fresh id (CSV parse mints ids) → reuse the
+      // existing theme's id and remap the incoming references — re-importing never duplicates a theme.
+      (inc.themes || []).forEach(t => {
+        const byId = state.project.themes.findIndex(x => x.id === t.id);
+        if (byId >= 0) { state.project.themes[byId] = t; return; }
+        const byName = state.project.themes.findIndex(x => x.name.trim().toLowerCase() === t.name.trim().toLowerCase());
+        if (byName >= 0) {
+          const keepId = state.project.themes[byName].id;
+          inc.streams.forEach(s => { if (s.themeId === t.id) s.themeId = keepId; });
+          state.project.themes[byName] = Object.assign({}, t, { id: keepId });
+        } else state.project.themes.push(t);
+      });
+      // UPSERT by stream name: same name → replace that stream in place (keeps its position); new name → append.
+      // Lets a deck be built from several CSVs and any of them re-imported after edits without duplicating.
+      inc.streams.forEach(s => {
+        s.teamCount = state.project.teamCount;   // merged streams share THIS deck's team count
+        const at = state.project.streams.findIndex(x => x.name.trim() === s.name.trim());
+        if (at >= 0) { s.id = state.project.streams[at].id; state.project.streams[at] = s; }
+        else { s.id = uid(); state.project.streams.push(s); }
+      });
+      // if the selected stream was replaced, its old slide ids are gone — re-point the selection
+      const cs = state.project.streams.find(x => x.id === state.selStream);
+      if (!cs) { const f = state.project.streams[0]; state.selStream = f ? f.id : null; state.selSlide = f && f.slides[0] ? f.slides[0].id : null; }
+      else if (!cs.slides.find(sl => sl.id === state.selSlide)) state.selSlide = cs.slides[0] ? cs.slides[0].id : null;
+      emit();
+    },
   };
 })();
 
@@ -1193,6 +1233,7 @@ const Views = (() => {
 
   // ✎ Stream settings — rename + the defaults a NEW question inherits (live-applied)
   function openStreamSettings(id) {
+    const old = document.getElementById('streamDlg'); if (old) old.remove();   // never stack two dialogs
     const s = Store.get().project.streams.find(x => x.id === id); if (!s) return;
     const d = () => Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults);
     const field = (label, hint, widget) => { const f = el('div', { class: 'field' }); const lab = el('label', {}, [label]); if (hint) lab.append(el('span', { class: 'hint', text: hint })); f.append(lab, widget); return f; };
@@ -1441,11 +1482,27 @@ async function embedImages(project) {
    IO — export / import (with image-embedding + encryption)
    ================================================================ */
 const IO = (() => {
-  function download(filename, obj) {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  function download(filename, obj) { downloadBlob(filename, new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })); }
+  function downloadText(filename, text) { downloadBlob(filename, new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' })); }   // BOM → Excel/Sheets read it as UTF-8 (curly quotes don't garble)
+  function downloadBlob(filename, blob) {
     const url = URL.createObjectURL(blob);
     const a = el('a', { href: url, download: filename }); document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  // shared ingest path for ALL imports (JSON / encrypted / CSV) — abortable merge/replace
+  function ingest(data) {
+    if (Store.project().streams.length) {
+      // name exactly what a merge would destroy — a coincidental name match replaces a hand-built stream
+      const mine = Store.project().streams.map(s => s.name.trim());
+      const hit = data.streams.map(s => (s.name || '').trim()).filter(n => mine.includes(n));
+      const warn = hit.length ? '\n\n⚠ MERGE will REPLACE your existing stream(s): ' + hit.join(', ') : '';
+      const choice = (prompt('Import ' + data.streams.length + ' stream(s):\n\n• type  M  to MERGE into your current deck (a stream with the SAME NAME is replaced, new names are added)\n• type  R  to REPLACE the whole deck (deletes it)\n• Cancel to abort' + warn, 'M') || '').trim().toLowerCase();
+      if (choice === 'r') Store.replaceProject(data);
+      else if (choice === 'm') Store.mergeStreams(data);
+      else { toast('Import cancelled'); return; }
+    } else Store.replaceProject(data);
+    const di = document.getElementById('deckName'); if (di) di.value = Store.project().name || '';
+    toast('Imported', 'ok');
   }
   const safe = s => ((s || 'deck').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'deck');
   const dt = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
@@ -1464,7 +1521,7 @@ const IO = (() => {
     }
     return Store.project().name;
   }
-  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 1, name: Store.project().name, teamCount: Store.project().teamCount, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
+  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 1, themesVersion: Store.project().themesVersion || 2, name: Store.project().name, teamCount: Store.project().teamCount, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
   // every export carries its creation timestamp — Display tags scores/session per deck with it
   const stamped = p => { p.exportedAt = Date.now(); return p; };
 
@@ -1482,7 +1539,7 @@ const IO = (() => {
       if (!CryptoBox.available) { toast('Encryption not supported by this browser'); return; }
       if (!ensureName()) return;
       const pw = prompt('Set a password to encrypt the whole deck.\nThe Display will need it to open the show:');
-      if (!pw) return;
+      if (!pw) { toast('Export cancelled — no password set'); return; }
       toast('Encrypting…');
       const p = stamped(await embedImages(Store.project()));
       try { const encd = await CryptoBox.encrypt(p, pw); download(fname('', '.cfcq.json'), encd); toast('🔒 Encrypted deck saved', 'ok'); }
@@ -1492,13 +1549,19 @@ const IO = (() => {
       if (!CryptoBox.available) { toast('Encryption not supported by this browser'); return; }
       if (!ensureName()) return;
       const s = Store.curStream(); if (!s) { toast('No stream selected'); return; }
-      const pw = prompt('Set a password to encrypt this stream:'); if (!pw) return;
+      const pw = prompt('Set a password to encrypt this stream:'); if (!pw) { toast('Export cancelled — no password set'); return; }
       toast('Encrypting…');
       const p = stamped(await embedImages(streamProject(s)));
       try { const encd = await CryptoBox.encrypt(p, pw); download(fname(s.name, '.cfcq.json'), encd); toast('🔒 Encrypted stream saved — note: a per-stream file gets its OWN scoreboard in Display. Export the whole deck to carry scores across streams.', 'ok'); }
       catch (e) { console.error(e); toast('Encryption failed'); }
     },
-    importFile(file) {
+    async exportCsv() {
+      if (!ensureName()) return;
+      const p = await embedImages(Store.project());
+      downloadText(fname('', '.csv'), CsvIO.serialize(p));
+      toast('Exported CSV (questions + themes)', 'ok');
+    },
+    importFile(file) {            // 🔒 encrypted or plain JSON (auto-detected)
       const rd = new FileReader();
       rd.onload = async () => {
         let data; try { data = JSON.parse(rd.result); } catch { toast('Not a valid JSON file'); return; }
@@ -1507,21 +1570,289 @@ const IO = (() => {
           try { data = await CryptoBox.decrypt(data, pw); } catch (e) { toast('Wrong password or corrupted file'); return; }
         }
         if (data.app !== 'cfc-quiz' || !Array.isArray(data.streams)) { toast('Not a CFC Quiz content file'); return; }
-        if (Store.project().streams.length) {
-          // explicit, abortable choice — the destructive REPLACE is never the accidental default
-          const choice = (prompt('Import ' + data.streams.length + ' stream(s):\n\n• type  M  to MERGE them into your current deck\n• type  R  to REPLACE the whole deck (deletes it)\n• Cancel to abort', 'M') || '').trim().toLowerCase();
-          if (choice === 'r') Store.replaceProject(data);
-          else if (choice === 'm') Store.mergeStreams(data);
-          else { toast('Import cancelled'); return; }
-        } else {
-          Store.replaceProject(data);
-        }
-        const di = document.getElementById('deckName'); if (di) di.value = Store.project().name || '';
-        toast('Imported', 'ok');
+        ingest(data);
       };
+      rd.onerror = () => toast('Could not read that file — try again');
+      rd.readAsText(file);
+    },
+    importCsvFile(file) {
+      const rd = new FileReader();
+      rd.onload = () => {
+        let data; try { data = CsvIO.parse(rd.result); }
+        catch (e) { toast('CSV import failed — ' + e.message); return; }   // graceful: show the error, import nothing
+        ingest(data);
+      };
+      rd.onerror = () => toast('Could not read that file — try again');
       rd.readAsText(file);
     },
   };
+})();
+
+/* ================================================================
+   CSV — human-editable spreadsheet import/export (questions + themes).
+   Real CSV: a HEADING row then a VALUE row beneath (never name,value in
+   one row). Sections [DECK] / [THEME] / [STREAM] / [SLIDES]. Per slide:
+   the shared "type, timer, start, points, reveal, scored" legend, a value
+   row, then the type's fields as heading row + value row(s) (each prefixed
+   with one empty cell); lists (options/pairs) stack one item per row, "*"
+   marks the correct option. A blank meta cell inherits the stream default.
+   Built-in themes referenced by name; custom themes in a [THEME] table.
+   ================================================================ */
+const CsvIO = (() => {
+  const TYPE_KW = { title: 'title', choices: 'choices', 'short-answer': 'short', 'titled-question': 'titled',
+    'true-false': 'truefalse', 'image-question': 'image', matching: 'matching', poll: 'poll',
+    buzzer: 'buzzer', answer: 'answer', leaderboard: 'leaderboard', podium: 'podium' };
+  const KW_TYPE = { TITLE: 'title', CHOICES: 'choices', SHORT: 'short-answer', SHORTANSWER: 'short-answer',
+    TITLED: 'titled-question', TITLEDQUESTION: 'titled-question', TRUEFALSE: 'true-false', TF: 'true-false',
+    IMAGE: 'image-question', PICTURE: 'image-question', MATCHING: 'matching', MATCH: 'matching',
+    POLL: 'poll', BUZZER: 'buzzer', ANSWER: 'answer', LEADERBOARD: 'leaderboard', PODIUM: 'podium' };
+  const LIST = new Set(['options', 'pairs']);
+  /* escaping discipline (designed once):
+     - text values escape backslash FIRST, then newlines → "\\" and "\n"; dec() reverses both plus "\*"
+     - an option whose REAL text ends in "*" exports that star as "\*" so only a bare trailing " *" means correct
+     - applied to EVERY text cell (deck/stream/theme names included) → no raw newline ever reaches a row
+     - cells are RFC-4180 quoted when they contain , or " ; formula-leading cells get a guard apostrophe */
+  const enc = s => String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n');
+  const dec = s => String(s == null ? '' : s).replace(/\\(\\|n|\*)/g, (m, g) => g === 'n' ? '\n' : g);
+  const encOpt = s => enc(s).replace(/\*(\s*)$/, '\\*$1');   // protect a real trailing star
+  const yn = b => b === false ? 'no' : 'yes';
+  const bool = (v, d) => { v = String(v || '').trim().toLowerCase(); if (['yes', 'y', 'true', 't', 'on', '1'].indexOf(v) >= 0) return true; if (['no', 'n', 'false', 'f', 'off', '0'].indexOf(v) >= 0) return false; return d; };
+
+  /* ---- CSV cell helpers ---- */
+  function splitCsv(line) {
+    const cells = []; let cur = '', q = false, wasQ = false;
+    // strip ONE guard apostrophe — the regexes are the EXACT inverse of cell()'s guard, so '-5 (real text) survives and \r doesn't accumulate apostrophes
+    const push = () => { let v = wasQ ? cur : cur.trim(); if (/^'+[=+@\t\r]/.test(v) || /^'+-(?![\d.]+\s*$)/.test(v)) v = v.slice(1); cells.push(v); cur = ''; wasQ = false; };
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"' && cur.trim() === '') { q = true; wasQ = true; cur = ''; }
+      else if (c === ',') push();
+      else cur += c;
+    }
+    push();
+    return cells;
+  }
+  const cell = v => {
+    v = String(v == null ? '' : v);
+    if (/^'*[=+@\t\r]/.test(v) || /^'*-(?![\d.]+\s*$)/.test(v)) v = "'" + v;   // CSV-injection guard: Excel must not evaluate cells as formulas (bare negative numbers stay clean; apostrophe-runs round-trip)
+    // quote a value that would otherwise read as a comment or section marker at line level (names like "#1 Youth Quiz" / "[SLIDES]")
+    return (/[",]/.test(v) || /^(#|\/\/|\[)/.test(v)) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  };
+  // join with a BARE comma — RFC CSV: a space before a quoted cell makes Excel ignore the quotes and split the cell.
+  // Trim trailing empty cells, but a field row (leading empty cell) keeps ≥2 cells so an empty value
+  // still emits "," — never a blank line (a blank line ends a group).
+  const row = cells => { const min = cells.length && cells[0] === '' ? 2 : 1; let e = cells.length; while (e > min && (cells[e - 1] === '' || cells[e - 1] == null)) e--; return cells.slice(0, Math.max(e, Math.min(min, cells.length))).map(cell).join(','); };
+
+  /* ---- per-type field groups: each group is a heading row + value row(s) ---- */
+  function groups(sl) {
+    const d = sl.data || {}, g = [];
+    const single = (hdr, vals) => g.push({ head: hdr, rows: [vals] });
+    switch (sl.type) {
+      case 'title': single(['heading', 'subheading'], [enc(d.heading), enc(d.subheading)]); break;
+      case 'answer': single(['heading', 'body'], [enc(d.heading), enc(d.body)]); break;
+      case 'leaderboard': case 'podium': single(['title'], [enc(d.title)]); break;
+      case 'choices': single(['question', 'mode'], [enc(d.question), (d.choice && d.choice.multiple) ? 'multi' : 'single']);
+        if (d.media) single(['image'], [d.media]);
+        g.push({ head: ['options'], rows: ((d.choice && d.choice.options) || []).map(o => [encOpt(o.text) + (o.correct ? ' *' : '')]) }); break;
+      case 'true-false': single(['statement', 'answer'], [enc(d.statement), d.answer === false ? 'no' : 'yes']); break;
+      case 'short-answer': single(['question', 'answer'], [enc(d.question), enc(d.answer)]); break;
+      case 'titled-question': single(['title', 'question', 'answer'], [enc(d.title), enc(d.question), enc(d.answer)]); break;
+      case 'image-question': single(['question', 'answer'], [enc(d.question), enc(d.answer)]); if (d.media) single(['image'], [d.media]); break;
+      case 'matching': single(['instruction'], [enc(d.instruction)]); g.push({ head: ['pairs'], rows: (d.pairs || []).map(p => [enc(p.left), enc(p.right)]) }); break;   // left/right in their OWN cells — no | sentinel
+      case 'poll': single(['question'], [enc(d.question)]); g.push({ head: ['options'], rows: (d.options || []).map(o => [encOpt(o.text)]) }); break;
+      case 'buzzer': single(['question', 'answer'], [enc(d.question), enc(d.answer)]); break;
+    }
+    return g;
+  }
+  // meta value cells — blank means "the stream default" on import, so a cell may be blank ONLY
+  // when the slide's EFFECTIVE value (unset = app default) equals the stream default; otherwise
+  // the explicit value is written. Guarantees import reproduces the exact show behavior.
+  function metaVals(sl, def) {
+    def = Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, def);
+    const o = sl.options || {}, d = sl.data || {}, poll = sl.type === 'poll';
+    const effTimer = (d.timer === '' || d.timer == null) ? 20 : Number(d.timer);
+    const effPts = (d.points == null || d.points === '') ? 1 : Number(d.points);
+    const effAuto = o.autoStart == null ? true : o.autoStart;
+    const effRev = o.reveal == null ? true : o.reveal;
+    const effSco = o.scored == null ? true : o.scored;
+    return [TYPE_KW[sl.type] || sl.type,
+      effTimer === def.timer ? '' : effTimer,
+      effAuto === (def.autoStart !== false) ? '' : (effAuto ? 'auto' : 'button'),
+      (poll || effPts === def.points) ? '' : effPts,
+      (poll || effRev === (def.reveal !== false)) ? '' : yn(effRev),
+      (poll || effSco === (def.scored !== false)) ? '' : yn(effSco)];
+  }
+
+  /* ---------- serialize: project → CSV text ---------- */
+  // a built-in theme is exported only when it was EDITED (content differs from the shipped default)
+  const THEME_KEYS = ['bgType', 'bg1', 'bg2', 'angle', 'ink', 'accent', 'correct', 'headingFont', 'bodyFont'];
+  const sameTheme = (a, b) => THEME_KEYS.every(k => String(a[k] ?? '') === String(b[k] ?? ''));
+  function serialize(project) {
+    const L = [];
+    const themeName = id => { const t = (project.themes || []).find(x => x.id === id); return t ? t.name : ''; };
+    L.push('[DECK]', 'Name,Teams,Theme', row([enc(project.name || 'Untitled Deck'), project.teamCount || 20, enc(themeName(project.themeId))]), '');
+    const exportable = (project.themes || []).filter(t => { const def = THEME_DEFAULTS.find(d => d.name === t.name); return !def || !sameTheme(def, t); });
+    if (exportable.length) {
+      L.push('[THEME]', 'Name,bg,color1,color2,angle,ink,accent,correct,heading-font,body-font');
+      exportable.forEach(t => L.push(row([enc(t.name), t.bgType, t.bg1, t.bg2, t.angle || 160, t.ink, t.accent, t.correct, t.headingFont, t.bodyFont])));
+      L.push('');
+    }
+    L.push('[STREAM]', 'Name,theme,timer,start,points,reveal,scored');
+    project.streams.forEach(s => { const d = s.defaults || {}; L.push(row([enc(s.name), enc(themeName(s.themeId)), d.timer != null ? d.timer : 20, d.autoStart === false ? 'button' : 'auto', d.points != null ? d.points : 1, yn(d.reveal), yn(d.scored)])); });
+    L.push('');
+    // each group = heading row then its value row(s), tight; a blank line ends every group
+    const METRC = ['type', 'timer', 'start', 'points', 'reveal', 'scored'];
+    project.streams.forEach(s => {
+      L.push('[SLIDES]', row([enc(s.name)]));
+      s.slides.forEach(sl => {
+        L.push('', row(METRC), row(metaVals(sl, s.defaults)));
+        groups(sl).forEach(grp => { L.push('', row(['', ...grp.head])); grp.rows.forEach(r => L.push(row(['', ...r]))); });
+      });
+      L.push('');
+    });
+    return L.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
+
+  /* ---------- parse: CSV text → project (throws Error with a located message) ----------
+     Grammar: [SECTION] rows start sections. In [SLIDES] the FIRST non-blank row is the
+     stream name VERBATIM (a stream may be called "Answer"). After that every non-field
+     row must be a type keyword (anything else = located error). A blank line ends a
+     heading group / options list — field names inside list items can't terminate them.
+     Comments: only WHOLE lines starting with // or #. Columns are mapped by HEADER NAME
+     (reorder-safe); stream keying is exact-case. */
+  function parse(text) {
+    const lines = String(text).replace(/^﻿/, '').split(/\r?\n/);
+    let deckName = 'Imported Deck', teamCount = 20, deckTheme = '', section = null;
+    let hdr = null;                              // current section's header map: name → column index
+    const customThemes = [], order = [], byNm = {};
+    let curStream = null, curSlide = null, pend = null, listName = null, expectStream = false, metaHdr = null;
+    const DEF_META = ['type', 'timer', 'start', 'points', 'reveal', 'scored'];
+    const fail = (i, msg) => { throw new Error('Line ' + (i + 1) + ': ' + msg); };
+    const getStream = name => { if (!byNm[name]) { const s = { id: 's_' + uid(), name, themeName: '', defaults: {}, slides: [] }; byNm[name] = s; order.push(s); } return byNm[name]; };
+    const newSlide = type => { const sl = { id: 'sl_' + uid(), type, data: SlideTypes.get(type).createDefault(), options: {} }; if (type === 'choices') sl.data.choice = { multiple: false, options: [] }; if (type === 'poll') sl.data.options = []; if (type === 'matching') sl.data.pairs = []; if (kindOf(type) === 'question' && 'timer' in sl.data) sl.data.timer = ''; sl.__set = {}; return sl; };
+    const hmap = cells => { const m = {}; cells.forEach((c, k) => { const n = String(c).trim().toLowerCase(); if (n) m[n] = k; }); return m; };
+    const pickCell = (cells, map, name, fallbackIdx) => { const k = map && map[name] != null ? map[name] : fallbackIdx; return k != null ? cells[k] : undefined; };
+
+    lines.forEach((raw, i) => {
+      const t = raw.trim();
+      if (t.startsWith('//') || t[0] === '#') return;                       // whole-line comments ONLY — never strip inside data
+      if (!t) { pend = null; listName = null; return; }                     // a blank line ends the current group/list
+      const sec = t.match(/^\[(DECK|THEME|STREAM|SLIDES)\]$/i);
+      if (sec) { section = sec[1].toLowerCase(); hdr = null; if (section === 'slides') { curStream = curSlide = pend = null; listName = null; metaHdr = null; expectStream = true; } return; }
+      const cells = splitCsv(raw);
+      const c0 = (cells[0] || '').trim();
+      if (section === 'deck') {
+        if (!hdr) { hdr = hmap(cells); if (hdr.name == null) fail(i, '[DECK] must start with a header row containing "Name" (got "' + t.slice(0, 40) + '")'); return; }
+        deckName = dec(pickCell(cells, hdr, 'name', 0) || '') || deckName;
+        const tm = pickCell(cells, hdr, 'teams', 1); if (tm) teamCount = Math.max(1, Math.min(99, Math.round(+tm) || 20));
+        const th = pickCell(cells, hdr, 'theme', 2); if (th) deckTheme = dec(th);
+        return;
+      }
+      if (section === 'theme') { if (!hdr) { hdr = hmap(cells); if (hdr.name == null) fail(i, '[THEME] must start with a header row containing "Name" (got "' + t.slice(0, 40) + '")'); return; } if (c0) customThemes.push(themeRow(cells, hdr)); return; }
+      if (section === 'stream') { if (!hdr) { hdr = hmap(cells); if (hdr.name == null) fail(i, '[STREAM] must start with a header row containing "Name" (got "' + t.slice(0, 40) + '")'); return; } if (c0) streamRow(cells, hdr, getStream); return; }
+      if (section === 'slides') {
+        if (expectStream) {   // first row after [SLIDES] = stream name, VERBATIM (even "Answer")
+          if (c0.toLowerCase() === 'type' && (cells[1] || '').trim().toLowerCase() === 'timer') fail(i, 'expected a stream name after [SLIDES], found the column legend — was the name line lost (does it start with # or //? quote it)');
+          curStream = getStream(dec(c0)); expectStream = false; return;
+        }
+        if (c0 === '') {                                  // a field row (leading empty cell)
+          if (!curSlide) return;
+          const fc = cells.slice(1);
+          if (listName) { listItem(curSlide, listName, fc); return; }      // a list runs until a BLANK line
+          if (pend) { pend.forEach((nm, k) => { if (fc[k] !== undefined) field(curSlide, nm, fc[k]); }); pend = null; return; }
+          const names = fc.map(x => x.trim().toLowerCase()).filter(Boolean);
+          if (!names.length) return;
+          if (LIST.has(names[0])) listName = names[0]; else pend = names;
+          return;
+        }
+        const lc = cells.map(x => x.trim().toLowerCase());
+        if (lc.indexOf('type') >= 0 && lc.indexOf('timer') >= 0) { metaHdr = lc; return; }   // the meta legend — columns may be in ANY order
+        const legend = metaHdr || DEF_META;
+        const tIdx = Math.max(0, legend.indexOf('type'));
+        const kw = (cells[tIdx] || '').trim().toUpperCase().replace(/\s+/g, '');
+        if (KW_TYPE[kw]) {                                // a slide's meta value row (type read from the legend's column)
+          curSlide = newSlide(KW_TYPE[kw]); applyMeta(curSlide, cells, legend); curStream.slides.push(curSlide); pend = null; listName = null; return;
+        }
+        fail(i, '"' + (cells[tIdx] || c0) + '" is not a slide type. Expected one of: title, choices, short, titled, truefalse, image, matching, poll, buzzer, answer, leaderboard, podium — or a field row starting with an empty cell.');
+      }
+      fail(i, 'content before any [DECK]/[THEME]/[STREAM]/[SLIDES] section: "' + t.slice(0, 40) + '"');
+    });
+
+    if (!order.length) throw new Error('No [SLIDES] / streams found — nothing to import.');
+    // themes: built-ins first; a [THEME] row with a built-in's name OVERRIDES it (edited built-in)
+    const themes = THEME_DEFAULTS.map(t => JSON.parse(JSON.stringify(t)));
+    customThemes.forEach(ct => { const at = themes.findIndex(t => t.name.toLowerCase() === ct.name.toLowerCase()); if (at >= 0) { ct.id = themes[at].id; themes[at] = ct; } else themes.push(ct); });
+    const tByName = {}; themes.forEach(t => tByName[t.name.toLowerCase()] = t.id);
+    order.forEach(s => {
+      if (s.themeName) { const id = tByName[s.themeName.toLowerCase()]; if (!id) throw new Error('Stream "' + s.name + '": unknown theme "' + s.themeName + '".'); s.themeId = id; } else s.themeId = null;
+      s.defaults = Object.assign({ timer: 20, autoStart: true, points: 1, reveal: true, scored: true }, s.defaults);
+      s.slides.forEach(sl => finalize(sl, s.defaults, s.name));
+      delete s.themeName;
+    });
+    if (deckTheme && !tByName[deckTheme.toLowerCase()]) throw new Error('Deck theme "' + deckTheme + '" is not a known theme.');
+    const defaultThemeId = deckTheme ? tByName[deckTheme.toLowerCase()] : (themes.find(t => t.name === 'Midnight') || themes[0]).id;
+    // themesVersion: 2 — or normalize()'s one-time built-in refresh would stomp imported edits of built-in themes
+    return { app: 'cfc-quiz', kind: 'content', version: 1, themesVersion: 2, name: deckName, teamCount, themes, themeId: defaultThemeId, streams: order };
+  }
+  function themeRow(c, h) {
+    const g = (n, k, d) => { const v = c[h && h[n] != null ? h[n] : k]; return (v === '' || v == null) ? d : v; };
+    return { id: 'theme-' + uid(), name: dec(g('name', 0, 'Theme')), bgType: String(g('bg', 1, 'linear')).toLowerCase(), bg1: g('color1', 2, '#1f2937'), bg2: g('color2', 3, '#0b1220'), angle: +g('angle', 4, 160) || 160, ink: g('ink', 5, '#ffffff'), accent: g('accent', 6, '#6366f1'), correct: g('correct', 7, '#34d399'), headingFont: g('heading-font', 8, 'System Sans'), bodyFont: g('body-font', 9, 'System Sans') };
+  }
+  function streamRow(c, h, getStream) {
+    const g = (n, k) => c[h && h[n] != null ? h[n] : k];
+    const s = getStream(dec((g('name', 0) || 'Stream').trim())), d = s.defaults;
+    const th = g('theme', 1); if (th) s.themeName = dec(th.trim());
+    const tm = g('timer', 2); if (tm !== '' && tm != null) d.timer = /^(off|no|0)$/i.test(tm) ? 0 : Math.max(0, Math.round(+tm) || 0);
+    const st = g('start', 3); if (st) d.autoStart = !/button|manual|no|^0$/i.test(st);
+    const pt = g('points', 4); if (pt !== '' && pt != null) d.points = Math.max(0, Math.round(+pt) || 0);
+    const rv = g('reveal', 5); if (rv) d.reveal = bool(rv, true);
+    const sc = g('scored', 6); if (sc) d.scored = bool(sc, true);
+  }
+  function applyMeta(sl, c, legend) {     // legend maps column position → meta name (reorder-safe)
+    const at = name => { const k = legend.indexOf(name); return k >= 0 ? c[k] : undefined; };
+    const tm = at('timer'); if (tm !== '' && tm != null) { sl.data.timer = /^(off|no|0)$/i.test(tm) ? 0 : Math.max(0, Math.round(+tm) || 0); sl.__set.timer = 1; }
+    const st = at('start'); if (st) { sl.options.autoStart = !/button|manual|no|^0$/i.test(st); sl.__set.autoStart = 1; }
+    const pt = at('points'); if (pt !== '' && pt != null) { sl.data.points = Math.max(0, Math.round(+pt) || 0); sl.__set.points = 1; }
+    const rv = at('reveal'); if (rv) { sl.options.reveal = bool(rv, true); sl.__set.reveal = 1; }
+    const sc = at('scored'); if (sc) { sl.options.scored = bool(sc, true); sl.__set.scored = 1; }
+  }
+  function field(sl, name, val) {
+    const d = sl.data, t = sl.type;
+    if (['heading', 'subheading', 'body', 'title', 'question', 'statement', 'instruction'].indexOf(name) >= 0) d[name] = dec(val);
+    else if (name === 'image') d.media = val.trim();
+    else if (name === 'mode') { if (d.choice) d.choice.multiple = /^(multi|multiple|many)/i.test(val.trim()); }
+    else if (name === 'answer') d.answer = (t === 'true-false') ? bool(val, true) : dec(val);
+  }
+  function listItem(sl, list, cells) {
+    const d = sl.data, t = sl.type, v = cells[0] || '';
+    if (list === 'options') {
+      const correct = /(^|[^\\])\*\s*$/.test(v);                         // a BARE trailing * = correct ("\*" is literal text)
+      const text = dec(correct ? v.replace(/\*\s*$/, '') : v).trim();
+      if (t === 'poll') d.options.push({ text }); else if (d.choice) d.choice.options.push({ text, correct });
+    } else if (list === 'pairs' && t === 'matching') {
+      if (cells.length === 1 && / \| /.test(v)) { const bar = v.indexOf(' | '); d.pairs.push({ left: dec(v.slice(0, bar)).trim(), right: dec(v.slice(bar + 3)).trim() }); }   // old single-cell "left | right" files still import
+      else d.pairs.push({ left: dec(v).trim(), right: dec(cells[1] || '').trim() });   // current format: left/right are separate cells
+    }
+  }
+  function finalize(sl, def, streamName) {
+    if (kindOf(sl.type) === 'question') {
+      if (!sl.__set.timer && 'timer' in sl.data) sl.data.timer = def.timer;      // blank → stream default (snapshot)
+      if (!sl.__set.autoStart && def.autoStart === false) sl.options.autoStart = false;
+      if (sl.type !== 'poll') {
+        if (!sl.__set.points) sl.data.points = def.points;
+        if (!sl.__set.reveal && def.reveal === false) sl.options.reveal = false;
+        if (!sl.__set.scored && def.scored === false) sl.options.scored = false;
+      }
+      if (sl.type === 'choices') {
+        if (!sl.data.choice.options.length) throw new Error('Stream "' + streamName + '": a CHOICES question has no options.');
+        if (!sl.data.choice.options.some(o => o.correct)) throw new Error('Stream "' + streamName + '": CHOICES "' + (sl.data.question || '').slice(0, 30) + '" has no option marked correct (add " *").');
+      }
+    }
+    delete sl.__set;
+    return sl;
+  }
+  return { serialize, parse };
 })();
 
 /* ================================================================
@@ -1586,6 +1917,7 @@ const Present = (() => {
       const block = el('div', { class: 'pv-pod-block ' + m.cls }, [
         el('div', { class: 'pv-pod-place', text: (r + 1) }),
         el('div', { class: 'pv-pod-score', text: t.score }) ]);
+      block.dataset.h = m.h;   // target height — a quiet re-render snaps to it instead of replaying the grow
       pod.append(block); podium.append(pod);
       setTimeout(() => { block.style.height = m.h; }, 90);
     });
@@ -1878,6 +2210,11 @@ const Present = (() => {
     else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream, slideId: step.slide.id })
                     : stage([ q('No preview for: ' + step.slide.type) ]);
     main.append(node);
+    if (opts && opts.quiet) {   // a score-driven refresh must not replay entrances — snap, don't animate
+      node.style.animation = 'none';   // the stage root carries the pvIn entrance — mute it too
+      node.querySelectorAll('.pv-pod-rest-row, .pv-pod-medal, .pv-opt, .pv-mitem').forEach(e2 => { e2.style.animation = 'none'; });
+      node.querySelectorAll('.pv-pod-block').forEach(b => { b.style.transition = 'none'; if (b.dataset.h) b.style.height = b.dataset.h; });
+    }
     // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
     const qEl = node.querySelector('.pv-q');
     if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
@@ -1934,7 +2271,7 @@ const Present = (() => {
   function switchStream(id) {
     if (curStream) positions[curStream.id] = idx; // remember where we were
     const s = Store.project().streams.find(x => x.id === id);
-    if (s && s.slides.length) loadStream(s, null); else toast('That stream has no slides');
+    if (s && s.slides.length) loadStream(s, null); else { toast('That stream has no slides'); fillStreamSel(); }   // revert the dropdown — no desync
   }
 
   /* score phase — tap ✓ (+points) / ✗ (−points) to MARK teams (green/red highlight).
@@ -2070,6 +2407,7 @@ const Present = (() => {
   function close() {
     flushScore();
     if (stopTimer) { stopTimer(); stopTimer = null; }
+    if (advanceCtl) { advanceCtl.cancel(); advanceCtl = null; }   // a held button must not fire after Exit
     closeConsole();                                    // the private console belongs to this show
     overlay.querySelectorAll('.pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
     overlay.classList.remove('open');
@@ -2188,7 +2526,7 @@ const Theme = (() => {
       el('button', { class: 'btn sm', text: 'Duplicate', onclick: () => { editId = Store.duplicateTheme(t.id); render(); } }),
       el('button', { class: 'btn sm', text: '⬇ Export', onclick: () => exportTheme(t) }),
       el('button', { class: 'btn sm', text: '⬆ Import', onclick: importTheme }),
-      el('button', { class: 'btn sm danger', text: 'Delete', onclick: () => { if (confirm('Delete theme “' + t.name + '”?')) { Store.deleteTheme(t.id); editId = null; render(); } } }),
+      el('button', { class: 'btn sm danger', text: 'Delete', onclick: () => { if (Store.themes().length <= 1) { toast('Cannot delete the last theme'); return; } if (confirm('Delete theme “' + t.name + '”?')) { Store.deleteTheme(t.id); editId = null; render(); } } }),
     ]));
     return wrap;
   }
@@ -2246,18 +2584,35 @@ function init() {
   document.getElementById('streamList').addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) setMView('slides'); });
   document.getElementById('slideList').addEventListener('click', e => { if (isMobile() && e.target.closest('.row')) setMView('editor'); });
 
-  // export — always the whole deck, encrypted with a password (so answers stay hidden)
-  document.getElementById('exportBtn').onclick = () => IO.exportEncrypted();
+  // a small format-picker dropdown anchored under a button
+  function ioMenu(anchor, items) {
+    document.querySelectorAll('.io-menu').forEach(e => e.remove());
+    const menu = el('div', { class: 'io-menu' });
+    items.forEach(it => { if (it.sub) { menu.append(el('div', { class: 'io-sub', text: it.sub })); return; } const b = el('button', { text: it.label }); b.onclick = () => { menu.remove(); it.onClick(); }; menu.append(b); });
+    document.body.append(menu);
+    const r = anchor.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+    setTimeout(() => { const close = e => { if (!menu.contains(e.target) && e.target !== anchor) { menu.remove(); document.removeEventListener('mousedown', close); } }; document.addEventListener('mousedown', close); }, 0);
+  }
+
+  const fileInput = document.getElementById('fileInput');
+  // export — choose format: 🔒 encrypted (answers hidden) · JSON (plain) · CSV (editable text + themes)
+  // two formats only: JSON (the recommended save — always ★ + 🔒 encrypted) or CSV (plain, editable)
+  document.getElementById('exportBtn').onclick = e => ioMenu(e.currentTarget, [
+    { label: '★ 🔒 JSON', onClick: () => IO.exportEncrypted() },
+    { label: 'CSV', onClick: () => IO.exportCsv() },
+  ]);
+  document.getElementById('importBtn').onclick = e => ioMenu(e.currentTarget, [
+    { label: '★ 🔒 JSON', onClick: () => { fileInput.accept = 'application/json,.json'; fileInput.dataset.mode = 'json'; fileInput.click(); } },
+    { label: 'CSV', onClick: () => { fileInput.accept = '.csv,text/csv,text/plain'; fileInput.dataset.mode = 'csv'; fileInput.click(); } },
+  ]);
+  fileInput.onchange = () => { if (fileInput.files[0]) { fileInput.dataset.mode === 'csv' ? IO.importCsvFile(fileInput.files[0]) : IO.importFile(fileInput.files[0]); } fileInput.value = ''; };
 
   // deck name (asked up front; used for export filenames)
   const deckInput = document.getElementById('deckName');
   deckInput.value = Store.project().name === 'Untitled Deck' ? '' : (Store.project().name || '');
   deckInput.oninput = () => Store.setDeckName(deckInput.value.trim() || 'Untitled Deck');
-
-  // import
-  const fileInput = document.getElementById('fileInput');
-  document.getElementById('importBtn').onclick = () => fileInput.click();
-  fileInput.onchange = () => { if (fileInput.files[0]) IO.importFile(fileInput.files[0]); fileInput.value = ''; };
 
   // present / preview (debug harness) — starts from the selected slide
   const present = () => { const s = Store.curStream(); if (!s) { toast('Add a stream first'); return; } Present.open(s, Store.get().selSlide); };
@@ -2273,7 +2628,7 @@ function init() {
   });
 
   // test/automation hook (also handy for debugging)
-  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf, CryptoBox, IO };
+  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf, CryptoBox, IO, CsvIO };
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
