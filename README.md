@@ -12,6 +12,9 @@ Nothing to install. Nothing to run. Nothing leaves your computer.
 > *that* browser on *that* device — it can be lost by clearing site data, switching machines, or another person
 > using the link. The **exported file is the real save**: Export after every editing session and keep the file.
 > (You can also download `maker.html` / `display.html` and open them straight from a folder — they work offline.)
+>
+> ℹ The hosted links are updated **manually** and can lag behind this repository — if a feature described
+> below is missing there, use the repo's `maker.html` / `display.html` directly (or redeploy).
 
 ---
 
@@ -22,7 +25,7 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 1. **Open the Maker** (link above) and **name your quiz** in the box at the top (used for the saved file name).
 2. **Streams** are **separate quiz tracks** in the same file — e.g. a **Main Quiz**, an **Audience Round**,
    or a **segue / interlude**. **+ Stream** adds one and opens **✎ Stream settings** — name it and set the
-   **defaults new questions start with** (timer, timer-start, points, reveal, scored). Double-click a name for a quick rename.
+   **defaults new questions start with** (timer, timer-start, points, show-answer-screen, scored, auto-next). Double-click a name for a quick rename.
    - All streams in a deck **share one scoreboard and one team count** (the same teams play every track).
    - Set the **👥 Teams** count once, on the Streams panel — it applies to the whole deck.
    - During the show you can **switch between streams** and come back where you left off.
@@ -34,13 +37,25 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
    - **Leaderboard** — shows every team and its score as a clean table.
    - **Podium (Winners)** — the finale: top 3 on a gold/silver/bronze podium (with a 👑 crown) and
      **everyone else in a side table**.
+   - **Reveal Answers** — an **answer browser**: it steps through the answer screens of every question
+     **before it** in the stream (back to the previous Reveal Answers slide — so one per round works),
+     with **◀ ▶ arrows**, a **“4 / 12” counter**, an optional **auto-advance every N seconds** (default 10,
+     0 = manual; **⏸/▶** to pause; a **loading bar** fills toward the next answer — on the **last** answer
+     the countdown stops, and **▶** there plays again from the first) and a **Loop** option that starts
+     over automatically.
+     Perfect with “Show answer screen: No” questions — their answers appear here instead.
 4. **Fill in the question and answer.** Per question you can set (new questions inherit the stream's defaults):
    - the **timer** (on/off; 10s up to 7 minutes) and whether it **auto-starts** or **starts on a button**,
    - the **Points** it's worth (✓ adds them, ✗ subtracts them),
-   - **Reveal answer: Yes / No** — **No** skips the answer slide entirely (the answer is never shown),
-   - **Scored: Yes / No** — set **No** for warm-ups / audience / tie-break questions; they show **no scoring page**.
+   - **Show answer screen: Yes / No** (default **No**) — **Yes** adds an answer slide after the question.
+     With **No**, a **Reveal Answers** slide later can still show the answer (decks saved before this option
+     existed keep their answer screens automatically),
+   - **Scored: Yes / No** — set **No** for warm-ups / audience / tie-break questions; they show **no scoring page**,
+   - **Auto next: Yes / No** (default **No**) — **Yes** = when the timer hits 0, the show **advances by itself**
+     after a ~2.5s beat (to the answer screen / scoring / next slide, whichever comes next per the flags above).
+     **+5s** after Time's-up revives the timer and cancels the pending hop.
 5. **Drag slides** to reorder. **Preview** any time with **P** or **▶ Present**.
-6. **Save it — always Export:** **Export** offers two formats — **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **CSV** (a spreadsheet file you can edit in Excel/Sheets; carries questions, defaults and themes — answers are visible). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several CSVs and re-import after edits without duplicates. In the CSV, each thing is a **heading row then a value row** (`[DECK]`, `[STREAM]`, `[SLIDES]`); a question's blank timer/points/reveal/scored takes the **stream's default**, and the correct option is marked with `*`.
+6. **Save it — always Export:** **Export** offers two formats — **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **CSV** (a spreadsheet file you can edit in Excel/Sheets; carries questions, defaults and themes — answers are visible). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several CSVs and re-import after edits without duplicates. In the CSV, each thing is a **heading row then a value row** (`[DECK]`, `[STREAM]`, `[SLIDES]`); a question's blank timer/points/reveal/scored/auto takes the **stream's default**, and the correct option is marked with `*`.
 
 > Your work is auto-saved in the browser. **🗑 Reset** wipes the Maker's own data and reloads the sample deck
 > (it never touches a Display running in the same browser).

@@ -78,6 +78,20 @@
   .pv-opt.dim { opacity: .38; filter: saturate(.4); }
   .pv-check { margin-left: auto; color: var(--pv-correct); font-weight: 900; font-size: 1.4em; }
   .pv-answer { font-size: clamp(30px, 5.5vw, 70px); font-weight: 900; color: var(--pv-correct); margin-top: 1vh; animation: pop .45s; }
+  /* Reveal Answers browser slide */
+  .pv-ra { position: relative; }
+  .pv-ra-inner { width: 100%; text-align: center; animation: pvIn .35s cubic-bezier(.2,.85,.25,1); }
+  .pv-ra-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 6; width: 62px; height: 62px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; font-size: 24px; cursor: pointer; }
+  .pv-ra-arrow.prev { left: -8px; } .pv-ra-arrow.next { right: -8px; }
+  .pv-ra-arrow:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+  .pv-ra-arrow:disabled { opacity: .25; cursor: default; }
+  .pv-ra-bar { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 2.5vh; }
+  .pv-ra-counter { font-weight: 800; font-size: clamp(16px, 2vw, 24px); opacity: .85; font-variant-numeric: tabular-nums; }
+  .pv-ra-prog { width: clamp(110px, 15vw, 200px); height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+  .pv-ra-prog-fill { height: 100%; width: 0%; background: currentColor; opacity: .75; }
+  .pv-ra-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; font-size: 17px; cursor: pointer; }
+  .pv-ra-pause:hover { background: rgba(255,255,255,.2); }
   .pv-passage { font-size: clamp(22px, 3.2vw, 40px); font-weight: 600; line-height: 1.35; max-width: 22ch; margin: 0 auto; }
 
   /* timer */
@@ -538,6 +552,69 @@ const Show = (() => {
     } },
     poll: { phases: ['question'], render: d => stage([ badge('Poll'), q(d.question), optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
     buzzer: { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'question' ? el('div', { class: 'pv-buzz', text: '🔔 BUZZ!' }) : answer(d.answer) ]) },
+    'reveal-answers': { phases: SOLO, render: (d, ctx) => {
+      // the answer browser: pages through the reveal screens of the questions BEFORE this
+      // slide (back to the previous Reveal Answers slide). "Show answer screen: No" questions
+      // are included — this slide is their catch-up moment. Polls have no answer → skipped.
+      const all = (ctx.stream && ctx.stream.slides) || [];
+      const at0 = all.findIndex(x => x.id === ctx.slideId);
+      const here = at0 < 0 ? all.length : at0;
+      let from = 0;
+      for (let i = here - 1; i >= 0; i--) if (all[i].type === 'reveal-answers') { from = i + 1; break; }
+      const qs = all.slice(from, here).filter(x => isQuestionType(x.type) && x.type !== 'poll' && renderers[x.type]);   // isQuestionType calls UNKNOWN types questions — only browse what we can render
+      const wrap = stage([ d.title ? badge(d.title) : null ]);
+      wrap.classList.add('pv-ra');
+      if (!qs.length) { wrap.append(q('No answers to show yet.')); return wrap; }
+      const page = el('div', { class: 'pv-ra-page' });
+      const counter = el('div', { class: 'pv-ra-counter' });
+      const prevB = el('button', { class: 'pv-ra-arrow prev', text: '◀', title: 'Previous answer' });
+      const nextB = el('button', { class: 'pv-ra-arrow next', text: '▶', title: 'Next answer' });
+      const secs = (d.auto === '' || d.auto == null) ? 10 : Math.max(0, Math.round(Number(d.auto)) || 0);
+      const loop = d.loop === true;
+      const pauseB = secs > 0 ? el('button', { class: 'pv-ra-pause', text: '⏸', title: 'Pause auto-advance' }) : null;
+      const prog = secs > 0 ? el('div', { class: 'pv-ra-prog', title: 'Next answer in ' + secs + 's' }, [ el('div', { class: 'pv-ra-prog-fill' }) ]) : null;
+      let at = 0, iv = null, dueAt = 0;
+      const stopAuto = () => { if (iv) { clearInterval(iv); iv = null; } };
+      const paintPlay = () => { if (pauseB) { pauseB.textContent = iv ? '⏸' : '▶'; pauseB.title = iv ? 'Pause auto-advance' : ((!loop && at === qs.length - 1) ? 'Play again from the first answer' : 'Play — next answer every ' + secs + 's'); } };
+      // countdown bar: refills over each window, restarts with it, freezes on pause, empty when stopped.
+      // The reset paints first and the target lands a frame later (double rAF): offsetWidth cannot
+      // flush a node that is NOT in the DOM yet (this renderer runs BEFORE renderStep appends the
+      // stage), and a transition only animates a style change made after a painted frame — without
+      // the deferral the FIRST window mounts already at 100% and never moves.
+      const armBar = () => { if (!prog) return; const f = prog.firstChild; f.style.transition = 'none'; f.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => { if (iv) { f.style.transition = 'width ' + secs + 's linear'; f.style.width = '100%'; } })); };
+      const freezeBar = () => { if (!prog) return; const f = prog.firstChild; const w = getComputedStyle(f).width; f.style.transition = 'none'; f.style.width = w; };
+      const renderPage = () => {
+        page.innerHTML = '';
+        const sl = qs[at], r = renderers[sl.type];
+        const node = r.render(sl.data, { phase: 'reveal', stream: ctx.stream, slideId: sl.id });
+        node.classList.remove('pv-stage'); node.classList.add('pv-ra-inner');   // ONE stage per show — the browser wrap is it
+        page.append(node);
+        counter.textContent = (at + 1) + ' / ' + qs.length;
+        prevB.disabled = !loop && at === 0;
+        nextB.disabled = !loop && at === qs.length - 1;
+        requestAnimationFrame(() => { if (wrap.parentElement) fitStage(wrap.parentElement); });
+      };
+      const step = dir => { at = loop ? (at + dir + qs.length) % qs.length : Math.max(0, Math.min(qs.length - 1, at + dir)); renderPage(); };
+      // DEADLINE-based like makeTimer: a fast tick checks a wall-clock due time, so a throttled
+      // (occluded/covered) window still steps on time — and only ONE page per window, never a
+      // catch-up burst on uncover. Keeps the auto-step on the same clock as the CSS loading bar.
+      // The LAST answer (no loop) has nothing to count down to: never start a window there, and
+      // stop the moment a step LANDS there — bar empty, button flips to ▶ (replays from the first).
+      const startAuto = () => { stopAuto(); if (secs > 0 && (loop || at < qs.length - 1)) { dueAt = performance.now() + secs * 1000; iv = setInterval(() => {
+        if (performance.now() < dueAt) return;
+        step(1);
+        if (!loop && at === qs.length - 1) { stopAuto(); paintPlay(); armBar(); return; }
+        dueAt = performance.now() + secs * 1000; armBar();
+      }, 250); } paintPlay(); armBar(); };
+      prevB.onclick = () => { step(-1); if (iv) startAuto(); else armBar(); };   // manual nav restarts the countdown
+      nextB.onclick = () => { step(1); if (iv) startAuto(); else armBar(); };
+      if (pauseB) pauseB.onclick = () => { if (iv) { stopAuto(); freezeBar(); } else { if (!loop && at === qs.length - 1) { at = 0; renderPage(); } startAuto(); } paintPlay(); };
+      wrap.append(page, el('div', { class: 'pv-ra-bar' }, [ counter, prog, pauseB ]), prevB, nextB);
+      renderPage(); startAuto();
+      wrap.__cleanup = stopAuto;   // renderStep hooks this into stopTimer — leaving the slide kills the auto-step
+      return wrap;
+    } },
   };
 
   function burst(host) {
@@ -771,8 +848,8 @@ const Show = (() => {
   }
 
   /* secret jump-to-any-slide (Ctrl/Cmd-click the 🏆 in the hint) */
-  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : type === 'answer' ? 'Answer' : type === 'title' ? 'Title' : 'Question'; }
-  const isQuestionType = t => !['title', 'answer', 'leaderboard', 'podium'].includes(t);
+  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : type === 'answer' ? 'Answer' : type === 'title' ? 'Title' : type === 'reveal-answers' ? 'Answers' : 'Question'; }
+  const isQuestionType = t => !['title', 'answer', 'leaderboard', 'podium', 'reveal-answers'].includes(t);
   const questionsOf = () => curStream ? curStream.slides.filter(s => isQuestionType(s.type)) : [];
   const qIndexOf = sl => questionsOf().findIndex(s => s.id === sl.id);
   function slideText(sl) { const d = sl.data || {}; return d.question || d.statement || d.prompt || d.instruction || d.heading || d.title || d.reference || ''; }
@@ -816,6 +893,7 @@ const Show = (() => {
     if (step.phase === 'score') node = renderTally(step.slide);
     else node = def ? def.render(step.slide.data, { phase: step.phase, stream: curStream, slideId: step.slide.id }) : stage([ q('No renderer for: ' + step.slide.type) ]);
     main.append(node);
+    if (node.__cleanup) stopTimer = node.__cleanup;   // a self-running slide (Reveal Answers) dies with the slide
     if (opts && opts.quiet) {   // a score-driven refresh must not replay entrances — snap, don't animate
       node.style.animation = 'none';   // the stage root carries the pvIn entrance — mute it too
       node.querySelectorAll('.pv-pod-rest-row, .pv-pod-medal, .pv-opt, .pv-mitem').forEach(e2 => { e2.style.animation = 'none'; });
@@ -838,11 +916,18 @@ const Show = (() => {
     if (timed) {
       const auto = !(step.slide.options && step.slide.options.autoStart === false);
       const lockMsg = auto ? '⏳ Locked — unlocks when the timer ends' : '⏳ Press ▶ Start to begin';
-      const t = makeTimer(main, Number(step.slide.data.timer), () => mountAdvance(), auto);
-      stopTimer = () => t.stop();
+      // "Auto next": when time's up, advance ONE step by itself after a short beat. The pending
+      // hop dies with the slide (stopTimer) and when +5s revives a finished timer (relock).
+      const autoNext = !!(step.slide.options && step.slide.options.autoNext) && idx < steps.length - 1;
+      let hopT = null;
+      const hopMsg = () => advanceLabel().replace(/^Hold to reveal answer$/, '⏭ Showing the answer…').replace(/^Hold for scoring$/, '⏭ Scoring…').replace(/^Hold for next — (.+)$/, '⏭ Next — $1…');
+      const t = makeTimer(main, Number(step.slide.data.timer), () => {
+        if (autoNext) { lockAdvance(hopMsg()); hopT = setTimeout(next, 2500); } else mountAdvance();
+      }, auto);
+      stopTimer = () => { if (hopT) { clearTimeout(hopT); hopT = null; } t.stop(); };
       lockAdvance(lockMsg);
-      // adding time while the clock is live must re-lock advance (extending un-ends a finished timer)
-      const relock = () => { if (t.isActive()) lockAdvance('⏳ Locked — unlocks when the timer ends'); };
+      // adding time while the clock is live must re-lock advance (extending un-ends a finished timer) + cancel the pending hop
+      const relock = () => { if (t.isActive()) { if (hopT) { clearTimeout(hopT); hopT = null; } lockAdvance('⏳ Locked — unlocks when the timer ends'); } };
       if (tctl) {
         const mk = (txt, fn, cls) => { const b = el('button', { class: 'pv-btn2 sm' + (cls ? ' ' + cls : ''), text: txt }); b.onclick = fn; return b; };
         if (!auto) { const sb = mk('▶ Start', () => { t.start(); sb.remove(); }, 'primary'); tctl.append(sb); }
@@ -879,8 +964,9 @@ const Show = (() => {
   function loadStream(stream, startIdx) {
     curStream = stream; steps = [];
     Theme.apply(overlay, Theme.resolve(project, stream));
-    // "Scored: No" questions have no scoring page — drop their score phase (default: scored)
-    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; const o = sl.options || {}; if (o.reveal === false) phs = phs.filter(p => p !== 'reveal'); if (o.scored === false) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
+    // "Show answer screen" (default NO) keeps the reveal phase only when explicitly Yes;
+    // "Scored: No" questions have no scoring page (default: scored)
+    stream.slides.forEach(sl => { const r = renderers[sl.type]; let phs = r ? r.phases : SOLO; const o = sl.options || {}; if (o.reveal !== true) phs = phs.filter(p => p !== 'reveal'); if (o.scored === false) phs = phs.filter(p => p !== 'score'); phs.forEach(ph => steps.push({ slide: sl, phase: ph })); });
     idx = 0;
     if (startIdx != null) idx = Math.max(0, Math.min(startIdx, steps.length - 1));
     else if (positions[stream.id] != null) idx = Math.max(0, Math.min(positions[stream.id], steps.length - 1));
@@ -946,7 +1032,15 @@ window.__CFCScores = Scores;
   function normalize(p) {
     // deck-level team count (all streams share one scoreboard → one team count), mirrored onto every stream
     p.teamCount = Math.max(1, Math.min(99, Math.round(p.teamCount || (p.streams && p.streams[0] && p.streams[0].teamCount) || 20)));
-    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: p.teamCount, themeId: s.themeId || null, slides: (s.slides || []).map(sl => migrateSlide({ id: sl.id || ('sl' + Math.random().toString(36).slice(2)), type: sl.type, data: sl.data || {}, options: sl.options || {} })) }));
+    // v2: "Show answer screen" now defaults NO. Decks exported before the flip showed an answer
+    // screen on every question, so grandfather them: stamp reveal:true where it was never set.
+    const legacyReveal = !p.version || p.version < 2;
+    const isQ = t => !['title', 'answer', 'leaderboard', 'podium', 'reveal-answers', 'poll'].includes(t);
+    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: p.teamCount, themeId: s.themeId || null, slides: (s.slides || []).map(sl => {
+      sl = migrateSlide({ id: sl.id || ('sl' + Math.random().toString(36).slice(2)), type: sl.type, data: sl.data || {}, options: sl.options || {} });
+      if (legacyReveal && isQ(sl.type) && sl.options.reveal == null) sl.options.reveal = true;
+      return sl;
+    }) }));
     p.themes = p.themes || [];
     return p;
   }
