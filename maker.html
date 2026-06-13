@@ -70,8 +70,9 @@
   .btn.ghost:hover { background: var(--accent-soft); border-color: transparent; box-shadow: none; }
   .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
   .btn.sm { padding: 4px 9px; font-size: 12.5px; }
-  .icon-btn { border: none; background: transparent; padding: 4px; border-radius: 6px; color: var(--ink-soft); line-height: 0; }
-  .icon-btn:hover { background: var(--accent-soft); color: var(--accent); }
+  .icon-btn { border: none; background: transparent; padding: 4px 5px; border-radius: 6px; color: var(--ink-soft); line-height: 1; font-size: 14px; }
+  .icon-btn:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+  .icon-btn:disabled { opacity: .3; cursor: default; }
   /* import/export format dropdown */
   .io-menu { position: absolute; z-index: 80; background: #fff; border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--shadow); padding: 5px; min-width: 170px; }
   .io-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: 9px 12px; border-radius: 7px; font: inherit; color: var(--ink); cursor: pointer; }
@@ -96,8 +97,8 @@
   .row .sub { font-size: 12px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .badge { font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft);
     padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: .4px; }
-  .row .tools { display: none; gap: 2px; }
-  .row:hover .tools, .row.active .tools { display: flex; }
+  .row .tools { display: flex; gap: 2px; opacity: .45; }   /* always visible — hidden tools are undiscoverable */
+  .row:hover .tools, .row.active .tools { opacity: 1; }
   .stream-rename { font: inherit; font-weight: 600; width: 100%; padding: 1px 4px; margin: -1px 0;
     border: 1px solid var(--accent); border-radius: 5px; background: var(--panel); color: var(--ink); outline: none; }
 
@@ -280,12 +281,14 @@
     transition: width 1.1s cubic-bezier(.2,.85,.2,1); }
   .pv-score { width: 66px; text-align: right; font-weight: 800; font-size: 20px; }
 
-  /* matching */
-  .pv-cols { display: flex; gap: clamp(20px,5vw,70px); justify-content: center; align-items: flex-start; }
-  .pv-col { display: flex; flex-direction: column; gap: 12px; }
+  /* matching — two clearly DIVIDED halves; each half breaks into 1/2/3 columns by item count */
+  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); width: 100%; position: relative; align-items: start; }
+  .pv-cols::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); opacity: .25; background: linear-gradient(to bottom, transparent, currentColor 15%, currentColor 85%, transparent); }
+  .pv-col { display: grid; grid-auto-flow: column; gap: 10px 14px; align-content: start; min-width: 0; }
   .pv-mitem { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px;
-    padding: 14px 22px; font-weight: 600; min-width: 190px; font-size: clamp(16px,1.9vw,22px); animation: optIn .4s both; }
-  .pv-pairlist { display: flex; flex-direction: column; gap: 10px; max-width: 640px; margin: 0 auto; }
+    padding: 13px 18px; font-weight: 600; min-width: 0; font-size: clamp(16px,1.9vw,22px); animation: optIn .4s both; overflow-wrap: break-word; }
+  .pv-pairlist { display: grid; gap: 10px clamp(28px,4vw,56px); max-width: 640px; margin: 0 auto; justify-items: center; }
+  .pv-pairlist.two { grid-auto-flow: column; max-width: 1100px; }   /* long answer lists read in two columns */
   .pv-pair-row { display: flex; align-items: center; gap: 14px; justify-content: center; font-size: clamp(17px,2.1vw,26px);
     font-weight: 600; animation: optIn .4s both; }
   .pv-pair-row .ar { color: #2fd39a; font-weight: 900; }
@@ -481,6 +484,20 @@
   /* question progress label */
   .pv-progress { position: absolute; top: 2.6vh; left: 3vw; font-size: clamp(12px,1.5vw,16px); font-weight: 700;
     letter-spacing: 1px; color: var(--pv-ink-soft, #9fb0d0); z-index: 4; font-variant-numeric: tabular-nums; }
+  /* deck branding — show chrome, never interactive; colors follow the theme.
+     ALWAYS centered: a branded show reserves a header band at the top, and the
+     timer ring + slide content start below it (.present.branded rules). */
+  .pv-brand { position: absolute; top: 2.2vh; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px; opacity: .92; pointer-events: none; max-width: 90vw; white-space: nowrap; }
+  .present.branded .pv-main { padding-top: calc(5vh + 52px); }
+  .present.branded .pv-timer { top: calc(2.2vh + 52px); }
+  .present.branded .pv-main.has-timer { padding-top: calc(262px + 52px); }
+  .pv-brand img { height: clamp(28px, 4.5vh, 44px); max-width: 180px; object-fit: contain; display: block; }
+  .pv-brand span { font-weight: 800; font-size: clamp(13px, 1.5vw, 19px); letter-spacing: .4px; }
+  .pv-footnote { position: absolute; left: 3vw; bottom: 1.6vh; z-index: 4; font-size: clamp(11px, 1.2vw, 15px);
+    color: var(--pv-ink-soft, #9fb0d0); max-width: 44vw; text-align: left; pointer-events: none;
+    display: flex; align-items: center; gap: 8px; }
+  .pv-footnote img { height: clamp(18px, 2.6vh, 26px); max-width: 90px; object-fit: contain; display: block; }
+  .pv-footnote span { white-space: pre-line; }
 
   /* podium finale — top 3 on the podium, the rest of the field beside it */
   .pv-podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px,4vw,64px); margin-top: 2vh; flex-wrap: wrap; }
@@ -543,6 +560,7 @@
   @media (max-width: 760px) {
     .pv-main { padding: 3vh 4vw; }
     .pv-main.has-timer { padding-top: clamp(120px, 22vh, 170px); }
+    .present.branded .pv-main.has-timer { padding-top: calc(clamp(120px, 22vh, 170px) + 44px); }
     .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
     .pv-options { grid-template-columns: 1fr; }
     .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
@@ -1107,7 +1125,13 @@ const Store = (() => {
     return p;
   }
   let warnedFull = false;
+  // the browser tab title tracks the deck name (falls back to the app name for an unnamed deck)
+  function syncTitle() {
+    const nm = state.project && state.project.name;
+    document.title = (nm && nm !== 'Untitled Deck') ? nm + ' · Maker' : 'CFC Quiz · Maker';
+  }
   function persist() {
+    syncTitle();
     try { localStorage.setItem(KEY, JSON.stringify(state)); warnedFull = false; }
     catch (e) {
       console.warn('persist failed (likely storage quota from embedded images)', e);
@@ -1124,6 +1148,9 @@ const Store = (() => {
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     get: () => state, project: () => state.project, curStream, curSlide,
     setDeckName(n) { state.project.name = n; persist(); },
+    syncTitle,   // reflect the deck name in the browser tab title (called on init + every persist)
+    // deck branding (show header logo/title + footer note) — empty/absent = hidden (old decks unchanged)
+    setBranding(patch) { state.project.branding = Object.assign({}, state.project.branding, patch); persist(); },
     reset() { try { Object.keys(localStorage).filter(k => k.startsWith('m_')).forEach(k => localStorage.removeItem(k)); } catch (e) {} location.reload(); },
 
     /* streams */
@@ -1134,6 +1161,8 @@ const Store = (() => {
     },
     selectStream(id) { state.selStream = id; const s = curStream(); state.selSlide = s && s.slides[0] ? s.slides[0].id : null; emit(); },
     renameStream(id, name) { const s = state.project.streams.find(x => x.id === id); if (s) { s.name = name; emit(); } },
+    moveStream(id, dir) { const a = state.project.streams; const i = a.findIndex(x => x.id === id); const j = i + dir;
+      if (i < 0 || j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; emit(); },
     // deck-level: one team count for the whole deck (shared scoreboard), mirrored onto every stream
     setTeamCount(n) { const v = Math.max(1, Math.min(99, Math.round(n || 1))); state.project.teamCount = v; state.project.streams.forEach(s => s.teamCount = v); emit(); },
     deleteStream(id) {
@@ -1316,6 +1345,26 @@ const Views = (() => {
     document.body.append(ov);
   }
 
+  // 🪧 deck branding — header logo + title and a footer note shown on EVERY slide of the show
+  function openBrandSettings() {
+    const old = document.getElementById('brandDlg'); if (old) old.remove();   // never stack two dialogs
+    const b = () => Store.project().branding || {};
+    const field = (label, hint, widget) => { const f = el('div', { class: 'field' }); const lab = el('label', {}, [label]); if (hint) lab.append(el('span', { class: 'hint', text: hint })); f.append(lab, widget); return f; };
+    const sheet = el('div', { class: 'sheet' });
+    sheet.append(el('h3', { text: 'Show header & footer' }));
+    sheet.append(el('p', { class: 'muted', text: 'Shown on EVERY slide of the show: a small logo + title at the top right, and a note at the bottom left (above the controls). Leave a field blank to hide it — colors follow the theme.' }));
+    sheet.append(field('Header title', 'centered at the top · blank = the deck name', FieldRenderers.text({ placeholder: 'blank = deck name' }, b().title || '', v => Store.setBranding({ title: v.trim() }))));
+    sheet.append(field('Logo', 'small image next to the title', FieldRenderers.image({}, b().logo || '', v => Store.setBranding({ logo: v }))));
+    sheet.append(field('Footer note', 'bottom left, above the controls', FieldRenderers.text({ placeholder: 'e.g. CFC Children’s Day' }, b().footer || '', v => Store.setBranding({ footer: v.trim() }))));
+    sheet.append(field('Footer logo', 'small image beside the note', FieldRenderers.image({}, b().footerLogo || '', v => Store.setBranding({ footerLogo: v }))));
+    sheet.append(el('p', { class: 'muted', text: 'Logo tip: best is an SVG (crisp at any size). For PNG, use a transparent background: a header logo shows up to 44 px tall (export ~88–128 px for retina), the footer logo up to 26 px (export ~52–64 px). Wide logos cap at 180 px (header) / 90 px (footer) wide. Images live INSIDE the deck file, so keep them under ~50 KB — smaller = faster saves and exports.' }));
+    const done = el('button', { class: 'btn primary', text: 'Done', style: 'margin-top:6px' });
+    const ov = el('div', { class: 'picker open', id: 'brandDlg' }, [ sheet ]);
+    done.onclick = () => ov.remove(); sheet.append(done);
+    ov.onclick = e => { if (e.target === ov) ov.remove(); };
+    document.body.append(ov);
+  }
+
   function renderStreams(state) {
     const wrap = $('streamList');
     // deck-level team count: one shared scoreboard → ONE team count for every stream
@@ -1324,8 +1373,10 @@ const Views = (() => {
     const teams = el('input', { type: 'number', min: 1, max: 99, value: state.project.teamCount || 20, class: 'teams-input',
       title: 'Teams playing this whole deck — they share one scoreboard across every stream' });
     teams.onchange = () => Store.setTeamCount(Number(teams.value));
+    const brandBtn = el('button', { class: 'btn sm', id: 'brandBtn', text: '🪧 Header / footer', title: 'Logo + title at the top of the show, a note at the bottom left' });
+    brandBtn.onclick = openBrandSettings;
     bar.append(el('span', { class: 'theme-pick-label', text: '👥 Teams' }), teams,
-               el('span', { class: 'theme-pick-note', text: 'shared by all streams' }));
+               el('span', { class: 'theme-pick-note', text: 'shared by all streams' }), brandBtn);
     wrap.parentElement.insertBefore(bar, wrap);
     wrap.innerHTML = '';
     if (!state.project.streams.length) { wrap.append(el('div', { class: 'empty', text: 'No streams yet. Add one →' })); return; }
@@ -1350,7 +1401,14 @@ const Views = (() => {
       title.ondblclick = e => { e.stopPropagation(); beginRename(); };   // double-click name = quick inline rename
       const del = el('button', { class: 'icon-btn', title: 'Delete stream', html: '🗑' });
       del.onclick = e => { e.stopPropagation(); if (confirm('Delete stream “' + s.name + '” and all its slides?')) Store.deleteStream(s.id); };
-      tools.append(ren, del);
+      const i = state.project.streams.indexOf(s);
+      const up = el('button', { class: 'icon-btn', title: 'Move stream up', html: '↑' });
+      up.disabled = i === 0;
+      up.onclick = e => { e.stopPropagation(); Store.moveStream(s.id, -1); };
+      const down = el('button', { class: 'icon-btn', title: 'Move stream down', html: '↓' });
+      down.disabled = i === state.project.streams.length - 1;
+      down.onclick = e => { e.stopPropagation(); Store.moveStream(s.id, 1); };
+      tools.append(up, down, ren, del);
       row.append(grow, tools);
       wrap.append(row);
     });
@@ -1467,7 +1525,7 @@ const Views = (() => {
   }
 
   function renderAll(state) { renderStreams(state); renderSlides(state); renderEditor(state); }
-  return { renderStreams, renderSlides, renderEditor, renderAll, openStreamSettings };
+  return { renderStreams, renderSlides, renderEditor, renderAll, openStreamSettings, openBrandSettings };
 })();
 
 /* ================================================================
@@ -1587,7 +1645,7 @@ const IO = (() => {
     }
     return Store.project().name;
   }
-  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 2, themesVersion: Store.project().themesVersion || 2, name: Store.project().name, teamCount: Store.project().teamCount, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
+  const streamProject = s => ({ app: 'cfc-quiz', kind: 'content', version: 2, branding: Store.project().branding, themesVersion: Store.project().themesVersion || 2, name: Store.project().name, teamCount: Store.project().teamCount, themes: Store.themes(), themeId: Store.projectThemeId(), streams: [ s ] });
   // every export carries its creation timestamp — Display tags scores/session per deck with it
   const stamped = p => { p.exportedAt = Date.now(); return p; };
 
@@ -1760,7 +1818,8 @@ const CsvIO = (() => {
   function serialize(project) {
     const L = [];
     const themeName = id => { const t = (project.themes || []).find(x => x.id === id); return t ? t.name : ''; };
-    L.push('[DECK]', 'Name,Teams,Theme,Version', row([enc(project.name || 'Untitled Deck'), project.teamCount || 20, enc(themeName(project.themeId)), 2]), '');
+    const br = project.branding || {};
+    L.push('[DECK]', 'Name,Teams,Theme,Version,Title,Footer,Logo,FooterLogo', row([enc(project.name || 'Untitled Deck'), project.teamCount || 20, enc(themeName(project.themeId)), 2, enc(br.title || ''), enc(br.footer || ''), br.logo || '', br.footerLogo || '']), '');
     const exportable = (project.themes || []).filter(t => { const def = THEME_DEFAULTS.find(d => d.name === t.name); return !def || !sameTheme(def, t); });
     if (exportable.length) {
       L.push('[THEME]', 'Name,bg,color1,color2,angle,ink,accent,correct,heading-font,body-font');
@@ -1793,6 +1852,7 @@ const CsvIO = (() => {
   function parse(text) {
     const lines = String(text).replace(/^﻿/, '').split(/\r?\n/);
     let deckName = 'Imported Deck', teamCount = 20, deckTheme = '', csvVersion = null, section = null;
+    const branding = {};
     let hdr = null;                              // current section's header map: name → column index
     const customThemes = [], order = [], byNm = {};
     let curStream = null, curSlide = null, pend = null, listName = null, expectStream = false, metaHdr = null;
@@ -1817,6 +1877,10 @@ const CsvIO = (() => {
         const tm = pickCell(cells, hdr, 'teams', 1); if (tm) teamCount = Math.max(1, Math.min(99, Math.round(+tm) || 20));
         const th = pickCell(cells, hdr, 'theme', 2); if (th) deckTheme = dec(th);
         const vv = pickCell(cells, hdr, 'version', 3); if (vv !== '' && vv != null) csvVersion = Math.round(+vv) || 1;
+        const bt = pickCell(cells, hdr, 'title', 4); if (bt) branding.title = dec(bt);
+        const bf = pickCell(cells, hdr, 'footer', 5); if (bf) branding.footer = dec(bf);
+        const bl = pickCell(cells, hdr, 'logo', 6); if (bl) branding.logo = bl.trim();
+        const bfl = pickCell(cells, hdr, 'footerlogo', 7); if (bfl) branding.footerLogo = bfl.trim();
         return;
       }
       if (section === 'theme') { if (!hdr) { hdr = hmap(cells); if (hdr.name == null) fail(i, '[THEME] must start with a header row containing "Name" (got "' + t.slice(0, 40) + '")'); return; } if (c0) customThemes.push(themeRow(cells, hdr)); return; }
@@ -1868,7 +1932,9 @@ const CsvIO = (() => {
     const defaultThemeId = deckTheme ? tByName[deckTheme.toLowerCase()] : (themes.find(t => t.name === 'Midnight') || themes[0]).id;
     // themesVersion: 2 — or normalize()'s one-time built-in refresh would stomp imported edits of built-in themes
     // version: 2 — CSV carries explicit/stream-default reveal values; normalize must NOT grandfather reveal:true onto it
-    return { app: 'cfc-quiz', kind: 'content', version: 2, themesVersion: 2, name: deckName, teamCount, themes, themeId: defaultThemeId, streams: order };
+    return { app: 'cfc-quiz', kind: 'content', version: 2, themesVersion: 2, name: deckName, teamCount,
+      branding: (branding.title || branding.footer || branding.logo || branding.footerLogo) ? branding : undefined,
+      themes, themeId: defaultThemeId, streams: order };
   }
   function themeRow(c, h) {
     const g = (n, k, d) => { const v = c[h && h[n] != null ? h[n] : k]; return (v === '' || v == null) ? d : v; };
@@ -2099,14 +2165,17 @@ const Present = (() => {
       const pairs = Array.isArray(d.pairs) ? d.pairs : [];
       if (ctx.phase === 'reveal') {
         const list = el('div', { class: 'pv-pairlist' });
+        if (pairs.length > 6) { list.classList.add('two'); list.style.gridTemplateRows = 'repeat(' + Math.ceil(pairs.length / 2) + ', auto)'; }   // long answer lists read in two columns
         pairs.forEach((p, i) => { const row = el('div', { class: 'pv-pair-row' }, [
           el('span', { text: p.left }), el('span', { class: 'ar', text: '↔' }), el('span', { text: p.right }) ]);
           row.style.animationDelay = (i * 0.07) + 's'; list.append(row); });
         return stage([ q(d.instruction), list ]);
       }
       const lefts = el('div', { class: 'pv-col' }), rights = el('div', { class: 'pv-col' });
-      pairs.forEach(p => lefts.append(el('div', { class: 'pv-mitem', text: p.left })));
-      stableShuffle(ctx.slideId, pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));   // fixed order for the run — re-render (← Back) keeps it
+      // each half breaks into 1 / 2 / 3 columns by item count, filled DOWN so it reads like a list
+      const fill = (host, texts) => { const k = texts.length > 12 ? 3 : texts.length > 6 ? 2 : 1; host.style.gridTemplateRows = 'repeat(' + Math.ceil(texts.length / k) + ', auto)'; texts.forEach(t => host.append(el('div', { class: 'pv-mitem', text: t }))); };
+      fill(lefts, pairs.map(p => p.left));
+      fill(rights, stableShuffle(ctx.slideId, pairs).map(p => p.right));   // fixed order for the run — re-render (← Back) keeps it
       return stage([ q(d.instruction), el('div', { class: 'pv-cols' }, [ lefts, rights ]) ]);
     } },
 
@@ -2373,6 +2442,24 @@ const Present = (() => {
     const qList = curStream.slides.filter(s => kindOf(s.type) === 'question');
     const qi = qList.findIndex(s => s.id === step.slide.id);
     if (qi >= 0) main.append(el('div', { class: 'pv-progress', text: 'Q ' + (qi + 1) + ' / ' + qList.length }));
+    // deck branding — logo + title centered in a reserved header band, note bottom left;
+    // a BLANK title falls back to the deck name; nothing set = hidden, colors follow the theme
+    const brand = Store.project().branding || {};
+    const brandTitle = (brand.title || '').trim() || ((brand.logo || brand.footer) ? Store.project().name || '' : '');
+    let hb = overlay.querySelector('.pv-brand');
+    if (!hb) { hb = el('div', { class: 'pv-brand' }); overlay.append(hb); }
+    hb.innerHTML = '';
+    if (brand.logo) hb.append(el('img', { src: brand.logo, alt: '' }));
+    if (brandTitle) hb.append(el('span', { text: brandTitle }));
+    const branded = !!(brand.logo || brandTitle);
+    hb.style.display = branded ? 'flex' : 'none';
+    overlay.classList.toggle('branded', branded);   // reserves the header band — ring + content start below it
+    if (brand.footer || brand.footerLogo) {
+      const fn = el('div', { class: 'pv-footnote' });
+      if (brand.footerLogo) fn.append(el('img', { src: brand.footerLogo, alt: '' }));
+      if (brand.footer) fn.append(el('span', { text: brand.footer }));
+      main.append(fn);
+    }
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
 
@@ -2766,10 +2853,11 @@ function init() {
   ]);
   fileInput.onchange = () => { if (fileInput.files[0]) { fileInput.dataset.mode === 'csv' ? IO.importCsvFile(fileInput.files[0]) : IO.importFile(fileInput.files[0]); } fileInput.value = ''; };
 
-  // deck name (asked up front; used for export filenames)
+  // deck name (asked up front; used for export filenames + the browser tab title)
   const deckInput = document.getElementById('deckName');
   deckInput.value = Store.project().name === 'Untitled Deck' ? '' : (Store.project().name || '');
   deckInput.oninput = () => Store.setDeckName(deckInput.value.trim() || 'Untitled Deck');
+  Store.syncTitle();   // reflect the loaded deck name in the tab title right away
 
   // present / preview (debug harness) — starts from the selected slide
   const present = () => { const s = Store.curStream(); if (!s) { toast('Add a stream first'); return; } Present.open(s, Store.get().selSlide); };

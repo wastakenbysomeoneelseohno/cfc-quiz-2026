@@ -109,10 +109,13 @@
     color: #fff; padding: 18px 44px; border-radius: 50px; font-size: clamp(22px,3vw,34px); font-weight: 900; box-shadow: 0 16px 44px rgba(225,29,54,.5); animation: buzzPulse 1.2s infinite; }
 
   /* matching */
-  .pv-cols { display: flex; gap: clamp(20px,5vw,70px); justify-content: center; align-items: flex-start; }
-  .pv-col { display: flex; flex-direction: column; gap: 12px; }
-  .pv-mitem { background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 12px; padding: 14px 22px; font-weight: 600; min-width: 190px; font-size: clamp(16px,1.9vw,22px); animation: optIn .4s both; }
-  .pv-pairlist { display: flex; flex-direction: column; gap: 10px; max-width: 640px; margin: 0 auto; }
+  /* matching — two clearly DIVIDED halves; each half breaks into 1/2/3 columns by item count */
+  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); width: 100%; position: relative; align-items: start; }
+  .pv-cols::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); opacity: .25; background: linear-gradient(to bottom, transparent, currentColor 15%, currentColor 85%, transparent); }
+  .pv-col { display: grid; grid-auto-flow: column; gap: 10px 14px; align-content: start; min-width: 0; }
+  .pv-mitem { background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 12px; padding: 13px 18px; font-weight: 600; min-width: 0; font-size: clamp(16px,1.9vw,22px); animation: optIn .4s both; overflow-wrap: break-word; }
+  .pv-pairlist { display: grid; gap: 10px clamp(28px,4vw,56px); max-width: 640px; margin: 0 auto; justify-items: center; }
+  .pv-pairlist.two { grid-auto-flow: column; max-width: 1100px; }   /* long answer lists read in two columns */
   .pv-pair-row { display: flex; align-items: center; gap: 14px; justify-content: center; font-size: clamp(17px,2.1vw,26px); font-weight: 600; animation: optIn .4s both; }
   .pv-pair-row .ar { color: var(--pv-correct); font-weight: 900; }
 
@@ -224,6 +227,20 @@
   /* question progress label (small, top-left corner; only on question slides) */
   .pv-progress { position: absolute; top: 2.6vh; left: 3vw; font-size: clamp(12px,1.5vw,16px); font-weight: 700;
     letter-spacing: 1px; color: var(--pv-ink-soft); z-index: 4; font-variant-numeric: tabular-nums; }
+  /* deck branding — show chrome, never interactive; colors follow the theme.
+     ALWAYS centered: a branded show reserves a header band at the top, and the
+     timer ring + slide content start below it (.present.branded rules). */
+  .pv-brand { position: absolute; top: 2.2vh; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px; opacity: .92; pointer-events: none; max-width: 90vw; white-space: nowrap; }
+  .present.branded .pv-main { padding-top: calc(5vh + 52px); }
+  .present.branded .pv-timer { top: calc(2.2vh + 52px); }
+  .present.branded .pv-main.has-timer { padding-top: calc(262px + 52px); }
+  .pv-brand img { height: clamp(28px, 4.5vh, 44px); max-width: 180px; object-fit: contain; display: block; }
+  .pv-brand span { font-weight: 800; font-size: clamp(13px, 1.5vw, 19px); letter-spacing: .4px; }
+  .pv-footnote { position: absolute; left: 3vw; bottom: 1.6vh; z-index: 4; font-size: clamp(11px, 1.2vw, 15px);
+    color: var(--pv-ink-soft, #9fb0d0); max-width: 44vw; text-align: left; pointer-events: none;
+    display: flex; align-items: center; gap: 8px; }
+  .pv-footnote img { height: clamp(18px, 2.6vh, 26px); max-width: 90px; object-fit: contain; display: block; }
+  .pv-footnote span { white-space: pre-line; }
 
   /* podium finale — top 3 on the podium, the rest of the field beside it */
   .pv-podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px,4vw,64px); margin-top: 2vh; flex-wrap: wrap; }
@@ -263,6 +280,7 @@
   @media (max-width: 760px) {
     .pv-main { padding: 3vh 4vw; }
     .pv-main.has-timer { padding-top: clamp(120px, 22vh, 170px); }
+    .present.branded .pv-main.has-timer { padding-top: calc(clamp(120px, 22vh, 170px) + 44px); }
     .pv-timer { transform: translateX(-50%) scale(.62); transform-origin: top center; }
     .pv-options { grid-template-columns: 1fr; }
     .pv-tally, .pv-bgrid { grid-template-columns: 1fr; }
@@ -542,12 +560,15 @@ const Show = (() => {
       const pairs = Array.isArray(d.pairs) ? d.pairs : [];
       if (ctx.phase === 'reveal') {
         const list = el('div', { class: 'pv-pairlist' });
+        if (pairs.length > 6) { list.classList.add('two'); list.style.gridTemplateRows = 'repeat(' + Math.ceil(pairs.length / 2) + ', auto)'; }   // long answer lists read in two columns
         pairs.forEach((p, i) => { const row = el('div', { class: 'pv-pair-row' }, [ el('span', { text: p.left }), el('span', { class: 'ar', text: '↔' }), el('span', { text: p.right }) ]); row.style.animationDelay = (i * 0.07) + 's'; list.append(row); });
         return stage([ q(d.instruction), list ]);
       }
       const lefts = el('div', { class: 'pv-col' }), rights = el('div', { class: 'pv-col' });
-      pairs.forEach(p => lefts.append(el('div', { class: 'pv-mitem', text: p.left })));
-      stableShuffle(ctx.slideId, pairs).forEach(p => rights.append(el('div', { class: 'pv-mitem', text: p.right })));   // fixed order for the run — re-render (← Back) keeps it
+      // each half breaks into 1 / 2 / 3 columns by item count, filled DOWN so it reads like a list
+      const fill = (host, texts) => { const k = texts.length > 12 ? 3 : texts.length > 6 ? 2 : 1; host.style.gridTemplateRows = 'repeat(' + Math.ceil(texts.length / k) + ', auto)'; texts.forEach(t => host.append(el('div', { class: 'pv-mitem', text: t }))); };
+      fill(lefts, pairs.map(p => p.left));
+      fill(rights, stableShuffle(ctx.slideId, pairs).map(p => p.right));   // fixed order for the run — re-render (← Back) keeps it
       return stage([ q(d.instruction), el('div', { class: 'pv-cols' }, [ lefts, rights ]) ]);
     } },
     poll: { phases: ['question'], render: d => stage([ badge('Poll'), q(d.question), optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
@@ -909,6 +930,24 @@ const Show = (() => {
     // question progress (only on question slides)
     const qi = qIndexOf(step.slide);
     if (qi >= 0) main.append(el('div', { class: 'pv-progress', text: 'Q ' + (qi + 1) + ' / ' + questionsOf().length }));
+    // deck branding — logo + title centered in a reserved header band, note bottom left;
+    // a BLANK title falls back to the deck name; nothing set = hidden, colors follow the theme
+    const brand = (project && project.branding) || {};
+    const brandTitle = (brand.title || '').trim() || ((brand.logo || brand.footer) ? (project && project.name) || '' : '');
+    let hb = overlay.querySelector('.pv-brand');
+    if (!hb) { hb = el('div', { class: 'pv-brand' }); overlay.append(hb); }
+    hb.innerHTML = '';
+    if (brand.logo) hb.append(el('img', { src: brand.logo, alt: '' }));
+    if (brandTitle) hb.append(el('span', { text: brandTitle }));
+    const branded = !!(brand.logo || brandTitle);
+    hb.style.display = branded ? 'flex' : 'none';
+    overlay.classList.toggle('branded', branded);   // reserves the header band — ring + content start below it
+    if (brand.footer || brand.footerLogo) {
+      const fn = el('div', { class: 'pv-footnote' });
+      if (brand.footerLogo) fn.append(el('img', { src: brand.footerLogo, alt: '' }));
+      if (brand.footer) fn.append(el('span', { text: brand.footer }));
+      main.append(fn);
+    }
     overlay.querySelector('#pvStep').textContent = (idx + 1) + ' / ' + steps.length;
     overlay.querySelector('#pvPrev').disabled = idx === 0;
     const timed = step.phase === 'question' && Number(step.slide.data.timer) > 0;
@@ -1059,6 +1098,8 @@ window.__CFCScores = Scores;
     // build with textContent — the deck name is file-controlled and must never reach innerHTML
     const ld = $('loaded'); ld.textContent = 'Loaded: ';
     ld.append(el('b', { text: project.name || 'Untitled Deck' }), ' · ' + project.streams.length + ' stream(s)');
+    // the browser tab title tracks the loaded deck name
+    document.title = (project.name && project.name !== 'Untitled Deck') ? project.name + ' · Display' : 'CFC Quiz · Display';
     syncReset();
     renderResume();
     show(2);

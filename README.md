@@ -25,8 +25,16 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 1. **Open the Maker** (link above) and **name your quiz** in the box at the top (used for the saved file name).
 2. **Streams** are **separate quiz tracks** in the same file — e.g. a **Main Quiz**, an **Audience Round**,
    or a **segue / interlude**. **+ Stream** adds one and opens **✎ Stream settings** — name it and set the
-   **defaults new questions start with** (timer, timer-start, points, show-answer-screen, scored, auto-next). Double-click a name for a quick rename.
+   **defaults new questions start with** (timer, timer-start, points, show-answer-screen, scored, auto-next). Double-click a name for a quick rename; **↑ / ↓** on a row reorders the streams.
    - All streams in a deck **share one scoreboard and one team count** (the same teams play every track).
+   - **🪧 Header / footer** (next to 👥 Teams): give the show a **small logo + title**, always **centered**
+     in a reserved header band at the top (the timer ring and slide content start below it), and a
+     **footer note + small footer logo** (bottom left, above the controls). A **blank title uses the deck
+     name**; colors follow the theme; leave everything blank and no band is reserved at all.
+     **Logo sizing:** an SVG is ideal; for PNG export the header logo around **88–128 px** tall
+     (shown ≤44 px) and the footer logo around **52–64 px** tall (shown ≤26 px), transparent background,
+     under ~50 KB — images are stored inside the deck file.
+   - The **deck name becomes the browser tab title** in both the Maker and the Display.
    - Set the **👥 Teams** count once, on the Streams panel — it applies to the whole deck.
    - During the show you can **switch between streams** and come back where you left off.
 3. **Add slides** with **+ Slide**:
