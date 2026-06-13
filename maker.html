@@ -1352,7 +1352,7 @@ const Views = (() => {
     const field = (label, hint, widget) => { const f = el('div', { class: 'field' }); const lab = el('label', {}, [label]); if (hint) lab.append(el('span', { class: 'hint', text: hint })); f.append(lab, widget); return f; };
     const sheet = el('div', { class: 'sheet' });
     sheet.append(el('h3', { text: 'Show header & footer' }));
-    sheet.append(el('p', { class: 'muted', text: 'Shown on EVERY slide of the show: a small logo + title at the top right, and a note at the bottom left (above the controls). Leave a field blank to hide it — colors follow the theme.' }));
+    sheet.append(el('p', { class: 'muted', text: 'Shown on EVERY slide of the show: a small logo + title centered at the top, and a note at the bottom left (above the controls). Leave a field blank to hide it — colors follow the theme.' }));
     sheet.append(field('Header title', 'centered at the top · blank = the deck name', FieldRenderers.text({ placeholder: 'blank = deck name' }, b().title || '', v => Store.setBranding({ title: v.trim() }))));
     sheet.append(field('Logo', 'small image next to the title', FieldRenderers.image({}, b().logo || '', v => Store.setBranding({ logo: v }))));
     sheet.append(field('Footer note', 'bottom left, above the controls', FieldRenderers.text({ placeholder: 'e.g. CFC Children’s Day' }, b().footer || '', v => Store.setBranding({ footer: v.trim() }))));
@@ -1585,19 +1585,22 @@ const CryptoBox = (() => {
   return { encrypt, decrypt, available: !!subtle };
 })();
 
-/* download any image-by-URL and embed it as a data-URL so exports are fully self-contained */
+/* download any image-by-URL and embed it as a data-URL so exports are fully self-contained —
+   covers slide media AND the deck's header/footer branding logos (all must travel offline) */
 async function embedImages(project) {
   const p = JSON.parse(JSON.stringify(project));
   let failed = 0;
-  for (const s of (p.streams || [])) for (const sl of (s.slides || [])) {
-    const m = sl.data && sl.data.media;
+  const embed = async (obj, key) => {
+    const m = obj && obj[key];
     if (m && typeof m === 'string' && /^https?:/i.test(m)) {
       try {
         const resp = await fetch(m); const blob = await resp.blob();
-        sl.data.media = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+        obj[key] = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
       } catch (e) { failed++; }
     }
-  }
+  };
+  for (const s of (p.streams || [])) for (const sl of (s.slides || [])) await embed(sl.data, 'media');
+  if (p.branding) { await embed(p.branding, 'logo'); await embed(p.branding, 'footerLogo'); }
   if (failed) toast('⚠ ' + failed + ' image URL(s) could not be downloaded (kept as links)');
   return p;
 }
@@ -1685,6 +1688,12 @@ const IO = (() => {
       downloadText(fname('', '.csv'), CsvIO.serialize(p));
       toast('Exported CSV (questions + themes)', 'ok');
     },
+    async exportTxt() {
+      if (!ensureName()) return;
+      const p = await embedImages(Store.project());
+      downloadText(fname('', '.txt'), QlIO.serialize(p));
+      toast('Exported text deck (questions + themes)', 'ok');
+    },
     importFile(file) {            // 🔒 encrypted or plain JSON (auto-detected)
       const rd = new FileReader();
       rd.onload = async () => {
@@ -1704,6 +1713,16 @@ const IO = (() => {
       rd.onload = () => {
         let data; try { data = CsvIO.parse(rd.result); }
         catch (e) { toast('CSV import failed — ' + e.message); return; }   // graceful: show the error, import nothing
+        ingest(data);
+      };
+      rd.onerror = () => toast('Could not read that file — try again');
+      rd.readAsText(file);
+    },
+    importTxtFile(file) {
+      const rd = new FileReader();
+      rd.onload = () => {
+        let data; try { data = QlIO.parse(rd.result); }
+        catch (e) { toast('Text import failed — ' + e.message); return; }   // graceful: one located error, import nothing
         ingest(data);
       };
       rd.onerror = () => toast('Could not read that file — try again');
@@ -1999,6 +2018,251 @@ const CsvIO = (() => {
     delete sl.__set;
     return sl;
   }
+  return { serialize, parse };
+})();
+
+/* ================================================================
+   QL (.txt) — human-editable, line-oriented deck format. Same project
+   schema as CSV; mirrors CsvIO (serialize/parse) so it's a drop-in.
+   First char of a line decides its kind:  # ## ###  ·  key:  ·  >  ·  <
+   ================================================================ */
+const QlIO = (() => {
+  const SPECIAL = new Set(['title', 'leaderboard', 'podium', 'reveal-answers', 'note', 'buzzer']);
+  const QUESTION = new Set(['choices', 'true-false', 'short-answer', 'titled-question', 'image-question', 'matching', 'poll', 'buzzer']);
+  const DEF = { timer: 20, autoStart: true, points: 1, reveal: false, scored: true, autoNext: false };
+  const unesc = s => s.replace(/\\(.)/g, '$1').trim();
+  function splitTop(s, delim) {   // split on an UNescaped delimiter (char-scan tells "\\" from "\|")
+    const out = []; let cur = '';
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '\\') { cur += s[i] + (s[i + 1] || ''); i++; continue; }
+      if (s.startsWith(delim, i)) { out.push(cur); cur = ''; i += delim.length - 1; continue; }
+      cur += s[i];
+    }
+    out.push(cur); return out;
+  }
+  const ansText = a => (a && a.answer != null) ? a.answer : '';
+
+  /* ---- lexer: QL text → simple model {name,teams,theme,branding,themes,streams[{name,theme,defaults,slides[]}]} ---- */
+  function parseAnswer(s) {
+    s = s.trim();
+    const parts = splitTop(s, '|');
+    if (parts.some(p => splitTop(p, '->').length > 1)) return { kind: 'matching', pairs: parts.map(p => { const seg = splitTop(p, '->'); return { left: unesc(seg[0]), right: unesc(seg.slice(1).join('->')) }; }) };
+    if (parts.length === 1 && !/^\s*\*/.test(parts[0])) return { kind: 'short', answer: unesc(parts[0]) };
+    const opts = parts.map(p => { const correct = /^\s*\*/.test(p); return { text: unesc(correct ? p.replace(/^\s*\*/, '') : p), correct }; });
+    const c = opts.filter(o => o.correct).length;
+    if (opts.length === 2 && opts.every(o => /^(true|false)$/i.test(o.text))) return { kind: 'true-false', options: opts };
+    if (c === 0) return { kind: 'poll', options: opts };
+    return { kind: 'choices', multiple: c > 1, options: opts };
+  }
+  function parseSettings(text, ln, errors) {
+    const out = {};
+    for (let t of text.split(',')) {
+      t = t.trim(); if (!t) continue; let m;
+      if (/^no-timer$/.test(t)) out.timer = 0;
+      else if ((m = t.match(/^(\d+)s$/))) out.timer = +m[1];
+      else if ((m = t.match(/^(\d+):(\d{2})$/))) out.timer = +m[1] * 60 + +m[2];
+      else if ((m = t.match(/^(\d+)pts$/))) out.points = +m[1];
+      else if (/^scored$/.test(t)) out.scored = true;
+      else if (/^unscored$/.test(t)) out.scored = false;
+      else if (/^reveal$/.test(t)) out.reveal = true;
+      else if (/^no-reveal$/.test(t)) out.reveal = false;
+      else if (/^auto-transition$/.test(t)) out.autoNext = true;
+      else if (/^manual-transition$/.test(t)) out.autoNext = false;
+      else if (/^timer-auto$/.test(t)) out.autoStart = true;
+      else if (/^timer-manual$/.test(t)) out.autoStart = false;
+      else if (/^loop-enabled$/.test(t)) out.loop = true;
+      else if (/^loop-disabled$/.test(t)) out.loop = false;
+      else errors.push('Line ' + ln + ': unknown setting "' + t + '"');
+    }
+    return out;
+  }
+  function parseQL(src) {
+    const deck = { name: 'Imported Deck', teams: 20, theme: 'midnight', streams: [] };
+    const errors = []; let stream = null, slide = null, themeBlock = null;
+    src.split(/\r?\n/).forEach((raw, i) => {
+      const ln = i + 1, line = raw.trim(); if (!line) return;
+      if (line[0] === '\\') {   // line-level escape: a line that would read as a comment/field/sigil becomes literal body
+        const lit = raw.replace(/^(\s*)\\/, '$1');
+        if (slide) slide.body = slide.body ? slide.body + '\n' + lit : lit;
+        else errors.push('Line ' + ln + ': stray text "' + line.slice(1, 30) + '"');
+        return;
+      }
+      if (/^(---|===)/.test(line)) return;   // comment / divider line (starts with --- or ===) — ignored
+      let m;
+      if ((m = line.match(/^#\s+(.+)$/))) { deck.name = m[1].trim(); slide = null; themeBlock = null; return; }
+      if ((m = line.match(/^##\s+(.+)$/))) {
+        const t = m[1].trim(), tm = t.match(/^\(theme\)\s*(.+)$/i); slide = null;
+        if (tm) { themeBlock = { id: 'theme-' + tm[1].trim().toLowerCase().replace(/[^\w]+/g, '-'), name: tm[1].trim() }; (deck.themes || (deck.themes = [])).push(themeBlock); stream = null; return; }
+        themeBlock = null; stream = { name: t, defaults: {}, slides: [] }; deck.streams.push(stream); return;
+      }
+      if ((m = line.match(/^###\s+(.+)$/))) {
+        themeBlock = null; let text = m[1].trim(), type = 'question';
+        const tag = text.match(/^\(([\w-]+)\)\s*(.*)$/);
+        if (tag) { type = tag[1].toLowerCase(); text = tag[2].trim(); if (!SPECIAL.has(type)) { errors.push('Line ' + ln + ': unknown slide type (' + tag[1] + ')'); return; } }
+        slide = { type, title: text, body: '', settings: {} };
+        (stream || (deck.streams[0] || (deck.streams[0] = { name: 'Main', defaults: {}, slides: [] }))).slides.push(slide); return;
+      }
+      if (themeBlock) {
+        if ((m = line.match(/^bg\s*:\s*(.+)$/i))) { const p = m[1].split(',').map(s => s.trim()); themeBlock.bgType = p[0]; themeBlock.bg1 = p[1]; themeBlock.bg2 = p[2]; themeBlock.angle = +p[3] || 160; return; }
+        if ((m = line.match(/^ink\s*:\s*(.+)$/i))) { themeBlock.ink = m[1].trim(); return; }
+        if ((m = line.match(/^accent\s*:\s*(.+)$/i))) { themeBlock.accent = m[1].trim(); return; }
+        if ((m = line.match(/^correct\s*:\s*(.+)$/i))) { themeBlock.correct = m[1].trim(); return; }
+        if ((m = line.match(/^heading-font\s*:\s*(.+)$/i))) { themeBlock.headingFont = m[1].trim(); return; }
+        if ((m = line.match(/^body-font\s*:\s*(.+)$/i))) { themeBlock.bodyFont = m[1].trim(); return; }
+      }
+      if ((m = line.match(/^(teams|theme|image|header-logo|footer-logo|header|footer)\s*:\s*(.+)$/i))) {
+        const k = m[1].toLowerCase(), v = m[2].trim();
+        if (k === 'teams') deck.teams = +v || deck.teams;
+        else if (k === 'theme') (stream && !slide ? stream : deck).theme = v;
+        else if (k === 'image') { if (slide) slide.image = v; else errors.push('Line ' + ln + ': image: outside a slide'); }
+        else { deck.branding || (deck.branding = {}); if (k === 'header') deck.branding.title = v; else if (k === 'footer') deck.branding.footer = v; else if (k === 'header-logo') deck.branding.logo = v; else if (k === 'footer-logo') deck.branding.footerLogo = v; }
+        return;
+      }
+      if ((m = line.match(/^>\s*(.+)$/))) { const set = parseSettings(m[1], ln, errors); if (slide) slide.settings = set; else if (stream) stream.defaults = set; else errors.push('Line ' + ln + ': > settings with no slide/stream'); return; }
+      if ((m = line.match(/^<\s*(.+)$/))) { if (!slide) { errors.push('Line ' + ln + ': < answer with no question'); return; } slide.answer = parseAnswer(m[1]); if (slide.answer.kind === 'short' && slide.body) slide.answer.kind = 'titled'; return; }
+      if (slide) slide.body = slide.body ? slide.body + '\n' + raw : raw;
+      else errors.push('Line ' + ln + ': stray text "' + line.slice(0, 30) + '"');
+    });
+    return { deck, errors };
+  }
+
+  /* ---- adapter: model → project (mirrors CsvIO.finalize) ---- */
+  function toSlide(q) {
+    const set = q.settings || {}, opts = {};
+    for (const k of ['reveal', 'scored', 'autoStart', 'autoNext']) if (k in set) opts[k] = set[k];
+    const qd = base => { const d = Object.assign({ timer: ('timer' in set ? set.timer : '') }, base); if ('points' in set) d.points = set.points; return d; };
+    const mk = (type, data) => ({ id: 'sl_' + uid(), type, data, options: opts, __set: set });
+    switch (q.type) {
+      case 'title': return { id: 'sl_' + uid(), type: 'title', data: { heading: q.title, subheading: q.body || '' }, options: {}, __set: {} };
+      case 'note': return { id: 'sl_' + uid(), type: 'answer', data: { heading: q.title, body: q.body || '' }, options: {}, __set: {} };
+      case 'leaderboard': return { id: 'sl_' + uid(), type: 'leaderboard', data: { title: q.title }, options: {}, __set: {} };
+      case 'podium': return { id: 'sl_' + uid(), type: 'podium', data: { title: q.title }, options: {}, __set: {} };
+      case 'reveal-answers': return { id: 'sl_' + uid(), type: 'reveal-answers', data: { title: q.title, auto: 'timer' in set ? set.timer : 10, loop: !!set.loop }, options: {}, __set: {} };
+      case 'buzzer': return mk('buzzer', qd({ question: q.title, answer: ansText(q.answer) }));
+    }
+    const a = q.answer || { kind: 'short', answer: '' };
+    if (a.kind === 'matching') return mk('matching', qd({ instruction: q.title, pairs: a.pairs }));
+    if (a.kind === 'poll') return { id: 'sl_' + uid(), type: 'poll', data: qd({ question: q.title, options: a.options.map(o => ({ text: o.text })) }), options: {}, __set: set };
+    if (a.kind === 'true-false') { const sl = mk('true-false', qd({ statement: q.title, answer: !!a.options.find(o => o.correct && /^true$/i.test(o.text)) })); sl.__tfNoStar = !a.options.some(o => o.correct); return sl; }
+    if (a.kind === 'choices') return mk('choices', qd({ question: q.title, media: q.image || '', choice: { options: a.options, multiple: a.multiple } }));
+    if (q.image && q.body) throw new Error('Question "' + (q.title || '').slice(0, 30) + '": a question can\'t have both an image and a body line.');
+    if (q.image) return mk('image-question', qd({ question: q.title, media: q.image, answer: a.answer }));
+    if (q.body) return mk('titled-question', qd({ title: q.title, question: q.body, answer: a.answer }));
+    return mk('short-answer', qd({ question: q.title, answer: a.answer }));
+  }
+  function finalize(sl, def, streamName) {
+    const set = sl.__set || {};
+    if (QUESTION.has(sl.type)) {
+      if (!('timer' in set) && 'timer' in sl.data) sl.data.timer = def.timer;
+      if (!('autoStart' in set) && def.autoStart === false) sl.options.autoStart = false;
+      if (!('autoNext' in set) && def.autoNext === true) sl.options.autoNext = true;
+      if (sl.type !== 'poll') {
+        if (!('points' in set)) sl.data.points = def.points;
+        if (!('reveal' in set) && def.reveal === true) sl.options.reveal = true;
+        if (!('scored' in set) && def.scored === false) sl.options.scored = false;
+      }
+      if (sl.type === 'true-false' && sl.__tfNoStar) throw new Error('Stream "' + streamName + '": true/false "' + (sl.data.statement || '').slice(0, 30) + '" has no answer — mark True or False with *.');
+      if (sl.type === 'choices') {
+        if (!sl.data.choice.options.length) throw new Error('Stream "' + streamName + '": a multiple-choice question has no options.');
+        if (!sl.data.choice.options.some(o => o.correct)) throw new Error('Stream "' + streamName + '": "' + (sl.data.question || '').slice(0, 30) + '" has no correct option (mark one with *).');
+      }
+    }
+    delete sl.__set; delete sl.__tfNoStar; return sl;
+  }
+  function parse(text) {
+    const m = parseQL(String(text).replace(/^﻿/, ''));
+    if (m.errors.length) throw new Error(m.errors[0]);
+    const model = m.deck;
+    const themes = THEME_DEFAULTS.map(t => JSON.parse(JSON.stringify(t)));
+    (model.themes || []).forEach(ct => { const at = themes.findIndex(t => t.name.toLowerCase() === ct.name.toLowerCase()); if (at >= 0) themes[at] = Object.assign(ct, { id: themes[at].id }); else themes.push(ct); });
+    const idByName = {}; themes.forEach(t => idByName[t.name.toLowerCase()] = t.id);
+    const tId = name => name ? (idByName[String(name).toLowerCase()] || null) : null;
+    if (model.theme && !idByName[String(model.theme).toLowerCase()]) throw new Error('Deck theme "' + model.theme + '" is not a known theme.');
+    const streams = model.streams.map(s => {
+      if (s.theme && !idByName[String(s.theme).toLowerCase()]) throw new Error('Stream "' + s.name + '": unknown theme "' + s.theme + '".');
+      const def = Object.assign({}, DEF, s.defaults || {});
+      return { id: 's_' + uid(), name: s.name, themeId: tId(s.theme), defaults: def, slides: s.slides.map(q => finalize(toSlide(q), def, s.name)) };
+    });
+    if (!streams.length) throw new Error('No streams found — nothing to import.');
+    const project = { app: 'cfc-quiz', kind: 'content', version: 2, themesVersion: 2, name: model.name, teamCount: Math.max(1, Math.min(99, model.teams || 20)), themeId: tId(model.theme) || themes[0].id, themes, streams };
+    if (model.branding) project.branding = model.branding;
+    return project;
+  }
+
+  /* ---- serialize: project → QL text (omit a token equal to the stream default) ---- */
+  const escOpt = s => String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/->/g, '\\->').replace(/^\s*\*/, '\\*');
+  const escBody = s => String(s == null ? '' : s).split('\n').map(line =>
+    (/^(\\|#|>|<|---|===)/.test(line) || /^(teams|theme|image|header-logo|footer-logo|header|footer)\s*:/i.test(line)) ? '\\' + line : line).join('\n');
+  const nameById = (project, id) => { const t = (project.themes || []).find(x => x.id === id); return t ? t.name.toLowerCase() : ''; };
+  function slideTokens(sl, def) {
+    if (sl.type === 'reveal-answers') { const d = sl.data; return [(d.auto == null ? 10 : d.auto) + 's', d.loop ? 'loop-enabled' : 'loop-disabled']; }
+    const o = sl.options || {}, d = sl.data || {}, poll = sl.type === 'poll', t = [];
+    const effTimer = (d.timer === '' || d.timer == null) ? 20 : Number(d.timer);
+    const effPts = (d.points == null || d.points === '') ? 1 : Number(d.points);
+    const effAuto = o.autoStart == null ? true : o.autoStart, effRev = o.reveal == null ? false : o.reveal, effSco = o.scored == null ? true : o.scored, effANx = o.autoNext == null ? false : o.autoNext;
+    if (effTimer !== def.timer) t.push(effTimer === 0 ? 'no-timer' : effTimer + 's');
+    if (!poll && effPts !== def.points) t.push(effPts + 'pts');
+    if (!poll && effSco !== (def.scored !== false)) t.push(effSco ? 'scored' : 'unscored');
+    if (!poll && effRev !== (def.reveal === true)) t.push(effRev ? 'reveal' : 'no-reveal');
+    if (effANx !== (def.autoNext === true)) t.push(effANx ? 'auto-transition' : 'manual-transition');
+    if (effAuto !== (def.autoStart !== false)) t.push(effAuto ? 'timer-auto' : 'timer-manual');
+    return t;
+  }
+  function slideLines(sl, def) {
+    const d = sl.data || {}, L = [];
+    const head = (tag, txt) => L.push('### ' + (tag ? '(' + tag + ') ' : '') + (txt || ''));
+    const settings = () => { const t = slideTokens(sl, def); if (t.length) L.push('> ' + t.join(', ')); };
+    const ans = body => L.push('< ' + body);
+    switch (sl.type) {
+      case 'title': head('title', d.heading); if (d.subheading) L.push(escBody(d.subheading)); return L;
+      case 'answer': head('note', d.heading); if (d.body) L.push(escBody(d.body)); return L;
+      case 'leaderboard': head('leaderboard', d.title); return L;
+      case 'podium': head('podium', d.title); return L;
+      case 'reveal-answers': head('reveal-answers', d.title); settings(); return L;
+      case 'buzzer': head('buzzer', d.question); ans(escOpt(d.answer)); settings(); return L;
+      case 'choices': head('', d.question); if (d.media) L.push('image: ' + d.media); ans(((d.choice && d.choice.options) || []).map(o => (o.correct ? '*' : '') + escOpt(o.text)).join(' | ')); settings(); return L;
+      case 'true-false': head('', d.statement); ans((d.answer === false ? '' : '*') + 'True | ' + (d.answer === false ? '*' : '') + 'False'); settings(); return L;
+      case 'short-answer': head('', d.question); ans(escOpt(d.answer)); settings(); return L;
+      case 'titled-question': head('', d.title); if (d.question) L.push(escBody(d.question)); ans(escOpt(d.answer)); settings(); return L;
+      case 'image-question': head('', d.question); if (d.media) L.push('image: ' + d.media); ans(escOpt(d.answer)); settings(); return L;
+      case 'matching': head('', d.instruction); ans((d.pairs || []).map(p => escOpt(p.left) + ' -> ' + escOpt(p.right)).join(' | ')); settings(); return L;
+      case 'poll': head('', d.question); ans((d.options || []).map(o => escOpt(o.text)).join(' | ')); settings(); return L;
+    }
+    return L;
+  }
+  function streamTokens(def) {
+    const t = [];
+    if (def.timer !== DEF.timer) t.push(def.timer === 0 ? 'no-timer' : def.timer + 's');
+    if (def.points !== DEF.points) t.push(def.points + 'pts');
+    if ((def.scored !== false) !== DEF.scored) t.push(def.scored !== false ? 'scored' : 'unscored');
+    if ((def.reveal === true) !== DEF.reveal) t.push(def.reveal === true ? 'reveal' : 'no-reveal');
+    if ((def.autoNext === true) !== DEF.autoNext) t.push(def.autoNext === true ? 'auto-transition' : 'manual-transition');
+    if ((def.autoStart !== false) !== DEF.autoStart) t.push(def.autoStart !== false ? 'timer-auto' : 'timer-manual');
+    return t;
+  }
+  function serialize(project) {
+    const L = ['# ' + (project.name || 'Untitled Deck'), 'teams: ' + (project.teamCount || 20)];
+    const dtn = nameById(project, project.themeId); if (dtn) L.push('theme: ' + dtn);
+    const b = project.branding || {};
+    if (b.title) L.push('header: ' + b.title);
+    if (b.footer) L.push('footer: ' + b.footer);
+    if (b.logo) L.push('header-logo: ' + b.logo);
+    if (b.footerLogo) L.push('footer-logo: ' + b.footerLogo);
+    (project.themes || []).forEach(t => {
+      const def = THEME_DEFAULTS.find(d => d.name === t.name);
+      if (def && JSON.stringify(def) === JSON.stringify(Object.assign({}, t, { id: def.id }))) return;
+      L.push('', '## (theme) ' + t.name, 'bg: ' + t.bgType + ', ' + t.bg1 + ', ' + t.bg2 + ', ' + (t.angle || 160), 'ink: ' + t.ink, 'accent: ' + t.accent, 'correct: ' + t.correct, 'heading-font: ' + t.headingFont, 'body-font: ' + t.bodyFont);
+    });
+    (project.streams || []).forEach(s => {
+      const def = Object.assign({}, DEF, s.defaults || {});
+      L.push('', '## ' + s.name);
+      const st = nameById(project, s.themeId); if (st) L.push('theme: ' + st);
+      const dtk = streamTokens(def); if (dtk.length) L.push('> ' + dtk.join(', '));
+      s.slides.forEach(sl => { L.push(''); slideLines(sl, def).forEach(x => L.push(x)); });
+    });
+    return L.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
+
   return { serialize, parse };
 })();
 
@@ -2832,7 +3096,7 @@ function init() {
   function ioMenu(anchor, items) {
     document.querySelectorAll('.io-menu').forEach(e => e.remove());
     const menu = el('div', { class: 'io-menu' });
-    items.forEach(it => { if (it.sub) { menu.append(el('div', { class: 'io-sub', text: it.sub })); return; } const b = el('button', { text: it.label }); b.onclick = () => { menu.remove(); it.onClick(); }; menu.append(b); });
+    items.forEach(it => { if (it.sub) { menu.append(el('div', { class: 'io-sub', text: it.sub })); return; } const b = el('button', { text: it.label }); if (it.deprecated) { b.style.textDecoration = 'line-through'; b.style.opacity = '.5'; b.title = 'Deprecated — use 📄 Text (.txt). Still works for now.'; } b.onclick = () => { menu.remove(); it.onClick(); }; menu.append(b); });
     document.body.append(menu);
     const r = anchor.getBoundingClientRect();
     menu.style.top = (r.bottom + 4) + 'px';
@@ -2845,13 +3109,23 @@ function init() {
   // two formats only: JSON (the recommended save — always ★ + 🔒 encrypted) or CSV (plain, editable)
   document.getElementById('exportBtn').onclick = e => ioMenu(e.currentTarget, [
     { label: '★ 🔒 JSON', onClick: () => IO.exportEncrypted() },
-    { label: 'CSV', onClick: () => IO.exportCsv() },
+    { label: '📄 Text (.txt)', onClick: () => IO.exportTxt() },
+    { label: 'CSV', deprecated: true, onClick: () => IO.exportCsv() },
   ]);
   document.getElementById('importBtn').onclick = e => ioMenu(e.currentTarget, [
     { label: '★ 🔒 JSON', onClick: () => { fileInput.accept = 'application/json,.json'; fileInput.dataset.mode = 'json'; fileInput.click(); } },
-    { label: 'CSV', onClick: () => { fileInput.accept = '.csv,text/csv,text/plain'; fileInput.dataset.mode = 'csv'; fileInput.click(); } },
+    { label: '📄 Text (.txt)', onClick: () => { fileInput.accept = '.txt,text/plain'; fileInput.dataset.mode = 'txt'; fileInput.click(); } },
+    { label: 'CSV', deprecated: true, onClick: () => { fileInput.accept = '.csv,text/csv,text/plain'; fileInput.dataset.mode = 'csv'; fileInput.click(); } },
   ]);
-  fileInput.onchange = () => { if (fileInput.files[0]) { fileInput.dataset.mode === 'csv' ? IO.importCsvFile(fileInput.files[0]) : IO.importFile(fileInput.files[0]); } fileInput.value = ''; };
+  fileInput.onchange = () => {
+    if (fileInput.files[0]) {
+      const mode = fileInput.dataset.mode;
+      if (mode === 'csv') IO.importCsvFile(fileInput.files[0]);
+      else if (mode === 'txt') IO.importTxtFile(fileInput.files[0]);
+      else IO.importFile(fileInput.files[0]);
+    }
+    fileInput.value = '';
+  };
 
   // deck name (asked up front; used for export filenames + the browser tab title)
   const deckInput = document.getElementById('deckName');
@@ -2873,7 +3147,7 @@ function init() {
   });
 
   // test/automation hook (also handy for debugging)
-  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf, CryptoBox, IO, CsvIO };
+  window.CFC = { Store, Theme, Present, Scores, SlideTypes, kindOf, CryptoBox, IO, CsvIO, QlIO, embedImages };
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>

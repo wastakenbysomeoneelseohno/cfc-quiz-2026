@@ -63,7 +63,9 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
      after a ~2.5s beat (to the answer screen / scoring / next slide, whichever comes next per the flags above).
      **+5s** after Time's-up revives the timer and cancels the pending hop.
 5. **Drag slides** to reorder. **Preview** any time with **P** or **▶ Present**.
-6. **Save it — always Export:** **Export** offers two formats — **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **CSV** (a spreadsheet file you can edit in Excel/Sheets; carries questions, defaults and themes — answers are visible). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several CSVs and re-import after edits without duplicates. In the CSV, each thing is a **heading row then a value row** (`[DECK]`, `[STREAM]`, `[SLIDES]`); a question's blank timer/points/reveal/scored/auto takes the **stream's default**, and the correct option is marked with `*`.
+6. **Save it — always Export:** **Export** offers **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **📄 Text (.txt)** — a plain, human-editable text file that carries questions, answers, defaults, themes and branding. The text format is line-oriented and easy to hand-write — see the formatted spec **[`txt-rules.html`](txt-rules.html)** (or [`txt-rules.md`](txt-rules.md)), with a worked example in [`sample-deck.txt`](sample-deck.txt). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several files and re-import after edits without duplicates.
+
+   > ⚠ **CSV export/import is deprecated and no longer supported.** It still appears in the menus **struck through** so you can open an old `.csv`, but it will be removed — **export to 📄 Text (.txt) going forward.**
 
 > Your work is auto-saved in the browser. **🗑 Reset** wipes the Maker's own data and reloads the sample deck
 > (it never touches a Display running in the same browser).

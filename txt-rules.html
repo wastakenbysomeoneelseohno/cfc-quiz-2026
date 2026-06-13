@@ -1,0 +1,509 @@
+<h1>QL — Quiz Language</h1>
+<p>The complete spec for a QL deck — a plain <strong><code>.txt</code></strong> file. QL is <strong>line-oriented</strong>: the first
+character of each line decides what it is, so a parser reads it in one pass (see <code>ql.js</code>, ~95
+lines, no dependencies). A worked deck is in <a href="./sample-deck.txt"><code>sample-deck.txt</code></a>.</p>
+<p><strong>Two ideas carry the whole language:</strong></p>
+<ol>
+<li><strong>The answer&#39;s shape decides the question type</strong> — you never name a type.</li>
+<li><strong>Each separator is used only where it can&#39;t collide</strong> — options split on <code>|</code>, settings split
+on <code>,</code>. Since real answers contain commas (<code>love, joy, peace</code>) but never pipes, this means
+<strong>content almost never needs escaping.</strong></li>
+</ol>
+<hr>
+<h2>1. Lines at a glance</h2>
+<table>
+<thead>
+<tr>
+<th>Line starts with</th>
+<th>Kind</th>
+<th>Section</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>#</code></td>
+<td>deck name</td>
+<td>§2</td>
+</tr>
+<tr>
+<td><code>##</code></td>
+<td>stream name</td>
+<td>§2</td>
+</tr>
+<tr>
+<td><code>###</code></td>
+<td>slide (<code>### (type) …</code> = special slide)</td>
+<td>§5 / §6</td>
+</tr>
+<tr>
+<td><code>key:</code></td>
+<td>field — <code>teams:</code>, <code>theme:</code>, <code>image:</code></td>
+<td>§2 / §6</td>
+</tr>
+<tr>
+<td><code>&gt;</code></td>
+<td>settings (comma-separated)</td>
+<td>§4</td>
+</tr>
+<tr>
+<td><code>&lt;</code></td>
+<td>the answer (pipe-separated)</td>
+<td>§6</td>
+</tr>
+<tr>
+<td><code>---</code> / <code>===</code></td>
+<td>comment / divider — any line starting with <code>---</code> or <code>===</code> is ignored</td>
+<td>§8</td>
+</tr>
+<tr>
+<td><code>\</code></td>
+<td>escape — the rest of the line is literal body text (not a comment/field/sigil)</td>
+<td>§8 / §9</td>
+</tr>
+<tr>
+<td>anything else</td>
+<td>body / subheading text</td>
+<td>§6</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Structure &amp; fields</h2>
+<pre><code># CFC Sample Deck
+teams: 20
+theme: midnight
+header: CFC Quiz Night
+footer: Calvary Fellowship, 2026
+header-logo: data:image/svg+xml;base64,…
+footer-logo: data:image/svg+xml;base64,…
+
+## Main Quiz
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Means</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code># [name]</code></td>
+<td>deck name (file name + browser tab)</td>
+<td>any text</td>
+<td><code>Untitled Deck</code></td>
+</tr>
+<tr>
+<td><code>## [name]</code></td>
+<td>a stream (quiz track; same teams, shared scoreboard)</td>
+<td>any text</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>teams: [n]</code></td>
+<td>team count, shared by all streams</td>
+<td><code>1</code>–<code>25</code></td>
+<td><code>20</code></td>
+</tr>
+<tr>
+<td><code>theme: [name]</code></td>
+<td>theme (deck-level, or stream-level under a <code>##</code>)</td>
+<td>a §7 name</td>
+<td><code>midnight</code></td>
+</tr>
+<tr>
+<td><code>header: [text]</code></td>
+<td>header title shown on every slide</td>
+<td>any text</td>
+<td>the deck name</td>
+</tr>
+<tr>
+<td><code>footer: [text]</code></td>
+<td>footer note (bottom-left, every slide)</td>
+<td>any text</td>
+<td>hidden</td>
+</tr>
+<tr>
+<td><code>header-logo: [data-url]</code></td>
+<td>header logo (embedded)</td>
+<td>a base64 <code>data:</code> URL</td>
+<td>hidden</td>
+</tr>
+<tr>
+<td><code>footer-logo: [data-url]</code></td>
+<td>footer logo (embedded)</td>
+<td>a base64 <code>data:</code> URL</td>
+<td>hidden</td>
+</tr>
+</tbody></table>
+<p>Streams merge <strong>by name</strong> on import: same name replaces, new name adds.</p>
+<h3>2.1 Header &amp; footer (branding)</h3>
+<p><code>header:</code> + <code>header-logo:</code> show centered in a band at the top of every slide; <code>footer:</code> +
+<code>footer-logo:</code> sit bottom-left. <code>header:</code> falls back to the <strong>deck name</strong> when omitted; leave
+all four blank and no band is drawn. <strong>Logos and all images are embedded base64 <code>data:</code> URLs,
+never external file references</strong> — a deck is one self-contained file that works fully offline.
+Keep each small (an SVG, or a PNG under ~50 KB — header logo shows ≤44 px tall, footer logo
+≤26 px).</p>
+<hr>
+<h2>3. The answer line <code>&lt;</code></h2>
+<p>One line per question, starting with <code>&lt;</code>. Options separate with <code>|</code>; the <strong>content decides the
+type</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>You write</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt; 27</code></td>
+<td>short answer</td>
+</tr>
+<tr>
+<td><code>&lt; love, joy, peace</code></td>
+<td>short answer — commas are free, no escaping</td>
+</tr>
+<tr>
+<td><code>&lt; Buzzer | Verses | Pictures</code></td>
+<td>poll (no <code>*</code>)</td>
+</tr>
+<tr>
+<td><code>&lt; *Noah | Moses | David</code></td>
+<td>choices — one <code>*</code></td>
+</tr>
+<tr>
+<td><code>&lt; *Matthew | *Mark | Acts</code></td>
+<td>pick-all — many <code>*</code></td>
+</tr>
+<tr>
+<td><code>&lt; *True | False</code></td>
+<td>true / false (auto-detected)</td>
+</tr>
+<tr>
+<td><code>&lt; Moses -&gt; Led the Exodus | David -&gt; King of Israel</code></td>
+<td>matching</td>
+</tr>
+</tbody></table>
+<p><strong>Markers:</strong> <code>*</code> (prefix) = the correct option · <code>|</code> separates options · <code>-&gt;</code> = maps-to.
+A body line <em>above</em> the <code>&lt;</code> turns a short answer into a <strong>titled question</strong> (§6).</p>
+<p><strong>Example</strong></p>
+<pre><code>### Who built the ark?
+&lt; *Noah | Moses | David | Paul
+</code></pre>
+<hr>
+<h2>4. Settings — the <code>&gt;</code> line</h2>
+<p>One blockquote-style line per slide (or stream), <code>&gt; token, token, …</code>. Split on commas, then
+match each token. On a <strong>stream</strong> it&#39;s the defaults for new questions; on a <strong>question</strong> it
+overrides them. Omitted tokens keep their default.</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Regex</th>
+<th>Means</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[N]s</code></td>
+<td><code>^\d+s$</code></td>
+<td>countdown of N seconds</td>
+<td><code>20s</code></td>
+</tr>
+<tr>
+<td><code>[M]:[SS]</code></td>
+<td><code>^\d+:\d{2}$</code></td>
+<td>countdown as m:ss (60s+)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>no-timer</code></td>
+<td><code>^no-timer$</code></td>
+<td>no countdown</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>[N]pts</code></td>
+<td><code>^\d+pts$</code></td>
+<td>worth N points (≥ 0; ✓ adds, ✗ subtracts)</td>
+<td><code>1pts</code></td>
+</tr>
+<tr>
+<td><code>scored</code></td>
+<td><code>^scored$</code></td>
+<td>has a scoring page</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>unscored</code></td>
+<td><code>^unscored$</code></td>
+<td>no scoring page</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>reveal</code></td>
+<td><code>^reveal$</code></td>
+<td>show an answer screen</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>no-reveal</code></td>
+<td><code>^no-reveal$</code></td>
+<td>no answer screen</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>auto-transition</code></td>
+<td><code>^auto-transition$</code></td>
+<td>advance itself when the timer hits 0</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>manual-transition</code></td>
+<td><code>^manual-transition$</code></td>
+<td>wait for the operator to advance</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>timer-auto</code></td>
+<td><code>^timer-auto$</code></td>
+<td>timer starts automatically</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>timer-manual</code></td>
+<td><code>^timer-manual$</code></td>
+<td>timer waits for ▶ Start</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>loop-enabled</code> / <code>loop-disabled</code></td>
+<td><code>^loop-(enabled|disabled)$</code></td>
+<td>(Reveal Answers) wrap after the last</td>
+<td><code>loop-disabled</code></td>
+</tr>
+</tbody></table>
+<p>Baseline: <code>20s, 1pts, scored, no-reveal, manual-transition, timer-auto</code>.</p>
+<h3>4.1 Timer values</h3>
+<p><code>no-timer</code>, or: <code>10 15 20 25 30 35 40 45 50 55 60</code> (every 5s), <code>75 90 105 120</code>, then
+<code>150 180 210 240 270 300 330 360 390 420</code> (every 30s). 60s+ may be written <code>m:ss</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code>&gt; 25s, 5pts, scored, reveal
+</code></pre>
+<hr>
+<h2>5. Special slides — <code>### (type) …</code></h2>
+<p>A <code>###</code> whose text starts with a <code>(type)</code> tag is that slide. An <strong>unknown type is an error</strong>
+(the import stops with the line). Any <code>###</code> without a tag is a question (§6).</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Slide</th>
+<th>Below it</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>### (title) [text]</code></td>
+<td>section / round divider</td>
+<td>a body line = subheading</td>
+</tr>
+<tr>
+<td><code>### (leaderboard) [text]</code></td>
+<td>current standings</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>### (podium) [text]</code></td>
+<td>top-3 finale</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>### (reveal-answers) [text]</code></td>
+<td>answer browser</td>
+<td>a <code>&gt;</code> line (§5.1)</td>
+</tr>
+<tr>
+<td><code>### (note) [text]</code></td>
+<td>standalone reveal slide</td>
+<td>a body line = body</td>
+</tr>
+<tr>
+<td><code>### (buzzer) [text]</code></td>
+<td>first-to-buzz question</td>
+<td>a <code>&lt;</code> answer</td>
+</tr>
+</tbody></table>
+<h3>5.1 Reveal Answers settings (its <code>&gt;</code> line)</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Means</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[N]s</code></td>
+<td>seconds per answer (<code>0s</code> = manual)</td>
+<td><code>10s</code></td>
+</tr>
+<tr>
+<td><code>loop-enabled</code> / <code>loop-disabled</code></td>
+<td>wrap after the last answer</td>
+<td><code>loop-disabled</code></td>
+</tr>
+</tbody></table>
+<p><strong>Example</strong></p>
+<pre><code>### (reveal-answers) The Answers
+&gt; 8s, loop-enabled
+</code></pre>
+<hr>
+<h2>6. Questions</h2>
+<p>A plain <code>###</code> is a question; its type comes from the <code>&lt;</code> answer line (§3). Optional parts:</p>
+<ul>
+<li>a <strong>body line</strong> between the heading and the <code>&lt;</code> → makes it a <strong>titled question</strong>;</li>
+<li>an <strong><code>image: [data-url]</code></strong> field → adds an embedded picture (with a typed answer it&#39;s an <em>image question</em>; with options it&#39;s a multiple choice that shows a picture);</li>
+<li>a <strong><code>&gt;</code> settings line</strong> → per-question overrides.</li>
+</ul>
+<p><strong>Examples</strong></p>
+<pre><code>### How many books are in the New Testament?
+&lt; 27
+
+### John 3:16
+For God so loved the ___.
+&lt; world
+
+### Name this symbol.
+image: data:image/svg+xml;base64,…    (embedded — no external files)
+&lt; The cross
+
+### Quick warm-up: name a disciple.
+&lt; Peter
+&gt; 10s, unscored, no-reveal
+</code></pre>
+<hr>
+<h2>7. Themes</h2>
+<p>Reference a theme by name with <code>theme:</code> on the deck (<code>#</code>) or a stream (<code>##</code>).</p>
+<h3>7.1 Built-in themes</h3>
+<p><code>midnight</code> (default) · <code>royal</code> · <code>parchment</code> · <code>sunrise</code>.</p>
+<pre><code>## Audience Round
+theme: parchment
+</code></pre>
+<h3>7.2 Custom theme block — <code>## (theme) [name]</code></h3>
+<p>Define a theme once, then reference it by name anywhere. Each field is a <code>key: value</code> line.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Means</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bg: [type], [c1], [c2], [angle]</code></td>
+<td>background gradient</td>
+<td><code>radial</code>/<code>linear</code>, two hex colors, an angle</td>
+</tr>
+<tr>
+<td><code>ink: [hex]</code></td>
+<td>text color</td>
+<td>hex</td>
+</tr>
+<tr>
+<td><code>accent: [hex]</code></td>
+<td>accent color</td>
+<td>hex</td>
+</tr>
+<tr>
+<td><code>correct: [hex]</code></td>
+<td>correct-answer color</td>
+<td>hex</td>
+</tr>
+<tr>
+<td><code>heading-font: [name]</code></td>
+<td>heading typeface</td>
+<td><code>System Sans</code>, <code>Georgia Serif</code>, <code>Helvetica</code>, <code>Trebuchet</code>, <code>Palatino Serif</code>, <code>Verdana</code></td>
+</tr>
+<tr>
+<td><code>body-font: [name]</code></td>
+<td>body typeface</td>
+<td>(same list)</td>
+</tr>
+</tbody></table>
+<pre><code>## (theme) Forest
+bg: linear, #14321f, #0a1a10, 160
+ink: #ffffff
+accent: #34d399
+correct: #a3e635
+heading-font: Georgia Serif
+body-font: System Sans
+
+## Main Quiz
+theme: forest
+</code></pre>
+<hr>
+<h2>8. Escaping &amp; rules</h2>
+<ul>
+<li><strong>Comments / dividers:</strong> any line that <strong>starts with</strong> <code>---</code> or <code>===</code> is ignored, so you can
+break a deck into sections — <code>=== Round 2 ===</code>, <code>--- audience questions ---</code>, or a bare <code>------</code>
+rule. (Only the start of the line matters, so <code>---</code> or <code>===</code> mid-text in a question or answer is
+kept as normal content.)</li>
+<li>*<em>Escape inside an answer with <code>\</code>:** <code>\|</code> (literal pipe), <code>\*</code> (literal leading star),
+<code>\-&gt;</code> (literal arrow — not a matching pair), plus <code>\,</code> <code>\&lt;</code> <code>\\</code>. (A *trailing* `</em><code>is already literal — only a *leading*</code>*` marks the correct option.)</li>
+<li>**Escape a whole line with a leading <code>\</code>:** any line that would otherwise be read as a comment,
+a field, or a sigil becomes **literal body text** — <code>\--- not a divider</code>, <code>\theme: my text</code>,
+<code>\&gt; a quote</code>, <code>\&lt; text</code>, <code>\# hashtag</code>. (Write <code>\\…</code> for a body line that really begins with a
+backslash.)</li>
+<li><strong>Type is inferred, never declared</strong> — the <code>&lt;</code> line&#39;s shape decides a question&#39;s type.</li>
+<li><strong>One line = one thing.</strong> The parser classifies by the first character, so every error
+carries its line number.</li>
+<li>A malformed file imports <strong>nothing</strong> and reports one located error (file + line).</li>
+<li>QL carries questions, answers, settings, and theme <em>names</em> — <strong>not</strong> custom themes or
+password encryption; use the <code>🔒 JSON</code> save for those.</li>
+</ul>
+<hr>
+<h2>9. Gotchas — and how to escape them</h2>
+<p>QL reads a question&#39;s <strong>type from the shape of its answer</strong> — that&#39;s why you never label types,
+but it also means a stray symbol can change the type. Every case below is <strong>escapable</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>If you write…</th>
+<th>QL reads it as…</th>
+<th>Get what you meant with…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt; Moses -&gt; the people</code></td>
+<td>a <strong>matching</strong> question</td>
+<td><code>&lt; Moses \-&gt; the people</code></td>
+</tr>
+<tr>
+<td><code>&lt; rock | roll</code> (one answer with a pipe)</td>
+<td>a 2-option <strong>poll</strong></td>
+<td>`&lt; rock \</td>
+</tr>
+<tr>
+<td><code>&lt; *5 stars</code> (literal leading star)</td>
+<td>first option marked <strong>correct</strong></td>
+<td><code>&lt; \*5 stars</code></td>
+</tr>
+<tr>
+<td>a body line starting <code>theme:</code> <code>header:</code> <code>footer:</code> <code>image:</code> <code>teams:</code></td>
+<td>a <strong>field</strong> (body text lost)</td>
+<td>start it with <code>\</code> → <code>\theme: …</code></td>
+</tr>
+<tr>
+<td>a body line starting <code>&gt;</code> <code>&lt;</code> <code>#</code> <code>---</code> <code>===</code></td>
+<td>settings / answer / heading / comment</td>
+<td>start it with <code>\</code> → <code>\&gt; a quote</code></td>
+</tr>
+</tbody></table>
+<p><strong>Not footguns — by design, and never silent-wrong:</strong></p>
+<ul>
+<li><strong>A list with no <code>*</code> is a poll.</strong> That&#39;s the <em>definition</em> of a poll (no right answer). If you
+meant a scored question, mark the correct option with <code>*</code>.</li>
+<li><strong>Two options reading <code>True</code> / <code>False</code> become a true/false question</strong> — and a true/false with
+<strong>no <code>*</code></strong> is a <strong>located error</strong> (you must mark the answer), never a silent <code>false</code>.</li>
+<li><strong>A question with both an image and a body line is a located error</strong> — no slide type carries
+both, so it&#39;s rejected rather than quietly dropping the body.</li>
+</ul>
