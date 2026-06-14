@@ -61,7 +61,7 @@ on <code>,</code>. Since real answers contain commas (<code>love, joy, peace</co
 </tr>
 <tr>
 <td>anything else</td>
-<td>body / subheading text</td>
+<td>body text (a question prompt, or a Title slide&#39;s body)</td>
 <td>§6</td>
 </tr>
 </tbody></table>
@@ -114,11 +114,11 @@ footer-logo: data:image/svg+xml;base64,…
 <td><code>header: [text]</code></td>
 <td>header title shown on every slide</td>
 <td>any text</td>
-<td>the deck name</td>
+<td>hidden (no fallback)</td>
 </tr>
 <tr>
 <td><code>footer: [text]</code></td>
-<td>footer note (bottom-left, every slide)</td>
+<td>footer note (bottom-<strong>right</strong>, every slide)</td>
 <td>any text</td>
 <td>hidden</td>
 </tr>
@@ -134,15 +134,22 @@ footer-logo: data:image/svg+xml;base64,…
 <td>a base64 <code>data:</code> URL</td>
 <td>hidden</td>
 </tr>
+<tr>
+<td><code>sounds: [on/off]</code></td>
+<td>countdown sounds (3·2·1·ring) on every timed question</td>
+<td><code>on</code> / <code>off</code></td>
+<td><code>on</code> (add <code>sounds: off</code> to silence)</td>
+</tr>
 </tbody></table>
 <p>Streams merge <strong>by name</strong> on import: same name replaces, new name adds.</p>
 <h3>2.1 Header &amp; footer (branding)</h3>
 <p><code>header:</code> + <code>header-logo:</code> show centered in a band at the top of every slide; <code>footer:</code> +
-<code>footer-logo:</code> sit bottom-left. <code>header:</code> falls back to the <strong>deck name</strong> when omitted; leave
-all four blank and no band is drawn. <strong>Logos and all images are embedded base64 <code>data:</code> URLs,
-never external file references</strong> — a deck is one self-contained file that works fully offline.
-Keep each small (an SVG, or a PNG under ~50 KB — header logo shows ≤44 px tall, footer logo
-≤26 px).</p>
+<code>footer-logo:</code> sit at the <strong>bottom-right</strong>. The header is <strong>fully optional — nothing set means
+nothing is drawn (no deck-name fallback)</strong>. <strong>Logos and all images are embedded base64 <code>data:</code>
+URLs, never external file references</strong> — a deck is one self-contained file that works fully
+offline. Keep each small (an SVG, or a PNG under ~50 KB — header logo ≤44 px tall, footer ≤26 px).</p>
+<p>In the <strong>footer text</strong> you can place the footer logo inline with the token <code>&lt;IMG&gt;</code> (e.g.
+<code>footer: Hosted by &lt;IMG&gt; CFC</code>); without <code>&lt;IMG&gt;</code> the logo just goes at the end (the right side).</p>
 <hr>
 <h2>3. The answer line <code>&lt;</code></h2>
 <p>One line per question, starting with <code>&lt;</code>. Options separate with <code>|</code>; the <strong>content decides the
@@ -281,6 +288,12 @@ overrides them. Omitted tokens keep their default.</p>
 <td>(Reveal Answers) wrap after the last</td>
 <td><code>loop-disabled</code></td>
 </tr>
+<tr>
+<td><code>additional</code> / <code>standard</code></td>
+<td><code>^(additional|standard)$</code></td>
+<td>a <strong>hidden reserve</strong> question, swapped in on a disqualify — see §10</td>
+<td><code>standard</code></td>
+</tr>
 </tbody></table>
 <p>Baseline: <code>20s, 1pts, scored, no-reveal, manual-transition, timer-auto</code>.</p>
 <h3>4.1 Timer values</h3>
@@ -304,7 +317,7 @@ overrides them. Omitted tokens keep their default.</p>
 <tbody><tr>
 <td><code>### (title) [text]</code></td>
 <td>section / round divider</td>
-<td>a body line = subheading</td>
+<td><code>sub:</code> (optional subheading) + <code>image:</code> (shown above) + body lines = body</td>
 </tr>
 <tr>
 <td><code>### (leaderboard) [text]</code></td>
@@ -332,6 +345,15 @@ overrides them. Omitted tokens keep their default.</p>
 <td>a <code>&lt;</code> answer</td>
 </tr>
 </tbody></table>
+<p>A <strong>title</strong> slide takes the <code>### (title)</code> line as the <strong>heading</strong>, an optional <strong><code>sub:</code></strong> line as
+the <strong>subheading</strong> (a short second line), an optional <code>image:</code> (shown above the heading), and any
+remaining lines as the <strong>body</strong> (longer text — kept across line breaks):</p>
+<pre><code>### (title) Round 2 — Verses
+sub: Scripture round
+image: data:image/svg+xml;base64,…
+Read each verse aloud
+before the team answers
+</code></pre>
 <h3>5.1 Reveal Answers settings (its <code>&gt;</code> line)</h3>
 <table>
 <thead>
@@ -447,8 +469,9 @@ theme: forest
 break a deck into sections — <code>=== Round 2 ===</code>, <code>--- audience questions ---</code>, or a bare <code>------</code>
 rule. (Only the start of the line matters, so <code>---</code> or <code>===</code> mid-text in a question or answer is
 kept as normal content.)</li>
-<li>*<em>Escape inside an answer with <code>\</code>:** <code>\|</code> (literal pipe), <code>\*</code> (literal leading star),
-<code>\-&gt;</code> (literal arrow — not a matching pair), plus <code>\,</code> <code>\&lt;</code> <code>\\</code>. (A *trailing* `</em><code>is already literal — only a *leading*</code>*` marks the correct option.)</li>
+<li><strong>Escape inside an answer</strong> with <code>\</code>: <code>\|</code> (literal pipe), <code>\*</code> (literal leading star),
+<code>\-&gt;</code> (literal arrow — not a matching pair), plus <code>\,</code> <code>\&lt;</code> <code>\\</code>. A trailing <code>*</code> is already
+literal — only a leading <code>*</code> marks the correct option.</li>
 <li>**Escape a whole line with a leading <code>\</code>:** any line that would otherwise be read as a comment,
 a field, or a sigil becomes **literal body text** — <code>\--- not a divider</code>, <code>\theme: my text</code>,
 <code>\&gt; a quote</code>, <code>\&lt; text</code>, <code>\# hashtag</code>. (Write <code>\\…</code> for a body line that really begins with a
@@ -480,7 +503,7 @@ but it also means a stray symbol can change the type. Every case below is <stron
 <tr>
 <td><code>&lt; rock | roll</code> (one answer with a pipe)</td>
 <td>a 2-option <strong>poll</strong></td>
-<td>`&lt; rock \</td>
+<td>put a <code>\</code> before the pipe</td>
 </tr>
 <tr>
 <td><code>&lt; *5 stars</code> (literal leading star)</td>
@@ -488,7 +511,7 @@ but it also means a stray symbol can change the type. Every case below is <stron
 <td><code>&lt; \*5 stars</code></td>
 </tr>
 <tr>
-<td>a body line starting <code>theme:</code> <code>header:</code> <code>footer:</code> <code>image:</code> <code>teams:</code></td>
+<td>a body line starting <code>theme:</code> <code>teams:</code> <code>sounds:</code> <code>sub:</code> <code>image:</code> <code>header:</code> <code>footer:</code></td>
 <td>a <strong>field</strong> (body text lost)</td>
 <td>start it with <code>\</code> → <code>\theme: …</code></td>
 </tr>
@@ -507,3 +530,25 @@ meant a scored question, mark the correct option with <code>*</code>.</li>
 <li><strong>A question with both an image and a body line is a located error</strong> — no slide type carries
 both, so it&#39;s rejected rather than quietly dropping the body.</li>
 </ul>
+<hr>
+<h2>10. Additional questions (<code>additional</code>) &amp; disqualifying</h2>
+<p>Mark a question <strong><code>additional</code></strong> (a <code>&gt; additional</code> token, or the Maker&#39;s <strong>Additional question →
+Yes</strong> toggle) to make it a <strong>hidden reserve</strong>. Additional questions keep their slide number in the
+editor but are <strong>skipped in the show by default</strong>.</p>
+<p>During the show — in both the Maker preview and the Display — the operator&#39;s <strong>🚫 button</strong>
+disqualifies the <strong>question currently on screen</strong>; pressing it again re-enables that question (it
+works like a checkbox). A disqualified question stays on screen with a big <strong>✗</strong>. The rule:</p>
+<ul>
+<li><strong>Disqualifying</strong> a question pulls it out of the count <strong>and brings in the next hidden additional
+question</strong> — so the number in play stays the same (one out, one off the bench).</li>
+<li><strong>Re-enabling</strong> reverses it exactly: the question returns and the <strong>last extra question re-hides</strong>.</li>
+</ul>
+<p>Example — <code>Q1 Q2 Q3</code> plus additional <code>A1 A2</code>:</p>
+<pre><code>default              → Q1 Q2 Q3
+disqualify Q2        → Q1 Q3 A1
+disqualify Q2 + Q3   → Q1 A1 A2
+un-disqualify Q3     → Q1 Q3 A1   (A2 goes back to the bench)
+</code></pre>
+<p><code>additional</code> is authored (it travels in the <code>.txt</code> and the JSON save). <strong>Disqualifying is a
+runtime action</strong> — it is <em>not</em> a QL token; it persists in the 🔒 JSON save and across a Display
+reload (resume), but is never written into a <code>.txt</code>.</p>
