@@ -208,27 +208,28 @@
     color: #fff; font-family: var(--font); }
   .present.open { display: flex; }
   .pv-main { flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 5vh 6vw; overflow: hidden; position: relative; }
-  .pv-stage { width: 100%; max-width: 1120px; text-align: center; animation: pvIn .5s cubic-bezier(.2,.85,.25,1); }
+    padding: 4vh 1.5vw; overflow: hidden; position: relative; }
+  .pv-stage { width: 100%; max-width: 97vw; text-align: center; animation: pvIn .5s cubic-bezier(.2,.85,.25,1); }   /* viewport-relative only — NO px ceiling, so it fills 4K/8K, not just 1080p */
+  .pv-stage.pv-fitting, .pv-stage.pv-fitting * { transition: none !important; animation: none !important; }   /* exact measurement while binary-searching the fit — freeze the entry animation too, or box() reads a mid-animation size */
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
     color: #9fb0d0; border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
-  .pv-q { font-size: clamp(26px, 4.6vw, 54px); font-weight: 800; line-height: 1.16; letter-spacing: -.5px; margin: 0 auto 3vh; max-width: 16ch; }
-  .pv-title-sub { color: #9fb0d0; font-size: clamp(18px, 3vw, 34px); font-weight: 600; margin-top: 1.4vh; line-height: 1.25; }
-  .pv-sub { color: #9fb0d0; font-size: clamp(16px, 2.2vw, 26px); margin-top: 2vh;
-    white-space: pre-line; line-height: 1.45; max-width: 26em; margin-left: auto; margin-right: auto; text-align: left; }
+  .pv-q { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.12; letter-spacing: -.5px; margin: 0 auto 3vh; width: fit-content; max-width: 100%; white-space: pre-line; }
+  .pv-title-sub { color: #9fb0d0; font-size: clamp(24px, 3.4vw, 62px); font-weight: 600; margin: 1.8vh auto 0; line-height: 1.28; width: fit-content; max-width: 100%; }
+  .pv-sub { color: #9fb0d0; font-size: clamp(24px, 3.2vw, 64px); margin-top: 2.4vh;
+    white-space: pre-line; line-height: 1.38; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; text-align: left; }
   .pv-title-img { display: block; margin: 0 auto 3.2vh; max-height: 34vh; max-width: 72vw; object-fit: contain; border-radius: 12px; }
-  .pv-title-huge { font-size: clamp(46px, 9vw, 124px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.02;
+  .pv-title-huge { font-size: clamp(52px, 10vw, 220px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.04; width: fit-content; max-width: 15ch; margin-left: auto; margin-right: auto; text-wrap: balance;
     background: linear-gradient(180deg, #ffffff, #aebede); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .pv-media { margin: 0 auto 3vh; max-width: min(620px, 64vw); }
+  .pv-media { margin: 0 auto 3vh; max-width: 32vw; }
   .pv-media img { width: 100%; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
 
-  .pv-options { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; max-width: 940px; margin: 0 auto; }
-  .pv-options.n1 { grid-template-columns: 1fr; max-width: 560px; }
-  .pv-opt { display: flex; align-items: center; gap: 16px; padding: clamp(14px,2vh,22px) 22px; text-align: left;
-    background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 14px;
-    font-size: clamp(17px, 2.3vw, 27px); font-weight: 600; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
-  .pv-letter { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 11px; background: var(--accent);
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; }
+  .pv-options { display: grid; gap: clamp(14px,1.4vw,28px); grid-template-columns: repeat(var(--opt-cols, 2), 1fr); width: 100%; margin: 0 auto; }
+  .pv-options.n1 { grid-template-columns: 1fr; max-width: 68vw; }
+  .pv-opt { display: flex; align-items: center; gap: clamp(16px,1.6vw,30px); padding: clamp(16px,2.2vh,32px) clamp(24px,2.2vw,48px); text-align: left;
+    background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 16px;
+    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 700; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
+  .pv-letter { width: 1.5em; height: 1.5em; flex: 0 0 auto; border-radius: .28em; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .92em; }
   .pv-opt-text { flex: 1; }
   .pv-opt.correct { background: rgba(47,211,154,.18); border-color: #2fd39a; transform: scale(1.03);
     box-shadow: 0 0 0 3px rgba(47,211,154,.28), 0 16px 44px rgba(47,211,154,.22); }
@@ -236,7 +237,7 @@
   .pv-opt.dim { opacity: .38; filter: saturate(.4); }
   .pv-check { margin-left: auto; color: #2fd39a; font-weight: 900; font-size: 1.4em; }
 
-  .pv-answer { font-size: clamp(30px, 5.5vw, 70px); font-weight: 900; color: #7ef0bf; margin-top: 1vh; animation: pop .45s; }
+  .pv-answer { font-size: clamp(34px, 6vw, 120px); font-weight: 900; color: #7ef0bf; margin-top: 1vh; animation: pop .45s; }
   /* Reveal Answers browser slide */
   .pv-ra { position: relative; }
   .pv-ra-inner { width: 100%; text-align: center; animation: pvIn .35s cubic-bezier(.2,.85,.25,1); }
@@ -251,13 +252,13 @@
   .pv-ra-prog-fill { height: 100%; width: 0%; background: currentColor; opacity: .75; }
   .pv-ra-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; font-size: 17px; cursor: pointer; }
   .pv-ra-pause:hover { background: rgba(255,255,255,.2); }
-  .pv-passage { font-size: clamp(22px, 3.2vw, 40px); font-weight: 600; line-height: 1.35; max-width: 22ch; margin: 0 auto; }
+  .pv-passage { font-size: calc(clamp(26px, 3.8vw, 78px) * var(--qscale, 1)); font-weight: 600; line-height: 1.28; width: fit-content; max-width: 100%; margin: 0 auto; white-space: pre-line; }
 
   /* timer ring — big & centered */
-  .pv-timer { position: absolute; top: 2.5vh; left: 50%; transform: translateX(-50%); width: 230px; height: 230px; z-index: 4; }
+  .pv-timer { position: absolute; top: 1.6vh; left: 50%; transform: translateX(-50%); width: 176px; height: 176px; z-index: 4; }
   .pv-timer .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 82px; font-variant-numeric: tabular-nums; }
-  .pv-timer .num.long { font-size: 58px; }
+    font-weight: 800; font-size: 64px; font-variant-numeric: tabular-nums; }
+  .pv-timer .num.long { font-size: 44px; }
   .pv-timer .prog { transition: none; }
   .pv-timer.warn .prog { stroke: #ff6b81 !important; }
   .pv-timer.warn .num { color: #ff6b81; animation: tick .5s infinite; }
@@ -273,7 +274,7 @@
     box-shadow: 0 16px 44px rgba(225,29,54,.5); animation: buzzPulse 1.2s infinite; }
 
   /* leaderboard */
-  .pv-board { max-width: 780px; margin: 0 auto; text-align: left; display: flex; flex-direction: column; gap: 11px; }
+  .pv-board { max-width: 41vw; margin: 0 auto; text-align: left; display: flex; flex-direction: column; gap: 11px; }
   .pv-board-row { display: flex; align-items: center; gap: 16px; }
   .pv-rank { width: 40px; font-weight: 800; color: var(--pv-ink-soft, #9fb0d0); font-size: 20px; text-align: center; }
   .pv-rank.top { color: #fbbf24; }
@@ -287,11 +288,11 @@
   .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); width: 100%; position: relative; align-items: start; }
   .pv-cols::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); opacity: .25; background: linear-gradient(to bottom, transparent, currentColor 15%, currentColor 85%, transparent); }
   .pv-col { display: grid; grid-auto-flow: column; gap: 10px 14px; align-content: start; min-width: 0; }
-  .pv-mitem { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px;
-    padding: 13px 18px; font-weight: 600; min-width: 0; font-size: clamp(16px,1.9vw,22px); animation: optIn .4s both; overflow-wrap: break-word; }
-  .pv-pairlist { display: grid; gap: 10px clamp(28px,4vw,56px); max-width: 640px; margin: 0 auto; justify-items: center; }
-  .pv-pairlist.two { grid-auto-flow: column; max-width: 1100px; }   /* long answer lists read in two columns */
-  .pv-pair-row { display: flex; align-items: center; gap: 14px; justify-content: center; font-size: clamp(17px,2.1vw,26px);
+  .pv-mitem { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
+    padding: clamp(13px,1.5vh,22px) clamp(18px,1.6vw,30px); font-weight: 600; min-width: 0; font-size: clamp(20px,2.4vw,48px); animation: optIn .4s both; overflow-wrap: break-word; }
+  .pv-pairlist { display: grid; gap: 12px clamp(28px,4vw,64px); max-width: 57vw; margin: 0 auto; justify-items: center; }
+  .pv-pairlist.two { grid-auto-flow: column; max-width: 83vw; }   /* long answer lists read in two columns */
+  .pv-pair-row { display: flex; align-items: center; gap: 16px; justify-content: center; font-size: clamp(20px,2.6vw,52px);
     font-weight: 600; animation: optIn .4s both; }
   .pv-pair-row .ar { color: #2fd39a; font-weight: 900; }
 
@@ -354,12 +355,13 @@
   .pv-stream-sel { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; padding: 9px 10px; font-weight: 600; max-width: 190px; }
   .pv-stream-sel option { color: #111; }
   /* ---- show: score tally ---- */
-  .pv-tally { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 8px 22px; width: min(960px, 95vw); margin: 2.5vh auto 0; max-height: 62vh; overflow: auto; padding: 4px; }
-  .pv-trow { display: flex; align-items: center; gap: 12px; background: var(--pv-tile, rgba(255,255,255,.06)); border: 1px solid var(--pv-tile-border, rgba(255,255,255,.12)); border-radius: 12px; padding: 7px 12px; transition: background .15s; }
+  /* score tally — every team is a big card (✗ · name · score · ✓), tiled to FILL the screen with NO scroll */
+  .pv-tally { display: grid; gap: clamp(10px,1vw,20px); width: 95vw; height: 82vh; grid-auto-rows: 1fr; margin: 0 auto; }
+  .pv-trow { display: flex; align-items: center; gap: clamp(8px,0.9vw,18px); background: var(--pv-tile, rgba(255,255,255,.06)); border: 2px solid var(--pv-tile-border, rgba(255,255,255,.12)); border-radius: 16px; padding: clamp(10px,1.5vh,24px) clamp(12px,1.1vw,24px); transition: background .15s; }
   .pv-trow.plus { background: var(--pv-correct-soft, rgba(47,211,154,.2)); border-color: var(--pv-correct, #2fd39a); }
   .pv-trow.minus { background: rgba(255,93,115,.18); border-color: #ff5d73; }
-  .pv-tname { flex: 1; font-weight: 700; font-size: 18px; text-align: left; }
-  .pv-tscore { min-width: 44px; text-align: right; font-weight: 900; font-size: 22px; }
+  .pv-tname { flex: 1; min-width: 0; font-weight: 800; font-size: clamp(18px,1.7vw,40px); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-tscore { font-weight: 900; font-size: clamp(22px,2.1vw,50px); font-variant-numeric: tabular-nums; min-width: 1.6em; text-align: right; }
   .pv-team-card { background: var(--pv-tile, rgba(255,255,255,.06)); border: 1px solid var(--pv-tile-border, rgba(255,255,255,.12)); border-radius: 14px; padding: 14px; text-align: center; transition: background .2s, transform .1s; }
   .pv-team-card.flash { background: var(--pv-correct-soft, rgba(47,211,154,.22)); transform: scale(1.04); }
   .pv-team-name { font-weight: 700; font-size: 15px; opacity: .85; }
@@ -369,7 +371,7 @@
   .pv-pm:hover { background: rgba(255,255,255,.18); }
   .pv-pm.plus { background: var(--pv-accent, #4f46e5); border-color: var(--pv-accent, #4f46e5); }
   .pv-mark-row { display: flex; gap: 8px; justify-content: center; }
-  .pv-mark { width: 46px; height: 46px; border-radius: 10px; border: 1px solid var(--pv-tile-border, rgba(255,255,255,.2)); background: var(--pv-tile, rgba(255,255,255,.08)); color: var(--pv-ink, #fff); font-size: 22px; font-weight: 800; cursor: pointer; transition: all .15s; }
+  .pv-mark { width: clamp(38px,2.6vw,64px); height: clamp(38px,2.6vw,64px); flex: 0 0 auto; border-radius: 12px; border: 1px solid var(--pv-tile-border, rgba(255,255,255,.2)); background: var(--pv-tile, rgba(255,255,255,.08)); color: var(--pv-ink, #fff); font-size: clamp(18px,1.6vw,36px); font-weight: 800; line-height: 1; cursor: pointer; transition: all .15s; }
   .pv-mark:hover { filter: brightness(1.25); }
   .pv-mark.check.on { background: #2fd39a; border-color: #2fd39a; color: #06231a; }
   .pv-mark.cross.on { background: #ff5d73; border-color: #ff5d73; color: #fff; }
@@ -385,7 +387,7 @@
   /* ---- show: standings overlay ---- */
   .pv-board-overlay { position: absolute; inset: 0; z-index: 20; background: #0a0e1d; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4vh 5vw; animation: fade .2s; }
   .pv-board-title { font-size: clamp(22px, 3.6vw, 42px); font-weight: 900; margin-bottom: 1.5vh; }
-  .pv-bgrid { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 8px 22px; width: min(940px, 95vw); max-height: 66vh; overflow: auto; padding: 4px; }
+  .pv-bgrid { display: grid; grid-template-columns: repeat(2, minmax(13.5vw, 1fr)); gap: 8px 22px; width: 49vw; max-height: 66vh; overflow: auto; padding: 4px; }
   .pv-brow { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; }
   .pv-brow.lead { border-color: #fbbf24; background: rgba(251,191,36,.1); }
   .pv-board-overlay .pv-rank { color: #9fb0d0; width: 32px; }
@@ -477,7 +479,7 @@
   .present.audience .pv-controls { display: none; }
 
   /* ---- timer clearance + points + option caption ---- */
-  .pv-main.has-timer { padding-top: 262px; }
+  .pv-main.has-timer { padding-top: 204px; }
   .pv-points { display: inline-block; margin: 0 auto 2.6vh; font-weight: 800; font-size: clamp(14px, 1.7vw, 19px);
     color: var(--pv-on-accent, #fff); background: var(--pv-accent, #4f46e5); padding: 5px 16px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
   .pv-ocap { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin: 0 auto 1.8vh; }
@@ -498,7 +500,7 @@
   .pv-brand { position: absolute; top: 2.2vh; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px; opacity: .92; pointer-events: none; max-width: 90vw; white-space: nowrap; }
   .present.branded .pv-main { padding-top: calc(5vh + 52px); }
   .present.branded .pv-timer { top: calc(2.2vh + 52px); }
-  .present.branded .pv-main.has-timer { padding-top: calc(262px + 52px); }
+  .present.branded .pv-main.has-timer { padding-top: calc(204px + 52px); }
   .pv-brand img { height: clamp(28px, 4.5vh, 44px); max-width: 180px; object-fit: contain; display: block; }
   .pv-brand span { font-weight: 800; font-size: clamp(13px, 1.5vw, 19px); letter-spacing: .4px; }
   .pv-footnote { position: absolute; right: 3vw; bottom: 1.6vh; z-index: 4; font-size: clamp(11px, 1.2vw, 15px);
@@ -508,33 +510,45 @@
   .pv-footnote span { white-space: pre-line; }
 
   /* podium finale — top 3 on the podium, the rest of the field beside it */
-  .pv-podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px,4vw,64px); margin-top: 2vh; flex-wrap: wrap; }
-  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(10px,2.4vw,30px); }
+  .pv-podium-wrap { display: flex; flex-direction: column; align-items: center; gap: clamp(10px,1.4vh,20px); margin: 0 auto; width: 97vw; }
+  .pv-podium { display: flex; justify-content: center; align-items: flex-end; gap: clamp(16px,2vw,52px); width: 100%; }
+  .pv-podrest { width: 100%; }
+  .pv-spos { font-weight: 800; font-size: clamp(18px,1.6vw,38px); opacity: .55; line-height: 1; }
   .pv-pod { display: flex; flex-direction: column; align-items: center; position: relative; }
-  .pv-pod-crown { font-size: clamp(26px,3.6vw,46px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
-  .pv-pod-medal { font-size: clamp(28px,4.2vw,54px); line-height: 1; animation: pop .5s; }
-  .pv-pod-name { font-weight: 800; font-size: clamp(15px,2vw,26px); margin: 6px 0 10px; max-width: 24vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-  .pv-pod-block { position: relative; width: clamp(86px,13vw,168px); height: 0; border-radius: 14px 14px 0 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-start; gap: 2px; padding-top: 16px; font-weight: 900; color: #1a1205;
+  .pv-pod-crown { font-size: clamp(28px,3.4vw,62px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
+  .pv-pod-medal { font-size: clamp(30px,4vw,74px); line-height: 1; animation: pop .5s; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(24px,3vw,60px); margin: 6px 0 8px; max-width: 30vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .pv-pod-block { position: relative; width: clamp(240px,27vw,580px); height: 0; border-radius: 18px 18px 0 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 2px; padding-top: clamp(8px,1vh,16px); font-weight: 900; color: #1a1205;
     box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
   .pv-pod-block::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 42%;
     background: linear-gradient(180deg, rgba(255,255,255,.5), transparent); pointer-events: none; }
   .pv-pod-block.gold { background: linear-gradient(180deg,#fde68a,#f59e0b); }
   .pv-pod-block.silver { background: linear-gradient(180deg,#f1f5f9,#94a3b8); }
   .pv-pod-block.bronze { background: linear-gradient(180deg,#fcd9b6,#d97706); }
-  .pv-pod-place { font-size: clamp(26px,3.2vw,42px); line-height: 1; opacity: .32; font-weight: 900; }
-  .pv-pod-score { font-size: clamp(22px,3.4vw,46px); line-height: 1.05; }
+  .pv-pod-place { font-size: clamp(14px,1.6vw,30px); line-height: 1; opacity: .32; font-weight: 900; }
+  .pv-pod-score { font-size: clamp(34px,4.4vw,92px); line-height: 1.05; }
   /* the rest of the field — a no-scroll table that grows into columns (filled top-to-bottom) so everyone shows */
   .pv-pod-rest { text-align: left; display: flex; flex-direction: column; align-self: center; }
   .pv-pod-rest-head { font-size: clamp(12px,1.4vw,15px); text-transform: uppercase; letter-spacing: 1.5px; color: var(--pv-ink-soft); margin-bottom: 10px; font-weight: 800; }
-  .pv-pod-rest-list { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); gap: 6px 12px; }
-  .pv-pod-rest-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-width: 150px;
-    background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 10px; padding: 7px 12px; animation: optIn .4s both; }
+  .pv-pod-rest-list { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); gap: clamp(8px,1vh,16px) clamp(14px,1.4vw,28px); }
+  .pv-pod-rest-row { display: grid; grid-template-columns: 1.6em 1fr auto; align-items: center; gap: .7em; min-width: clamp(240px, 24vw, 460px);
+    background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 12px; padding: clamp(8px,1.1vh,18px) clamp(14px,1.4vw,28px); font-size: clamp(20px, 2.1vw, 46px); animation: optIn .4s both; }
   .pv-pod-rest-rank { color: var(--pv-ink-soft); font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
   .pv-pod-rest-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pv-pod-rest-score { font-weight: 800; font-variant-numeric: tabular-nums; }
   .pv-pod-rest-row.top { border-color: #fbbf24; }
   .pv-pod-rest-row.top .pv-pod-rest-rank { color: #fbbf24; }
+  /* the STANDINGS slide — a grid of equal rectangles (Name · Score) that tiles the screen, no wasted
+     space; top 3 are gold prize cards (★ full = 1st, half = 2nd, gold-no-star = 3rd) */
+  .pv-standings-title { font-size: clamp(28px, 4vw, 88px); font-weight: 900; margin-bottom: clamp(8px,1.4vh,22px); }
+  .pv-sgrid { display: grid; gap: clamp(10px,1.2vw,26px); width: 93vw; margin: 0 auto; align-items: stretch; }
+  .pv-scard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .02em; padding: clamp(6px,0.8vh,14px) clamp(8px,0.8vw,16px); border-radius: 16px; border: 2px solid var(--pv-tile-border); background: var(--pv-tile); }
+  .pv-sstar { font-size: clamp(24px,2.4vw,60px); line-height: 1; color: #f5b317; text-shadow: 0 2px 16px rgba(245,179,23,.65); }
+  .pv-sstar.half { background: linear-gradient(90deg, #f5b317 50%, rgba(255,255,255,.22) 50%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
+  .pv-sname { font-weight: 800; font-size: clamp(28px,2.9vw,72px); line-height: 1.02; text-align: center; }
+  .pv-sscore { font-weight: 900; font-size: clamp(38px,4vw,108px); line-height: 1; font-variant-numeric: tabular-nums; }
+  .pv-scard.medal { border-color: #f59e0b; background: linear-gradient(180deg, rgba(245,158,11,.24), rgba(245,158,11,.07)); }
   @keyframes podCrown { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
 
   /* clean, snappy scroll areas — no chunky OS scrollbar */
@@ -2333,38 +2347,85 @@ const Present = (() => {
   const answer = (t) => el('div', { class: 'pv-answer', text: t });
   const pointsOf = d => { const p = d && d.points; return (p == null || p === '') ? 1 : Number(p); };
   const ocap = parts => { const ps = parts.filter(Boolean); return ps.length ? el('div', { class: 'pv-ocap' }, ps.map(t => el('span', { class: 'pv-ocap-pill', text: t }))) : null; };
+  // Scale the slide to FILL the screen — grow to use every bit of the stage (an auditorium needs the
+  // biggest readable text), shrink only when content would overflow. Capped so a one-word slide
+  // doesn't blow up absurdly.
   function fitStage(main) {
     if (!main) return;
     const st = main.querySelector('.pv-stage'); if (!st) return;
-    st.style.transform = ''; st.style.animation = '';
+    st.style.transform = '';
+    st.style.removeProperty('--qscale');
+    st.classList.add('pv-fitting');   // freeze transitions so each trial size is measured exactly, not mid-animation
     const cs = getComputedStyle(main);
     const availH = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
     const availW = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const k = Math.min(1, availH / st.scrollHeight, availW / st.scrollWidth);
-    if (k < 1) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
+    // the stage is full-width, so scrollWidth is pinned to it — measure the REAL content box from the
+    // children so a sparse slide (a title, a short question) GROWS to fill instead of floating in a void.
+    const box = () => {
+      let L = Infinity, R = -Infinity;
+      for (const c of st.children) {
+        if (getComputedStyle(c).position === 'absolute') continue;   // overlays (e.g. the Reveal-Answers nav arrows, which sit OUTSIDE the stage edges) must not define the content box
+        const r = c.getBoundingClientRect(); if (r.width > 0) { L = Math.min(L, r.left); R = Math.max(R, r.right); }
+      }
+      return { w: (R > L) ? (R - L) : st.scrollWidth, h: st.scrollHeight };
+    };
+    // 1) AUDITORIUM FIT (text slides only) — binary-search the largest font multiplier whose REFLOWED text
+    // still fits. A uniform transform is width-bound and wastes vertical space; growing the real font size
+    // lets the text re-wrap and fill the whole box, so the question is as big as the screen allows.
+    // Skipped when the slide carries a non-scalable grid/board (matching, podium, leaderboard, tally) — those
+    // stay on the transform path below so a small label can't balloon over the layout it sits above.
+    const hasText = st.querySelector('.pv-q, .pv-passage, .pv-opt');
+    const hasGrid = st.querySelector('.pv-cols, .pv-pairlist, .pv-podium-wrap, .pv-board, .pv-tally, .pv-sgrid');
+    if (hasText && !hasGrid) {
+      const fits = s => { st.style.setProperty('--qscale', s); const b = box(); return b.h <= availH && b.w <= availW + 1; };
+      let lo = 0.5, hi = 3.0;
+      for (let i = 0; i < 12; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
+      st.style.setProperty('--qscale', lo);
+    }
+    // 2) SAFETY / sparse-fill — grow a slide with no scalable text (title, podium, board) to fill, and clamp
+    // anything still overflowing so nothing is ever clipped off-screen.
+    const b = box();
+    if (b.w && b.h) {
+      let k = Math.min(availW / b.w, availH / b.h) * 0.98;
+      k = Math.max(0.3, Math.min(k, 3.2));
+      if (Math.abs(k - 1) > 0.02) { st.style.animation = 'none'; st.style.transform = 'scale(' + k + ')'; }
+    }
+    void st.offsetWidth;   // commit the final size before transitions resume (no settle-jiggle)
+    st.classList.remove('pv-fitting');
+  }
+  // balance a card grid: at most maxRows rows, columns chosen to fill the wide screen (last row not an orphan)
+  function gridCols(n, maxRows) {
+    let cols = Math.max(Math.ceil(n / maxRows), Math.round(Math.sqrt(n * 2)));
+    cols = Math.min(Math.max(1, cols), n);
+    return Math.ceil(n / Math.ceil(n / cols));
+  }
+  function restCards(rest, startRank) {
+    const grid = el('div', { class: 'pv-sgrid pv-podrest' });
+    rest.forEach((t, i) => grid.append(el('div', { class: 'pv-scard' }, [
+      el('div', { class: 'pv-spos', text: (i + startRank) }),
+      el('div', { class: 'pv-sname', text: t.name }),
+      el('div', { class: 'pv-sscore', text: t.score }) ])));
+    grid.style.gridTemplateColumns = 'repeat(' + gridCols(rest.length, 4) + ', 1fr)';
+    return grid;
   }
   function buildPodium(all) {
     const top = all.slice(0, 3), rest = all.slice(3);
     const wrap = el('div', { class: 'pv-podium-wrap' });
     const podium = el('div', { class: 'pv-podium' });
-    const meta = [ { medal: '🥇', cls: 'gold', h: '34vh' }, { medal: '🥈', cls: 'silver', h: '24vh' }, { medal: '🥉', cls: 'bronze', h: '17vh' } ];
+    const meta = [ { medal: '🥇', cls: 'gold', h: '26vh' }, { medal: '🥈', cls: 'silver', h: '20vh' }, { medal: '🥉', cls: 'bronze', h: '14vh' } ];
     [1, 0, 2].forEach(r => {           // render order 2nd–1st–3rd so the winner stands in the centre
       const t = top[r]; if (!t) return; const m = meta[r];
       const pod = el('div', { class: 'pv-pod' });
       if (r === 0) pod.append(el('div', { class: 'pv-pod-crown', text: '👑' }));
       pod.append(el('div', { class: 'pv-pod-medal', text: m.medal }), el('div', { class: 'pv-pod-name', text: t.name }));
-      const block = el('div', { class: 'pv-pod-block ' + m.cls }, [
+      const block = el('div', { class: 'pv-pod-block ' + m.cls, style: 'height:' + m.h }, [   // final height set NOW so fitStage measures the real podium
         el('div', { class: 'pv-pod-place', text: (r + 1) }),
         el('div', { class: 'pv-pod-score', text: t.score }) ]);
-      block.dataset.h = m.h;   // target height — a quiet re-render snaps to it instead of replaying the grow
+      block.dataset.h = m.h;
       pod.append(block); podium.append(pod);
-      setTimeout(() => { block.style.height = m.h; }, 90);
     });
     wrap.append(podium);
-    if (rest.length) {                 // everyone below 3rd, as a side scoreboard table
-      const side = el('div', { class: 'pv-pod-rest' }, [ el('div', { class: 'pv-pod-rest-head', text: 'The rest of the field' }) ]);
-      side.append(scoreTable(rest, 4)); wrap.append(side);
-    }
+    if (rest.length) wrap.append(restCards(rest, 4));   // the rest as rectangle cards along the bottom
     return wrap;
   }
   // a ranked rank/name/score table that lays itself out across columns to fit the space (every team shows)
@@ -2387,7 +2448,7 @@ const Present = (() => {
   function layoutRest(list, count) {
     if (!list || !count) return;
     const vh = window.innerHeight || 720;
-    const maxRows = Math.max(2, Math.min(count, Math.floor((vh * 0.46) / 46)));
+    const maxRows = Math.max(2, Math.min(count, Math.floor((vh * 0.62) / 56)));
     const cols = Math.ceil(count / maxRows);            // columns we actually need
     const rows = Math.ceil(count / cols);               // balance them: 12 → 6|6 (not 10|2), 25 → 9|9|7
     list.style.gridTemplateRows = 'repeat(' + rows + ', auto)';
@@ -2396,6 +2457,10 @@ const Present = (() => {
   function optionsGrid(options, { reveal = false } = {}) {
     const opts = Array.isArray(options) ? options : [];
     const grid = el('div', { class: 'pv-options' + (opts.length <= 1 ? ' n1' : '') });
+    // columns: keep the familiar 2-up for ≤4, but spread 5+ SHORT options across a 3rd column so a long
+    // list stays short (fewer rows). A tall grid forces fitStage to shrink the whole slide, wasting the screen.
+    const longest = opts.reduce((m, o) => Math.max(m, (o.text || '').length), 0);
+    grid.style.setProperty('--opt-cols', opts.length <= 1 ? 1 : opts.length <= 4 ? 2 : longest > 22 ? 2 : 3);
     opts.forEach((o, i) => {
       const correct = !!o.correct;
       const tile = el('div', { class: 'pv-opt' + (reveal && correct ? ' correct' : '') + (reveal && !correct ? ' dim' : '') });
@@ -2426,7 +2491,15 @@ const Present = (() => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
       const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n);   // ALL teams, ranked (negative scores count — match the podium guard)
-      return stage([ el('div', { class: 'pv-q', text: d.title || 'Standings' }), scoreTable(teams, 1) ]);
+      const grid = el('div', { class: 'pv-sgrid' });
+      teams.forEach((t, i) => {
+        const kids = [];
+        if (i < 2) kids.push(el('div', { class: 'pv-sstar ' + (i === 0 ? 'full' : 'half'), text: '★' }));   // ★ full = 1st, half = 2nd, 3rd is gold w/ no star — rank reads from the order
+        kids.push(el('div', { class: 'pv-sname', text: t.name }), el('div', { class: 'pv-sscore', text: t.score }));
+        grid.append(el('div', { class: 'pv-scard' + (i < 3 ? ' medal' : ''), }, kids));
+      });
+      grid.style.gridTemplateColumns = 'repeat(' + gridCols(teams.length, 4) + ', 1fr)';   // ≤ 4 rows, balanced to fill the wide screen
+      return stage([ el('div', { class: 'pv-standings-title', text: d.title || 'Standings' }), grid ]);
     } },
 
     podium: { phases: SOLO, render: (d, ctx) => {
@@ -2450,8 +2523,8 @@ const Present = (() => {
       q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
 
     'titled-question': { phases: Q2, render: (d, ctx) => stage([
-      d.title ? badge(d.title) : null,
-      q(d.question),
+      d.title ? q(d.title) : null,
+      d.question ? el('div', { class: 'pv-passage', text: d.question }) : null,
       ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
 
     'image-question': { phases: Q2, render: (d, ctx) => stage([
@@ -2590,13 +2663,13 @@ const Present = (() => {
     } catch (e) {}
   }
   function makeTimer(host, seconds, onDone, autoStart) {
-    const size = 230, r = 104, C = 2 * Math.PI * r;
+    const size = 176, r = 78, c = size / 2, C = 2 * Math.PI * r;
     const wrap = el('div', { class: 'pv-timer' });
     wrap.innerHTML =
       '<svg width="' + size + '" height="' + size + '">' +
-      '<circle cx="115" cy="115" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="13" fill="none"/>' +
-      '<circle class="prog" cx="115" cy="115" r="' + r + '" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" ' +
-      'stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 115 115)"/></svg>' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="12" fill="none"/>' +
+      '<circle class="prog" cx="' + c + '" cy="' + c + '" r="' + r + '" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round" ' +
+      'stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 ' + c + ' ' + c + ')"/></svg>' +
       '<div class="num"></div>';
     host.append(wrap);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
@@ -2834,9 +2907,7 @@ const Present = (() => {
       node.querySelectorAll('.pv-pod-rest-row, .pv-pod-medal, .pv-opt, .pv-mitem').forEach(e2 => { e2.style.animation = 'none'; });
       node.querySelectorAll('.pv-pod-block').forEach(b => { b.style.transition = 'none'; if (b.dataset.h) b.style.height = b.dataset.h; });
     }
-    // length-aware question width: short = punchy narrow column, long = use full width (then fit scales font)
-    const qEl = node.querySelector('.pv-q');
-    if (qEl) { const L = (qEl.textContent || '').length; qEl.style.maxWidth = L > 80 ? '100%' : L > 36 ? '22ch' : '16ch'; }
+    // question width is governed by CSS (.pv-q is fit-content up to the full stage width — no narrow column)
     if (step.phase === 'question') {
       const qel = node.querySelector('.pv-q, .pv-passage');
       if (step.slide.type !== 'poll' && !(step.slide.options && step.slide.options.scored === false)) { const p = pointsOf(step.slide.data); if (p !== 1 && qel) qel.after(el('div', { class: 'pv-points', text: 'Worth ' + p + ' point' + (p === 1 ? '' : 's') })); }
@@ -2967,13 +3038,15 @@ const Present = (() => {
     const points = pointsOf(slide.data);
     const marks = {}; // teamIndex -> 1 | -1
     const wrap = stage([]);
-    wrap.append(badge('Tap ✓ (+' + points + ') or ✗ (−' + points + ') — saved when you advance'));
-    wrap.append(q(slide.data.question || slide.data.statement || slide.data.prompt || slide.data.instruction || 'Score this round'));
-
     const list = el('div', { class: 'pv-tally' });
+    // tile ALL teams to fill the screen (no scroll). 3–4 columns keeps the cards wide enough to read a name;
+    // minmax(0,1fr) makes the columns share equally and ellipsize, so a long name never overflows the grid.
+    const cols = Math.min(n, n <= 12 ? 3 : 4);
+    list.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+    const scores = Scores.get(sid, n);
     for (let i = 0; i < n; i++) {
       const row = el('div', { class: 'pv-trow' });
-      const sc = el('div', { class: 'pv-tscore', text: Scores.get(sid, n)[i] });
+      const sc = el('div', { class: 'pv-tscore', text: scores[i] });
       const check = el('button', { class: 'pv-mark check', text: '✓' });
       const cross = el('button', { class: 'pv-mark cross', text: '✗' });
       const paint = () => {
@@ -2984,11 +3057,11 @@ const Present = (() => {
       };
       check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
       cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
-      row.append(check, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, cross);
+      row.append(cross, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, check);   // ✗ · TEAM · SCORE · ✓
       list.append(row); paint();
     }
     commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k] * points); }); };
-    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ / ✗ marks are saved automatically when you move to the next slide.' }));
+    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ +' + points + '   ✗ −' + points + '   · saved automatically when you advance' }));
     return wrap;
   }
 
