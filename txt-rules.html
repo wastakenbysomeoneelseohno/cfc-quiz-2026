@@ -150,6 +150,23 @@ URLs, never external file references</strong> — a deck is one self-contained f
 offline. Keep each small (an SVG, or a PNG under ~50 KB — header logo ≤44 px tall, footer ≤26 px).</p>
 <p>In the <strong>footer text</strong> you can place the footer logo inline with the token <code>&lt;IMG&gt;</code> (e.g.
 <code>footer: Hosted by &lt;IMG&gt; CFC</code>); without <code>&lt;IMG&gt;</code> the logo just goes at the end (the right side).</p>
+<h3>2.2 Team names — <code>## (teams)</code></h3>
+<p>By default the teams are just <strong><code>Team 1</code> … <code>Team N</code></strong> (where <code>N</code> is <code>teams:</code>). To give them real
+names, add a <strong><code>## (teams)</code></strong> block — <strong>one name per line, in team order</strong>. A <strong>blank line keeps
+that team's default</strong> (<code>Team 3</code>), so you can name only the teams you care about:</p>
+<pre><code># CFC Quiz
+teams: 6
+## (teams)
+The Eagles
+Lions
+
+Sharks
+</code></pre>
+<p>Here team 3 stays <strong><code>Team 3</code></strong> and teams 5–6 stay <strong><code>Team 5</code> / <code>Team 6</code></strong> (only the named prefix is
+needed). Names are <strong>deck-level</strong> (shared by every stream, like <code>teams:</code>) and show <strong>everywhere</strong> —
+the score sheet, leaderboard, and podium. They travel in the <strong>JSON and <code>.txt</code></strong> exports; the
+Display also lets you review/edit them on the start screen before the show. A deck with <strong>no
+<code>## (teams)</code> block</strong> simply keeps <code>Team N</code> (fully backward compatible).</p>
 <hr>
 <h2>3. The answer line <code>&lt;</code></h2>
 <p>One line per question, starting with <code>&lt;</code>. Options separate with <code>|</code>; the <strong>content decides the

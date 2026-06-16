@@ -24,10 +24,15 @@
   .field input[type=number], .field select { width: 100%; padding: 12px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2);
     background: rgba(255,255,255,.08); color: #fff; font-size: 16px; font-weight: 600; }
   .field select option { color: #111; }
+  .names-ta { width: 100%; padding: 11px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: #fff; font: 14px ui-monospace, Menlo, Consolas, monospace; line-height: 1.5; resize: vertical; max-height: 36vh; }
   .drop { border: 2px dashed rgba(255,255,255,.25); border-radius: 14px; padding: 30px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
   .drop:hover { border-color: var(--accent); background: rgba(79,70,229,.1); }
+  .drop.dragging { border-color: var(--accent); background: rgba(79,70,229,.18); }
   .drop .big { font-size: 40px; margin-bottom: 8px; }
   .drop .hint { color: #9fb0d0; font-size: 13px; margin-top: 6px; }
+  .orsep { text-align: center; color: #9fb0d0; font-size: 12px; margin: 12px 0; letter-spacing: 1px; }
+  #quizPick code { background: rgba(255,255,255,.1); padding: 1px 5px; border-radius: 5px; }
+  #quizSel:disabled { opacity: .6; }
   .row { display: flex; align-items: center; gap: 10px; }
   .check { display: flex; align-items: center; gap: 9px; color: #cdd6e6; font-weight: 600; cursor: pointer; user-select: none; }
   .check input { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -60,8 +65,8 @@
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--pv-ink-soft);
     border: 1px solid var(--pv-tile-border); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.12; letter-spacing: -.5px; margin: 0 auto 3vh; width: fit-content; max-width: 100%; font-family: var(--pv-heading-font); white-space: pre-line; }
-  .pv-title-sub { color: var(--pv-ink-soft); font-size: clamp(24px, 3.4vw, 62px); font-weight: 600; margin: 1.8vh auto 0; line-height: 1.28; width: fit-content; max-width: 100%; }
-  .pv-sub { color: var(--pv-ink-soft); font-size: clamp(24px, 3.2vw, 64px); margin-top: 2.4vh;
+  .pv-title-sub { color: var(--pv-ink); font-size: clamp(24px, 3.4vw, 62px); font-weight: 600; margin: 1.8vh auto 0; line-height: 1.28; width: fit-content; max-width: 100%; }
+  .pv-sub { color: var(--pv-ink); font-size: clamp(24px, 3.2vw, 64px); margin-top: 2.4vh;
     white-space: pre-line; line-height: 1.38; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; text-align: left; }
   .pv-title-img { display: block; margin: 0 auto 3.2vh; max-height: 34vh; max-width: 72vw; object-fit: contain; border-radius: 12px; }
   .pv-title-huge { font-size: clamp(52px, 10vw, 220px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.04; color: var(--pv-ink); font-family: var(--pv-heading-font); width: fit-content; max-width: 15ch; margin-left: auto; margin-right: auto; text-wrap: balance; }
@@ -134,7 +139,7 @@
 
   /* score tally — every team is a big card (✗ · name · score · ✓), tiled to FILL the screen with NO scroll;
      columns are chosen to fit all teams in ≤ 4 rows and fitStage scales the grid to the viewport. */
-  .pv-tally { display: grid; gap: clamp(10px,1vw,20px); width: 95vw; height: 82vh; grid-auto-rows: 1fr; margin: 0 auto; }
+  .pv-tally { display: grid; gap: clamp(10px,1.1vw,22px); width: 95vw; grid-auto-rows: clamp(78px, 13vh, 170px); margin: 0 auto; }   /* comfortable, capped card height — centers for few teams, fills for many (no giant empty boxes) */
   .pv-trow { display: flex; align-items: center; gap: clamp(8px,0.9vw,18px); background: var(--pv-tile); border: 2px solid var(--pv-tile-border); border-radius: 16px; padding: clamp(10px,1.5vh,24px) clamp(12px,1.1vw,24px); transition: background .15s; }
   .pv-trow.plus { background: var(--pv-correct-soft); border-color: var(--pv-correct); }
   .pv-trow.minus { background: rgba(255,93,115,.18); border-color: #ff5d73; }
@@ -205,6 +210,10 @@
   .pv-jnum-k { font-size: 11px; color: #9fb0d0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
   .pv-jnum-body { display: none; padding: 0 16px 14px; }
   .pv-jnum.open .pv-jnum-body { display: block; }
+  /* Ctrl/⌘+Scores leaderboard overlay — the leaderboard slide's look, live scores, closeable */
+  .pv-lb-overlay { position: absolute; inset: 0; z-index: 25; background: var(--pv-bg, #0a0e1d); display: flex; flex-direction: column; animation: fade .15s; }
+  .pv-lb-close { position: absolute; top: 2vh; right: 2vw; z-index: 2; }
+  .pv-lb-hint { position: absolute; bottom: 1.4vh; left: 50%; transform: translateX(-50%); color: var(--pv-ink-soft); font-size: 13px; z-index: 2; pointer-events: none; }
   .pv-jnum-q { font-size: 15px; color: #dbe2ee; margin-bottom: 10px; }
 
   @keyframes pop { from { opacity: 0; transform: scale(.96) translateY(-4px); } to { opacity: 1; transform: none; } }
@@ -257,7 +266,8 @@
   .pv-pod { display: flex; flex-direction: column; align-items: center; position: relative; }
   .pv-pod-crown { font-size: clamp(28px,3.4vw,62px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
   .pv-pod-medal { font-size: clamp(30px,4vw,74px); line-height: 1; animation: pop .5s; }
-  .pv-pod-name { font-weight: 800; font-size: clamp(24px,3vw,60px); margin: 6px 0 8px; max-width: 30vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(24px,3vw,60px); margin: 6px 0 8px; max-width: 30vw; text-align: center; line-height: 1.12;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: break-word; }   /* full name, wraps to ≤ 2 lines */
   .pv-pod-block { position: relative; width: clamp(240px,27vw,580px); height: 0; border-radius: 18px 18px 0 0; display: flex; flex-direction: column;
     align-items: center; justify-content: flex-start; gap: 2px; padding-top: clamp(8px,1vh,16px); font-weight: 900; color: #1a1205;
     box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
@@ -282,9 +292,14 @@
   /* the STANDINGS slide — a grid of equal rectangles (Position · Name · Score stacked) that tiles the
      whole screen, no wasted space; the top 3 are gold/silver/bronze prize cards */
   .pv-standings-title { font-size: clamp(28px, 4vw, 88px); font-weight: 900; margin-bottom: clamp(8px,1.4vh,22px); font-family: var(--pv-heading-font); }
-  .pv-sgrid { display: grid; gap: clamp(10px,1.2vw,26px); width: 93vw; margin: 0 auto; align-items: stretch; }
-  .pv-scard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .02em; padding: clamp(6px,0.8vh,14px) clamp(8px,0.8vw,16px); border-radius: 16px; border: 2px solid var(--pv-tile-border); background: var(--pv-tile); }
-  .pv-sstar { font-size: clamp(24px,2.4vw,60px); line-height: 1; color: #f5b317; text-shadow: 0 2px 16px rgba(245,179,23,.65); }
+  .pv-sgrid { display: grid; gap: clamp(10px,1.2vw,26px); width: 93vw; height: 78vh; grid-auto-rows: 1fr; margin: 0 auto; }   /* equal rows that tile the screen */
+  .pv-scard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .04em; padding: clamp(6px,0.8vh,14px) clamp(8px,0.8vw,16px); border-radius: 16px; border: 2px solid var(--pv-tile-border); background: var(--pv-tile); min-height: 0; overflow: hidden; }
+  .pv-sstar { position: absolute; top: clamp(3px,0.7vh,10px); right: clamp(8px,0.9vw,18px); font-size: clamp(16px,1.7vw,34px); line-height: 1; color: #f5b317; text-shadow: 0 2px 16px rgba(245,179,23,.65); }   /* corner badge — doesn't change card height */
+  .pv-sgrid.pv-podrest { height: auto; grid-auto-rows: auto; }   /* the podium's also-rans size to content (the 78vh fill is for the standings slide only) */
+  /* standings text auto-sizes to each card via container-query units (cqh = 1% of card height); long names wrap to 2 lines */
+  .pv-sgrid:not(.pv-podrest) .pv-scard { container-type: size; }
+  .pv-sgrid:not(.pv-podrest) .pv-sname { font-size: clamp(14px, 16cqh, 54px); line-height: 1.05; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; max-width: 96cqw; }
+  .pv-sgrid:not(.pv-podrest) .pv-sscore { font-size: clamp(20px, 32cqh, 120px); }
   .pv-sstar.half { background: linear-gradient(90deg, #f5b317 50%, rgba(255,255,255,.22) 50%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
   .pv-sname { font-weight: 800; font-size: clamp(28px,2.9vw,72px); line-height: 1.02; text-align: center; }
   .pv-sscore { font-weight: 900; font-size: clamp(38px,4vw,108px); line-height: 1; font-variant-numeric: tabular-nums; }
@@ -320,9 +335,14 @@
 
     <!-- step 1: config -->
     <div class="step on" id="step1">
+      <div class="field" id="quizPick">
+        <label>📁 Load from the <code>quiz</code> folder <span style="font-weight:400;opacity:.65">— served decks appear here</span></label>
+        <select id="quizSel"><option value="">— checking… —</option></select>
+      </div>
+      <div class="orsep">— or —</div>
       <div class="drop" id="drop">
         <div class="big">📂</div>
-        <div><b>Click to load a quiz file</b></div>
+        <div><b>Click, or drag &amp; drop, a quiz file</b></div>
         <div class="hint">.json or encrypted .cfcq.json exported from the Maker</div>
       </div>
       <input type="file" id="file" accept="application/json,.json" hidden />
@@ -347,6 +367,10 @@
       <div class="field">
         <label>Number of teams <span style="font-weight:400;opacity:.7">— shared by all streams</span></label>
         <input type="number" id="teamCount" min="1" max="99" value="20" />
+      </div>
+      <div class="field">
+        <label>Team names <span style="font-weight:400;opacity:.7">— one per line; blank line = “Team N”</span></label>
+        <textarea id="teamNames" class="names-ta" rows="5" spellcheck="false" placeholder="Alpha&#10;Bravo&#10;…"></textarea>
       </div>
       <label class="check" style="margin-bottom:20px;"><input type="checkbox" id="resetScores" checked /> Start scores from 0 — uncheck to keep the running scoreboard</label>
       <div class="row">
@@ -455,7 +479,7 @@ const Scores = (() => {
   function set(streamId, i, value) { const a = data[bucket] || (data[bucket] = []); a[i] = value | 0; save(); }   // negatives allowed
   function reset(streamId) { delete data[bucket]; save(); }
   function hasAny() { return (data[bucket] || []).some(v => v); }
-  function standings(streamId, n) { return get(streamId, n).map((score, i) => ({ name: 'Team ' + (i + 1), score, idx: i })).sort((a, b) => b.score - a.score); }
+  function standings(streamId, n, nameFn) { const nm = nameFn || (i => 'Team ' + (i + 1)); return get(streamId, n).map((score, i) => ({ name: nm(i), score, idx: i })).sort((a, b) => b.score - a.score); }
   return { use, get, add, set, reset, hasAny, standings };
 })();
 
@@ -477,6 +501,9 @@ const Session = (() => {
    SHOW ENGINE
    ================================================================ */
 const Show = (() => {
+  // team i's display name: the deck's name (mirrored onto the stream), else "Team N". Blank = default.
+  const teamNameOf = (stream, i) => { const nm = stream && stream.teamNames && stream.teamNames[i]; return (nm != null && String(nm).trim() !== '') ? String(nm) : 'Team ' + (i + 1); };
+  const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const stage = kids => el('div', { class: 'pv-stage' }, kids);
   const badge = t => el('div', { class: 'pv-badge', text: t });
   const q = t => el('div', { class: 'pv-q', text: t || '' });
@@ -616,7 +643,7 @@ const Show = (() => {
     answer: { phases: SOLO, render: d => stage([ badge('Answer'), el('div', { class: 'pv-q', text: d.heading || '' }), d.body ? el('div', { class: 'pv-passage', text: d.body }) : null ]) },
     leaderboard: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
-      const teams = Scores.standings(ctx.stream.id, n);   // ALL teams, ranked
+      const teams = Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i));   // ALL teams, ranked
       const grid = el('div', { class: 'pv-sgrid' });
       teams.forEach((t, i) => {
         const kids = [];
@@ -629,7 +656,7 @@ const Show = (() => {
     } },
     podium: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
-      const teams = Scores.standings(ctx.stream.id, n);
+      const teams = Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i));
       return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams) ]);
     } },
     'choices': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'question' ? ocap([ d.choice && d.choice.multiple ? 'Select all that apply' : null ]) : null, optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
@@ -900,11 +927,12 @@ const Show = (() => {
     ]);
     document.body.append(overlay);
     overlay.querySelector('#pvExit').onclick = close;
-    overlay.querySelector('#pvPrev').onclick = prev;
+    // ← Back steps back one slide; ctrl/⌘-click is the operator's secret jump-to-any-slide panel.
+    overlay.querySelector('#pvPrev').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openJump(); } else prev(); };
     overlay.querySelector('#pvDisq').onclick = toggleDisqCurrent;
     // 🏆 Scores opens the PRIVATE score console (popup on the operator's other screen);
-    // ctrl/⌘-click is the operator's secret jump panel. Nothing renders on the projected window.
-    overlay.querySelector('#pvBoard').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openJump(); } else openConsole(); };
+    // ctrl/⌘-click opens the live Leaderboard overlay. Nothing renders on the projected window.
+    overlay.querySelector('#pvBoard').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openLeaderboard(); } else openConsole(); };
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
   }
 
@@ -946,7 +974,7 @@ const Show = (() => {
       const paint = () => { check.classList.toggle('on', marks[i] === 1); cross.classList.toggle('on', marks[i] === -1); row.classList.toggle('plus', marks[i] === 1); row.classList.toggle('minus', marks[i] === -1); };
       check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
       cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
-      row.append(cross, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, check);   // ✗ · TEAM · SCORE · ✓
+      row.append(cross, el('div', { class: 'pv-tname', text: teamNameOf(curStream, i) }), sc, check);   // ✗ · TEAM · SCORE · ✓
       list.append(row); paint();
     }
     // commit happens on leave (flushScore). Green/red row highlight is the live "marked" state.
@@ -973,6 +1001,8 @@ const Show = (() => {
     + '.cc-pm:hover{background:rgba(255,255,255,.2)}'
     + '.cc-set{height:44px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;text-align:center;font-weight:700;font-size:16px;min-width:0}'
     + '@media(max-width:560px){#cc-rows{grid-template-columns:1fr!important;grid-auto-flow:row!important;grid-template-rows:none!important}.cc-row{grid-template-columns:1fr 40px 46px 40px 60px;gap:6px}}'   /* narrow popup → one column, no clipping */
+    + '#cc-bulk-wrap{margin-top:14px}#cc-bulk-label{font-size:12px;color:#9fb0d0;margin-bottom:6px}'
+    + '#cc-bulk{width:100%;min-height:72px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font:14px ui-monospace,Menlo,Consolas,monospace;padding:8px 10px;resize:vertical}'
     + '</style>';
   function pendingMarkCount() { return overlay ? overlay.querySelectorAll('.pv-trow.plus, .pv-trow.minus').length : 0; }
   function openConsole() {
@@ -988,11 +1018,23 @@ const Show = (() => {
     const doc = consoleWin.document;
     doc.title = 'Score Console';
     doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1">' + CONSOLE_CSS;
-    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>';
+    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>'
+      + '<div id="cc-bulk-wrap"><div id="cc-bulk-label">Bulk set — one score per line or comma-separated (team 1, 2, 3…). Applies when you click away. Blank or missing = 0; this REPLACES the whole board.</div>'
+      + '<textarea id="cc-bulk" spellcheck="false" placeholder="10&#10;20&#10;30 …  (or: 10, 20, 30)"></textarea></div>';
     doc.body.addEventListener('click', onConsoleClick);
     doc.body.addEventListener('change', onConsoleChange);
+    doc.body.addEventListener('focusout', onConsoleBlur);   // bulk box applies on click-away
     renderConsole();
   }
+  // bulk score entry: a full RESET of the board from the text — team i ← value i; blank/garbage/missing → 0
+  function applyBulkScores(text) {
+    if (!curStream) return;
+    const tokens = String(text).split(/[\n,]/);
+    const n = curStream.teamCount || 8;
+    for (let i = 0; i < n; i++) { const t = (tokens[i] || '').trim(); Scores.set(curStream.id, i, (t === '' || !Number.isFinite(+t)) ? 0 : Math.round(+t)); }
+    refreshScoreUIs();
+  }
+  function onConsoleBlur(e) { if (e.target && e.target.id === 'cc-bulk') applyBulkScores(e.target.value); }
   function renderConsole() {
     if (!consoleWin || consoleWin.closed || !curStream) return;
     const doc = consoleWin.document; const sid = curStream.id, n = curStream.teamCount || 8;
@@ -1013,7 +1055,7 @@ const Show = (() => {
       }
     } else {
       rows.innerHTML = scores.map((sc, i) =>
-        '<div class="cc-row"><span class="cc-team">Team ' + (i + 1) + '</span>'
+        '<div class="cc-row"><span class="cc-team">' + escHtml(teamNameOf(curStream, i)) + '</span>'
         + '<button class="cc-pm" data-act="minus" data-i="' + i + '">−</button>'
         + '<span class="cc-score">' + sc + '</span>'
         + '<button class="cc-pm" data-act="plus" data-i="' + i + '">+</button>'
@@ -1044,7 +1086,7 @@ const Show = (() => {
     }
   }
 
-  /* secret jump-to-any-slide (Ctrl/Cmd-click the 🏆 in the hint) */
+  /* secret jump-to-any-slide (Ctrl/Cmd-click the ← Back button) */
   function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : type === 'answer' ? 'Answer' : type === 'title' ? 'Title' : type === 'reveal-answers' ? 'Answers' : 'Question'; }
   const isQuestionType = t => !['title', 'answer', 'leaderboard', 'podium', 'reveal-answers'].includes(t);
   // a spare (additional) unhides once enough questions are disqualified
@@ -1094,6 +1136,24 @@ const Show = (() => {
     });
     ov.onclick = e => { if (e.target === ov) ov.remove(); };
     overlay.append(ov);
+  }
+  // Ctrl/⌘-click on 🏆 Scores → a full-screen Leaderboard overlay (the leaderboard slide's look, LIVE committed
+  // scores) over whatever is projected. Closeable, nothing permanent: Esc · click-backdrop · ✕ · Ctrl+Scores again.
+  function lbEsc(e) { if (e.key === 'Escape') { e.preventDefault(); closeLeaderboard(); } }
+  function closeLeaderboard() { const ov = overlay && overlay.querySelector('.pv-lb-overlay'); if (ov) ov.remove(); document.removeEventListener('keydown', lbEsc); }
+  function openLeaderboard() {
+    if (!curStream) return;
+    if (overlay.querySelector('.pv-lb-overlay')) { closeLeaderboard(); return; }   // toggle off
+    const main = el('div', { class: 'pv-main' }, [ renderers.leaderboard.render({ title: 'Standings' }, { stream: curStream }) ]);
+    const ov = el('div', { class: 'pv-lb-overlay' }, [
+      main,
+      el('button', { class: 'pv-btn2 pv-lb-close', text: '✕ Close', onclick: closeLeaderboard }),
+      el('div', { class: 'pv-lb-hint', text: 'Esc · click · Ctrl/⌘+Scores to close' }),
+    ]);
+    ov.onclick = e => { if (e.target === ov) closeLeaderboard(); };
+    overlay.append(ov);
+    document.addEventListener('keydown', lbEsc);
+    requestAnimationFrame(() => fitStage(main));
   }
   // toggle the disqualified ✗ on whatever question is on screen right now
   function toggleDisqCurrent() { const sl = steps[idx] && steps[idx].slide; if (sl && isQuestionType(sl.type)) setDisqualified(sl.id); }
@@ -1270,7 +1330,8 @@ const Show = (() => {
     confetti.stop();
     if (advanceCtl) { advanceCtl.cancel(); advanceCtl = null; }   // a held button must not fire after Exit
     closeConsole();                                    // the private console belongs to this show
-    overlay.querySelectorAll('.pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    overlay.querySelectorAll('.pv-jump, .pv-lb-overlay').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    document.removeEventListener('keydown', lbEsc);
     overlay.classList.remove('open');
     window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -1279,7 +1340,8 @@ const Show = (() => {
   }
   // no keyboard shortcuts — every action is an on-screen button click (Esc does NOT exit)
 
-  return { open, next, prev, gotoSlide, openConsole, openJump, toggleDisqCurrent, setDisqualified, setOnClose: fn => { onCloseCb = fn; },
+  return { open, next, prev, gotoSlide, openConsole, openJump, openLeaderboard, toggleDisqCurrent, setDisqualified, setOnClose: fn => { onCloseCb = fn; },
+    applyBulkScores, getScores: () => curStream ? Scores.get(curStream.id, curStream.teamCount || 8) : [],
     info: () => ({ idx, len: steps.length, type: (steps[idx] && steps[idx].slide.type) || null,
       slideId: (steps[idx] && steps[idx].slide.id) || null,
       qNum: steps[idx] ? (qIndexOf(steps[idx].slide) + 1) : 0, qTotal: questionsOf().length,
@@ -1311,11 +1373,13 @@ window.__CFCScores = Scores;
   function normalize(p) {
     // deck-level team count (all streams share one scoreboard → one team count), mirrored onto every stream
     p.teamCount = Math.max(1, Math.min(99, Math.round(p.teamCount || (p.streams && p.streams[0] && p.streams[0].teamCount) || 20)));
+    // deck-level team names (older shape: on the first stream), kept ≤ teamCount; blank = "Team N"
+    p.teamNames = (Array.isArray(p.teamNames) ? p.teamNames : ((p.streams && p.streams[0] && p.streams[0].teamNames) || [])).slice(0, p.teamCount).map(x => (x == null ? '' : String(x)));
     // v2: "Show answer screen" now defaults NO. Decks exported before the flip showed an answer
     // screen on every question, so grandfather them: stamp reveal:true where it was never set.
     const legacyReveal = !p.version || p.version < 2;
     const isQ = t => !['title', 'answer', 'leaderboard', 'podium', 'reveal-answers', 'poll'].includes(t);
-    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: p.teamCount, themeId: s.themeId || null, slides: (s.slides || []).map(sl => {
+    p.streams = (p.streams || []).map(s => ({ id: s.id || ('s' + Math.random().toString(36).slice(2)), name: s.name || 'Stream', teamCount: p.teamCount, teamNames: p.teamNames, themeId: s.themeId || null, slides: (s.slides || []).map(sl => {
       sl = migrateSlide({ id: sl.id || ('sl' + Math.random().toString(36).slice(2)), type: sl.type, data: sl.data || {}, options: sl.options || {} });
       if (legacyReveal && isQ(sl.type) && sl.options.reveal == null) sl.options.reveal = true;
       return sl;
@@ -1325,6 +1389,8 @@ window.__CFCScores = Scores;
   }
   // set the deck's team count once, for every stream (shared scoreboard)
   function setDeckTeams(n) { const v = Math.max(1, Math.min(99, Math.round(Number(n) || 20))); project.teamCount = v; project.streams.forEach(s => s.teamCount = v); return v; }
+  function setDeckNames(text) { const v = String(text == null ? '' : text).split('\n').map(s => s); project.teamNames = v; project.streams.forEach(s => s.teamNames = v); return v; }   // deck-level, mirrored onto streams
+  const namesToText = a => { a = a || []; let last = -1; a.forEach((x, i) => { if (x != null && String(x).trim() !== '') last = i; }); return a.slice(0, last + 1).map(x => (x == null ? '' : x)).join('\n'); };
 
   function useProject(p) {
     project = normalize(p);
@@ -1333,6 +1399,7 @@ window.__CFCScores = Scores;
     project.streams.forEach(s => sel.append(el('option', { value: s.id, text: s.name + ' (' + s.slides.length + ' slides)' })));
     // teams are deck-level: one value for the whole deck, unchanged by which stream is selected
     $('teamCount').value = project.teamCount || 20;
+    $('teamNames').value = namesToText(project.teamNames);   // review/edit before the show; blank line = "Team N"
     deckKey = keyOf(project, fileName);
     Scores.use(deckKey); // every deck gets its own scoreboard, shared by its streams
     // build with textContent — the deck name is file-controlled and must never reach innerHTML
@@ -1377,7 +1444,7 @@ window.__CFCScores = Scores;
       // a real clean slate: slide 1, scoreboard zeroed, old session forgotten
       const sel = $('streamSel'); const st = project.streams.find(x => x.id === sel.value) || stream;
       if (!st.slides || !st.slides.length) { $('err1').textContent = 'That stream has no slides — pick another one.'; return; }   // guard BEFORE wiping anything
-      setDeckTeams($('teamCount').value);
+      setDeckTeams($('teamCount').value); setDeckNames($('teamNames').value);
       Scores.reset(st.id);
       Session.clear(deckKey);
       document.getElementById('landing').style.display = 'none';
@@ -1388,18 +1455,52 @@ window.__CFCScores = Scores;
   Show.setOnClose(() => { syncReset(); renderResume(); }); // exiting a show refreshes the landing
 
   let pendingEncrypted = null;
-  function handleFile(f) {
-    fileName = f.name || '';
+  // shared by drag-drop, the file picker, and the quiz-folder dropdown: parse text → password prompt or open
+  function acceptDeck(text, name) {
+    fileName = name || '';
     $('err1').textContent = ''; $('pwArea').style.display = 'none'; pendingEncrypted = null;
+    let data; try { data = JSON.parse(text); } catch { $('err1').textContent = 'Not a valid JSON file.'; return; }
+    if (data.kind === 'encrypted') { pendingEncrypted = data; $('pwArea').style.display = 'block'; $('pw').value = ''; $('pw').focus(); return; }
+    if (data.app !== 'cfc-quiz' || !Array.isArray(data.streams)) { $('err1').textContent = 'Not a CFC Quiz file.'; return; }
+    useProject(data);
+  }
+  function handleFile(f) {
     const rd = new FileReader();
-    rd.onload = () => {
-      let data; try { data = JSON.parse(rd.result); } catch { $('err1').textContent = 'Not a valid JSON file.'; return; }
-      if (data.kind === 'encrypted') { pendingEncrypted = data; $('pwArea').style.display = 'block'; $('pw').value = ''; $('pw').focus(); return; }
-      if (data.app !== 'cfc-quiz' || !Array.isArray(data.streams)) { $('err1').textContent = 'Not a CFC Quiz file.'; return; }
-      useProject(data);
-    };
+    rd.onload = () => acceptDeck(rd.result, f.name || '');
     rd.onerror = () => { $('err1').textContent = 'Could not read that file — try again.'; };
     rd.readAsText(f);
+  }
+
+  // Auto-discover decks in the sibling `quiz/` folder. Works only when the page is SERVED over http(s)
+  // (a local server or the hosted link) — file:// blocks reading sibling files, so it just shows "empty"
+  // and you drag & drop instead. Prefers quiz/manifest.json (a list), else parses a server directory index.
+  async function discoverQuizzes() {
+    const sel = $('quizSel'); let files = [];
+    try {
+      const r = await fetch('quiz/manifest.json', { cache: 'no-store' });
+      if (r.ok) { const j = await r.json(); if (Array.isArray(j)) files = j.map(x => (typeof x === 'string' ? x : (x && x.file))).filter(Boolean); }
+    } catch (e) {}
+    if (!files.length) {
+      try {
+        const r = await fetch('quiz/', { cache: 'no-store' });   // a directory listing (python http.server, nginx autoindex, …)
+        if (r.ok) { const html = await r.text(); files = [...new Set([...html.matchAll(/href="([^"?#]+\.(?:json|cfcq\.json))"/gi)].map(m => decodeURIComponent(m[1].split('/').pop())))]; }
+      } catch (e) {}
+    }
+    files = files.filter(f => f !== 'manifest.json');
+    sel.innerHTML = '';
+    if (!files.length) { sel.append(el('option', { value: '', text: '— empty (open this page over http to list quiz/, or drag & drop) —' })); sel.disabled = true; return; }
+    sel.disabled = false;
+    sel.append(el('option', { value: '', text: '— choose a quiz (' + files.length + ') —' }));
+    files.sort().forEach(f => sel.append(el('option', { value: f, text: f })));
+  }
+  async function loadFromQuizFolder(f) {
+    if (!f) return;
+    $('err1').textContent = 'Loading “' + f + '” …';
+    try {
+      const r = await fetch('quiz/' + encodeURIComponent(f), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      acceptDeck(await r.text(), f);
+    } catch (e) { $('err1').textContent = 'Couldn’t load “' + f + '” from the quiz folder — try drag & drop.'; }
   }
   async function unlock() {
     if (!pendingEncrypted) return;
@@ -1413,13 +1514,23 @@ window.__CFCScores = Scores;
 
   $('drop').onclick = () => $('file').click();
   $('file').onchange = () => { if ($('file').files[0]) handleFile($('file').files[0]); $('file').value = ''; };
+  $('quizSel').onchange = () => loadFromQuizFolder($('quizSel').value);
+  // real drag & drop onto the drop zone (and the whole landing card)
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); drop.classList.add('dragging'); }));
+  ['dragleave', 'dragend'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('dragging'); }));
+  drop.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('dragging'); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) handleFile(f); });
+  window.addEventListener('dragover', e => e.preventDefault());   // stop the browser from navigating to a dropped file
+  window.addEventListener('drop', e => e.preventDefault());
+  discoverQuizzes();   // populate the quiz-folder dropdown (no-op fallback on file://)
+  window.__CFCDiscover = discoverQuizzes; window.__CFCAccept = acceptDeck;   // test hooks
   $('unlockBtn').onclick = unlock;
   $('pw').onkeydown = e => { if (e.key === 'Enter') unlock(); };
   $('backBtn').onclick = () => { show(1); $('err1').textContent = ''; $('pwArea').style.display = 'none'; $('pw').value = ''; pendingEncrypted = null; };
   $('startBtn').onclick = () => {
     const sel = $('streamSel'); const stream = project.streams.find(x => x.id === sel.value); if (!stream) return;
     if (!stream.slides || !stream.slides.length) { const b = $('startBtn'), t = b.textContent; b.textContent = 'This stream has no slides'; b.disabled = true; setTimeout(() => { b.textContent = t; b.disabled = false; }, 1800); return; }
-    setDeckTeams($('teamCount').value);
+    setDeckTeams($('teamCount').value); setDeckNames($('teamNames').value);
     if ($('resetScores').checked) Scores.reset(stream.id);
     document.getElementById('landing').style.display = 'none';
     Show.open(project, stream, { fileName, deckKey });

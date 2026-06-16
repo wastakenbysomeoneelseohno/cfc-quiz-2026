@@ -37,6 +37,9 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
      under ~50 KB — images are stored inside the deck file.
    - The **deck name becomes the browser tab title** in both the Maker and the Display.
    - Set the **👥 Teams** count once, on the Streams panel — it applies to the whole deck.
+   - **✎ Names** (next to 👥 Teams): give the teams **real names** (one per line) — they show **everywhere**
+     (score sheet, leaderboard, podium) instead of `Team 1 … Team N`. Leave a line **blank** to keep that
+     team's default. Names are deck-level and travel in both the JSON and `.txt` exports.
    - During the show you can **switch between streams** and come back where you left off.
 3. **Add slides** with **+ Slide**:
    - **Question** — pick a **format** and switch it any time:
@@ -75,8 +78,16 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 ## 2. Run your quiz (Display)
 
 1. **Open the Display** (link above) on the screen/projector everyone sees.
-2. **Load your quiz file** and **type the password** to unlock it.
-3. **Choose the stream** and the **number of teams** (shared by all streams), then press **▶ Start show**.
+2. **Load your quiz file:** pick one from the **📁 quiz-folder dropdown**, *or* **drag & drop** (or click) a
+   file — both are always available. Then **type the password** if the deck is encrypted.
+   - The **dropdown auto-lists** every `.json` / `.cfcq.json` in the sibling **`quiz/`** folder, but only when
+     the Display is **served over http** (a local server or the hosted link). If you **double-click
+     `display.html` (file://)** the browser blocks reading the folder, so the dropdown is empty — just drag &
+     drop. To serve it: `python -m http.server 8000` in the project root, then open
+     `http://localhost:8000/display.html`. See [`quiz/README.md`](quiz/README.md).
+3. **Choose the stream**, the **number of teams** (shared by all streams), and **review the team names** —
+   a box pre-filled from the deck (one per line; a blank line keeps that team's `Team N` default), editable
+   right here before you go. Then press **▶ Start show**.
 4. **Move through the quiz:**
    - **Click and hold** the big button (~0.8s) **with your mouse** to advance or reveal the answer.
      Holding prevents accidental clicks. The button always **names the next page**. There are **no keyboard shortcuts** — every action is an on-screen button (Esc does **not** exit).
@@ -98,8 +109,16 @@ The projector mirrors your screen, so you should **never edit scores on the proj
 > count once you advance). Changes are **live** — if a Leaderboard or Podium slide is up, it updates too.
 > Closing the popup is fine — clicking 🏆 again re-opens it. Exiting the show closes it.
 > *(If your browser blocks pop-ups, allow them for this page.)*
+>
+> **Bulk-set scores:** the console has a **paste box** — drop in a column of numbers (one per line, or
+> comma-separated) and it sets **team 1, 2, 3 …** in order when you click away. It's a **full reset**: a blank
+> entry — and any team past your last number — becomes **0**. Handy for typing in a whole round at once.
 
-> **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click 🏆 Scores**. A panel shows
+> **🏆 Live leaderboard.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click 🏆 Scores** → a full-screen **standings
+> overlay** drops over whatever's projected (current scores, top-3 highlighted). Close it with **Esc**, a click,
+> or **Ctrl+Scores** again.
+
+> **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click ← Back**. A panel shows
 > **slide numbers only** (no questions, so nothing leaks). Click a number to peek, then **▶ Go** to jump there.
 
 That's it. Build in the Maker, **Export** (your real save), open the file in the Display, and run the show.

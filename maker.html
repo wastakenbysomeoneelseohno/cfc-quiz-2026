@@ -214,8 +214,8 @@
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
     color: #9fb0d0; border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.12; letter-spacing: -.5px; margin: 0 auto 3vh; width: fit-content; max-width: 100%; white-space: pre-line; }
-  .pv-title-sub { color: #9fb0d0; font-size: clamp(24px, 3.4vw, 62px); font-weight: 600; margin: 1.8vh auto 0; line-height: 1.28; width: fit-content; max-width: 100%; }
-  .pv-sub { color: #9fb0d0; font-size: clamp(24px, 3.2vw, 64px); margin-top: 2.4vh;
+  .pv-title-sub { color: var(--pv-ink); font-size: clamp(24px, 3.4vw, 62px); font-weight: 600; margin: 1.8vh auto 0; line-height: 1.28; width: fit-content; max-width: 100%; }
+  .pv-sub { color: var(--pv-ink); font-size: clamp(24px, 3.2vw, 64px); margin-top: 2.4vh;
     white-space: pre-line; line-height: 1.38; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; text-align: left; }
   .pv-title-img { display: block; margin: 0 auto 3.2vh; max-height: 34vh; max-width: 72vw; object-fit: contain; border-radius: 12px; }
   .pv-title-huge { font-size: clamp(52px, 10vw, 220px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.04; width: fit-content; max-width: 15ch; margin-left: auto; margin-right: auto; text-wrap: balance;
@@ -323,7 +323,7 @@
     background: var(--pv-bg); color: var(--pv-ink); font-family: var(--pv-body-font); }
   .pv-q, .pv-title-huge { font-family: var(--pv-heading-font); }
   .pv-title-huge { background: none; -webkit-text-fill-color: currentColor; color: var(--pv-ink); }
-  .pv-sub, .pv-title-sub, .pv-badge, .pv-step { color: var(--pv-ink-soft); }
+  .pv-badge, .pv-step { color: var(--pv-ink-soft); }   /* body + subheading use full ink (readable) — see .pv-sub / .pv-title-sub */
   .pv-badge { border-color: var(--pv-tile-border); }
   .pv-letter { background: var(--pv-accent); color: var(--pv-on-accent, #fff); }
   .pv-opt { background: var(--pv-tile); border-color: var(--pv-tile-border); }
@@ -356,7 +356,7 @@
   .pv-stream-sel option { color: #111; }
   /* ---- show: score tally ---- */
   /* score tally — every team is a big card (✗ · name · score · ✓), tiled to FILL the screen with NO scroll */
-  .pv-tally { display: grid; gap: clamp(10px,1vw,20px); width: 95vw; height: 82vh; grid-auto-rows: 1fr; margin: 0 auto; }
+  .pv-tally { display: grid; gap: clamp(10px,1.1vw,22px); width: 95vw; grid-auto-rows: clamp(78px, 13vh, 170px); margin: 0 auto; }   /* comfortable, capped card height — centers for few teams, fills for many (no giant empty boxes) */
   .pv-trow { display: flex; align-items: center; gap: clamp(8px,0.9vw,18px); background: var(--pv-tile, rgba(255,255,255,.06)); border: 2px solid var(--pv-tile-border, rgba(255,255,255,.12)); border-radius: 16px; padding: clamp(10px,1.5vh,24px) clamp(12px,1.1vw,24px); transition: background .15s; }
   .pv-trow.plus { background: var(--pv-correct-soft, rgba(47,211,154,.2)); border-color: var(--pv-correct, #2fd39a); }
   .pv-trow.minus { background: rgba(255,93,115,.18); border-color: #ff5d73; }
@@ -413,6 +413,7 @@
   .theme-pick-note { font-size: 11px; color: var(--ink-soft); font-style: italic; }
   .theme-pick select { flex: 1; padding: 6px 8px; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 0; }
   .teams-input { width: 58px; padding: 6px 8px; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; font-weight: 700; }
+  .teamnames-ta { width: 100%; min-height: 180px; max-height: 50vh; resize: vertical; padding: 9px 11px; border: 1px solid var(--line-2); border-radius: 8px; background: #fff; font: 14px ui-monospace, Menlo, Consolas, monospace; line-height: 1.5; }
 
   /* ---- drawer (theme editor) ---- */
   .drawer-bg { position: fixed; inset: 0; background: rgba(20,28,48,.32); display: none; z-index: 60; animation: fade .15s; }
@@ -517,7 +518,8 @@
   .pv-pod { display: flex; flex-direction: column; align-items: center; position: relative; }
   .pv-pod-crown { font-size: clamp(28px,3.4vw,62px); line-height: 1; animation: podCrown 2.4s ease-in-out infinite; transform-origin: bottom center; }
   .pv-pod-medal { font-size: clamp(30px,4vw,74px); line-height: 1; animation: pop .5s; }
-  .pv-pod-name { font-weight: 800; font-size: clamp(24px,3vw,60px); margin: 6px 0 8px; max-width: 30vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .pv-pod-name { font-weight: 800; font-size: clamp(24px,3vw,60px); margin: 6px 0 8px; max-width: 30vw; text-align: center; line-height: 1.12;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: break-word; }   /* full name, wraps to ≤ 2 lines */
   .pv-pod-block { position: relative; width: clamp(240px,27vw,580px); height: 0; border-radius: 18px 18px 0 0; display: flex; flex-direction: column;
     align-items: center; justify-content: flex-start; gap: 2px; padding-top: clamp(8px,1vh,16px); font-weight: 900; color: #1a1205;
     box-shadow: 0 16px 44px rgba(0,0,0,.45); transition: height 1s cubic-bezier(.2,.85,.2,1); overflow: hidden; }
@@ -542,14 +544,37 @@
   /* the STANDINGS slide — a grid of equal rectangles (Name · Score) that tiles the screen, no wasted
      space; top 3 are gold prize cards (★ full = 1st, half = 2nd, gold-no-star = 3rd) */
   .pv-standings-title { font-size: clamp(28px, 4vw, 88px); font-weight: 900; margin-bottom: clamp(8px,1.4vh,22px); }
-  .pv-sgrid { display: grid; gap: clamp(10px,1.2vw,26px); width: 93vw; margin: 0 auto; align-items: stretch; }
-  .pv-scard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .02em; padding: clamp(6px,0.8vh,14px) clamp(8px,0.8vw,16px); border-radius: 16px; border: 2px solid var(--pv-tile-border); background: var(--pv-tile); }
-  .pv-sstar { font-size: clamp(24px,2.4vw,60px); line-height: 1; color: #f5b317; text-shadow: 0 2px 16px rgba(245,179,23,.65); }
+  .pv-sgrid { display: grid; gap: clamp(10px,1.2vw,26px); width: 93vw; height: 78vh; grid-auto-rows: 1fr; margin: 0 auto; }   /* equal rows that tile the screen */
+  .pv-scard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .04em; padding: clamp(6px,0.8vh,14px) clamp(8px,0.8vw,16px); border-radius: 16px; border: 2px solid var(--pv-tile-border); background: var(--pv-tile); min-height: 0; overflow: hidden; }
+  .pv-sstar { position: absolute; top: clamp(3px,0.7vh,10px); right: clamp(8px,0.9vw,18px); font-size: clamp(16px,1.7vw,34px); line-height: 1; color: #f5b317; text-shadow: 0 2px 16px rgba(245,179,23,.65); }   /* corner badge — doesn't change card height */
+  .pv-sgrid.pv-podrest { height: auto; grid-auto-rows: auto; }   /* the podium's also-rans size to content (the 78vh fill is for the standings slide only) */
+  /* standings text auto-sizes to each card via container-query units (cqh = 1% of card height); long names wrap to 2 lines */
+  .pv-sgrid:not(.pv-podrest) .pv-scard { container-type: size; }
+  .pv-sgrid:not(.pv-podrest) .pv-sname { font-size: clamp(14px, 16cqh, 54px); line-height: 1.05; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; max-width: 96cqw; }
+  .pv-sgrid:not(.pv-podrest) .pv-sscore { font-size: clamp(20px, 32cqh, 120px); }
   .pv-sstar.half { background: linear-gradient(90deg, #f5b317 50%, rgba(255,255,255,.22) 50%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
   .pv-sname { font-weight: 800; font-size: clamp(28px,2.9vw,72px); line-height: 1.02; text-align: center; }
   .pv-sscore { font-weight: 900; font-size: clamp(38px,4vw,108px); line-height: 1; font-variant-numeric: tabular-nums; }
   .pv-scard.medal { border-color: #f59e0b; background: linear-gradient(180deg, rgba(245,158,11,.24), rgba(245,158,11,.07)); }
   @keyframes podCrown { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
+
+  /* Ctrl/⌘+Back jump-to-slide panel + Ctrl/⌘+Scores leaderboard overlay (preview mirrors Display) */
+  .pv-jump { position: absolute; inset: 0; z-index: 25; background: rgba(8,12,28,.96); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5vh 6vw; animation: fade .15s; }
+  .pv-jump-title { font-size: 22px; font-weight: 800; margin-bottom: 18px; color: #fff; }
+  .pv-jump-hint { color: #9fb0d0; font-size: 13px; margin: -8px 0 18px; }
+  .pv-jump-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(10vw, 1fr)); gap: 10px; width: 49vw; max-height: 64vh; overflow: auto; padding: 4px; align-items: start; }
+  .pv-jnum { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; overflow: hidden; }
+  .pv-jnum.open { border-color: var(--pv-accent); }
+  .pv-jnum-head { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: transparent; border: none; color: #fff; cursor: pointer; font-family: inherit; text-align: left; }
+  .pv-jnum-head:hover { background: rgba(255,255,255,.06); }
+  .pv-jnum-n { font-size: 24px; font-weight: 900; min-width: 34px; }
+  .pv-jnum-k { font-size: 11px; color: #9fb0d0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .pv-jnum-body { display: none; padding: 0 16px 14px; }
+  .pv-jnum.open .pv-jnum-body { display: block; }
+  .pv-jnum-q { font-size: 15px; color: #dbe2ee; margin-bottom: 10px; }
+  .pv-lb-overlay { position: absolute; inset: 0; z-index: 25; background: var(--pv-bg, #0a0e1d); display: flex; flex-direction: column; animation: fade .15s; }
+  .pv-lb-close { position: absolute; top: 2vh; right: 2vw; z-index: 2; }
+  .pv-lb-hint { position: absolute; bottom: 1.4vh; left: 50%; transform: translateX(-50%); color: var(--pv-ink-soft); font-size: 13px; z-index: 2; pointer-events: none; }
 
   /* clean, snappy scroll areas — no chunky OS scrollbar */
   .pv-tally, .pv-bgrid, .pv-jump-list { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
@@ -1036,7 +1061,7 @@ const Store = (() => {
   let state = load();
 
   // teamCount is a DECK-level setting: all streams share one scoreboard, so they share one team count.
-  function blankProject() { return { app: 'cfc-quiz', kind: 'content', version: 2, name: 'Untitled Deck', teamCount: 20, themes: cloneThemes(), themeId: THEME_DEFAULTS[0].id, streams: [] }; }
+  function blankProject() { return { app: 'cfc-quiz', kind: 'content', version: 2, name: 'Untitled Deck', teamCount: 20, teamNames: [], themes: cloneThemes(), themeId: THEME_DEFAULTS[0].id, streams: [] }; }
 
   // first-run seed: a main quiz that shows EVERY current slide type meaningfully
   // (leaderboard in the middle, podium at the end) + a parallel "Audience Round" stream
@@ -1138,8 +1163,10 @@ const Store = (() => {
     if (!p.themes.find(t => t.id === p.themeId)) p.themeId = p.themes[0].id;
     // deck-level team count: take the deck's own value, else the first stream's (older shape), else 20
     p.teamCount = Math.max(1, Math.min(99, Math.round(p.teamCount || (p.streams && p.streams[0] && p.streams[0].teamCount) || 20)));
+    // deck-level team names (older shape: on the first stream). Kept ≤ teamCount; blanks default to "Team N".
+    p.teamNames = (Array.isArray(p.teamNames) ? p.teamNames : ((p.streams && p.streams[0] && p.streams[0].teamNames) || [])).slice(0, p.teamCount).map(x => (x == null ? '' : String(x)));
     p.streams = (p.streams || []).map(s => ({ id: s.id || uid(), name: s.name || 'Stream',
-      teamCount: p.teamCount, themeId: s.themeId || null,   // mirror the deck count onto every stream
+      teamCount: p.teamCount, teamNames: p.teamNames, themeId: s.themeId || null,   // mirror the deck count + names onto every stream
       defaults: s.defaults || undefined,                    // per-stream new-question defaults (preserved on import/export)
       slides: (s.slides || []).map(sl => {
         sl = migrateSlide({ id: sl.id || uid(), type: sl.type, data: sl.data || {}, options: sl.options || {} });
@@ -1191,6 +1218,7 @@ const Store = (() => {
       if (i < 0 || j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; emit(); },
     // deck-level: one team count for the whole deck (shared scoreboard), mirrored onto every stream
     setTeamCount(n) { const v = Math.max(1, Math.min(99, Math.round(n || 1))); state.project.teamCount = v; state.project.streams.forEach(s => s.teamCount = v); emit(); },
+    setTeamNames(arr) { const v = (arr || []).map(x => (x == null ? '' : String(x))); state.project.teamNames = v; state.project.streams.forEach(s => s.teamNames = v); emit(); },   // deck-level; mirrored (by ref) onto every stream
     deleteStream(id) {
       state.project.streams = state.project.streams.filter(s => s.id !== id);
       if (state.selStream === id) { const f = state.project.streams[0]; state.selStream = f ? f.id : null; state.selSlide = f && f.slides[0] ? f.slides[0].id : null; }
@@ -1392,6 +1420,27 @@ const Views = (() => {
     document.body.append(ov);
   }
 
+  // deck-level team names — one per line, in team order; a blank line = "Team N". Exported in JSON + QL.
+  function openTeamNames() {
+    const old = document.getElementById('teamNamesDlg'); if (old) old.remove();
+    const n = Store.project().teamCount || 20;
+    const names = Store.project().teamNames || [];
+    let last = -1; names.forEach((x, i) => { if (x != null && String(x).trim() !== '') last = i; });
+    const sheet = el('div', { class: 'sheet' });
+    sheet.append(el('h3', { text: '👥 Team names' }));
+    sheet.append(el('p', { class: 'muted', text: 'One name per line, in order (team 1, 2, 3…). A blank line keeps that team as “Team ' + 'N”. This deck has ' + n + ' team' + (n === 1 ? '' : 's') + '.' }));
+    const ta = el('textarea', { class: 'teamnames-ta', spellcheck: 'false', placeholder: 'Alpha\nBravo\n…' });
+    ta.value = names.slice(0, last + 1).map(x => (x == null ? '' : x)).join('\n');
+    const apply = () => Store.setTeamNames(ta.value.split('\n'));
+    ta.addEventListener('change', apply); ta.addEventListener('blur', apply);
+    sheet.append(ta);
+    const done = el('button', { class: 'btn primary', text: 'Done', style: 'margin-top:6px' });
+    const ov = el('div', { class: 'picker open', id: 'teamNamesDlg' }, [ sheet ]);
+    done.onclick = () => { apply(); ov.remove(); };
+    ov.onclick = e => { if (e.target === ov) { apply(); ov.remove(); } };
+    document.body.append(ov);
+  }
+
   function renderStreams(state) {
     const wrap = $('streamList');
     // deck-level team count: one shared scoreboard → ONE team count for every stream
@@ -1400,10 +1449,12 @@ const Views = (() => {
     const teams = el('input', { type: 'number', min: 1, max: 99, value: state.project.teamCount || 20, class: 'teams-input',
       title: 'Teams for the whole deck (shared scoreboard)' });
     teams.onchange = () => Store.setTeamCount(Number(teams.value));
+    const namesBtn = el('button', { class: 'btn sm', id: 'teamNamesBtn', text: '✎ Names', title: 'Name the teams (shown everywhere instead of “Team N”)' });
+    namesBtn.onclick = openTeamNames;
     const brandBtn = el('button', { class: 'btn sm', id: 'brandBtn', text: '🪧 Header / footer', title: 'Logo + title top · note bottom-right' });
     brandBtn.onclick = openBrandSettings;
     bar.append(el('span', { class: 'theme-pick-label', text: '👥 Teams' }), teams,
-               el('span', { class: 'theme-pick-note', text: 'shared by all streams' }), brandBtn);
+               el('span', { class: 'theme-pick-note', text: 'shared by all streams' }), namesBtn, brandBtn);
     wrap.parentElement.insertBefore(bar, wrap);
     wrap.innerHTML = '';
     if (!state.project.streams.length) { wrap.append(el('div', { class: 'empty', text: 'No streams yet. Add one →' })); return; }
@@ -2115,9 +2166,9 @@ const QlIO = (() => {
   }
   function parseQL(src) {
     const deck = { name: 'Imported Deck', teams: 20, theme: 'midnight', streams: [] };
-    const errors = []; let stream = null, slide = null, themeBlock = null;
+    const errors = []; let stream = null, slide = null, themeBlock = null, inTeams = false;
     src.split(/\r?\n/).forEach((raw, i) => {
-      const ln = i + 1, line = raw.trim(); if (!line) return;
+      const ln = i + 1, line = raw.trim(); if (!line) { if (inTeams) deck.teamNames.push(''); return; }   // blank line inside ## (teams) = a default slot
       if (line[0] === '\\') {   // line-level escape: a line that would read as a comment/field/sigil becomes literal body
         const lit = raw.replace(/^(\s*)\\/, '$1');
         if (slide) slide.body = slide.body ? slide.body + '\n' + lit : lit;
@@ -2126,19 +2177,21 @@ const QlIO = (() => {
       }
       if (/^(---|===)/.test(line)) return;   // comment / divider line (starts with --- or ===) — ignored
       let m;
-      if ((m = line.match(/^#\s+(.+)$/))) { deck.name = m[1].trim(); slide = null; themeBlock = null; return; }
+      if ((m = line.match(/^#\s+(.+)$/))) { deck.name = m[1].trim(); slide = null; themeBlock = null; inTeams = false; return; }
       if ((m = line.match(/^##\s+(.+)$/))) {
-        const t = m[1].trim(), tm = t.match(/^\(theme\)\s*(.+)$/i); slide = null;
+        const t = m[1].trim(), tm = t.match(/^\(theme\)\s*(.+)$/i); slide = null; inTeams = false;
+        if (/^\(teams\)$/i.test(t)) { inTeams = true; deck.teamNames = []; themeBlock = null; stream = null; return; }   // deck-level team-names block
         if (tm) { themeBlock = { id: 'theme-' + tm[1].trim().toLowerCase().replace(/[^\w]+/g, '-'), name: tm[1].trim() }; (deck.themes || (deck.themes = [])).push(themeBlock); stream = null; return; }
         themeBlock = null; stream = { name: t, defaults: {}, slides: [] }; deck.streams.push(stream); return;
       }
       if ((m = line.match(/^###\s+(.+)$/))) {
-        themeBlock = null; let text = m[1].trim(), type = 'question';
+        themeBlock = null; inTeams = false; let text = m[1].trim(), type = 'question';
         const tag = text.match(/^\(([\w-]+)\)\s*(.*)$/);
         if (tag) { type = tag[1].toLowerCase(); text = tag[2].trim(); if (!SPECIAL.has(type)) { errors.push('Line ' + ln + ': unknown slide type (' + tag[1] + ')'); return; } }
         slide = { type, title: text, body: '', settings: {} };
         (stream || (deck.streams[0] || (deck.streams[0] = { name: 'Main', defaults: {}, slides: [] }))).slides.push(slide); return;
       }
+      if (inTeams) { deck.teamNames.push(raw.trim()); return; }   // any other line inside ## (teams) is a team name
       if (themeBlock) {
         if ((m = line.match(/^bg\s*:\s*(.+)$/i))) { const p = m[1].split(',').map(s => s.trim()); themeBlock.bgType = p[0]; themeBlock.bg1 = p[1]; themeBlock.bg2 = p[2]; themeBlock.angle = (p[3] != null && p[3] !== '' && !isNaN(+p[3])) ? +p[3] : 160; return; }   // a valid 0° must survive (|| 160 would eat it)
         if ((m = line.match(/^ink\s*:\s*(.+)$/i))) { themeBlock.ink = m[1].trim(); return; }
@@ -2226,6 +2279,11 @@ const QlIO = (() => {
     const project = { app: 'cfc-quiz', kind: 'content', version: 2, themesVersion: 2, name: model.name, teamCount: Math.max(1, Math.min(99, model.teams || 20)), themeId: tId(model.theme) || themes[0].id, themes, streams };
     if (model.branding) project.branding = model.branding;
     if (model.sounds != null) project.sounds = model.sounds;   // explicit on/off only; absent = default ON
+    if (model.teamNames && model.teamNames.length) {
+      const tn = model.teamNames.slice();
+      while (tn.length && String(tn[tn.length - 1]).trim() === '') tn.pop();   // trailing default slots are meaningless
+      if (tn.length) { project.teamNames = tn; streams.forEach(s => s.teamNames = project.teamNames); }   // deck-level, mirrored onto streams
+    }
     return project;
   }
 
@@ -2290,6 +2348,12 @@ const QlIO = (() => {
     if (b.footer) L.push('footer: ' + b.footer);
     if (b.logo) L.push('header-logo: ' + b.logo);
     if (b.footerLogo) L.push('footer-logo: ' + b.footerLogo);
+    // team names — emit up to the last named team; blank line = default. A text marker survives the \n{3,}
+    // collapse, then the real (blank-preserving) block is spliced in.
+    const tn = (project.teamNames || []).map(x => (x == null ? '' : String(x).trim()));
+    let lastNamed = -1; tn.forEach((x, i) => { if (x !== '') lastNamed = i; });
+    let teamsBlk = '';
+    if (lastNamed >= 0) { teamsBlk = ['## (teams)'].concat(tn.slice(0, lastNamed + 1)).join('\n'); L.push('', '@@QL_TEAMS@@'); }
     (project.themes || []).forEach(t => {
       const def = THEME_DEFAULTS.find(d => d.name === t.name);
       if (def && JSON.stringify(def) === JSON.stringify(Object.assign({}, t, { id: def.id }))) return;
@@ -2302,7 +2366,9 @@ const QlIO = (() => {
       const dtk = streamTokens(def); if (dtk.length) L.push('> ' + dtk.join(', '));
       s.slides.forEach(sl => { L.push(''); slideLines(sl, def).forEach(x => L.push(x)); });
     });
-    return L.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+    let out = L.join('\n').replace(/\n{3,}/g, '\n\n');
+    if (teamsBlk) out = out.replace('@@QL_TEAMS@@', teamsBlk);   // splice AFTER the collapse so interior blank slots survive
+    return out.trim() + '\n';
   }
 
   return { serialize, parse };
@@ -2326,7 +2392,7 @@ const Scores = (() => {
   function add(streamId, i, delta) { const a = data[BUCKET] || (data[BUCKET] = []); a[i] = (a[i] || 0) + delta; save(); } // negatives allowed
   function set(streamId, i, value) { const a = data[BUCKET] || (data[BUCKET] = []); a[i] = value | 0; save(); }
   function reset(streamId) { delete data[BUCKET]; save(); }
-  function standings(streamId, n) { return get(streamId, n).map((score, i) => ({ name: 'Team ' + (i + 1), score, idx: i })).sort((a, b) => b.score - a.score); }
+  function standings(streamId, n, nameFn) { const nm = nameFn || (i => 'Team ' + (i + 1)); return get(streamId, n).map((score, i) => ({ name: nm(i), score, idx: i })).sort((a, b) => b.score - a.score); }
   return { get, add, set, reset, standings };
 })();
 
@@ -2340,6 +2406,9 @@ const Scores = (() => {
    ================================================================ */
 const Present = (() => {
   /* ---- small presentation builders ---- */
+  // team i's display name: the deck's name (mirrored onto the stream), else "Team N". Blank = default.
+  const teamNameOf = (stream, i) => { const nm = stream && stream.teamNames && stream.teamNames[i]; return (nm != null && String(nm).trim() !== '') ? String(nm) : 'Team ' + (i + 1); };
+  const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const stage = (kids) => el('div', { class: 'pv-stage' }, kids);
   const badge = (t) => el('div', { class: 'pv-badge', text: t });
   const q = (t) => el('div', { class: 'pv-q', text: t || '' });
@@ -2489,8 +2558,8 @@ const Present = (() => {
 
     leaderboard: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
-      const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
-      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n);   // ALL teams, ranked (negative scores count — match the podium guard)
+      const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i)) : null;
+      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n, ctx.stream);   // ALL teams, ranked (negative scores count — match the podium guard)
       const grid = el('div', { class: 'pv-sgrid' });
       teams.forEach((t, i) => {
         const kids = [];
@@ -2504,8 +2573,8 @@ const Present = (() => {
 
     podium: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
-      const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n) : null;
-      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n);
+      const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i)) : null;
+      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n, ctx.stream);
       return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams) ]);
     } },
 
@@ -2620,8 +2689,8 @@ const Present = (() => {
     } },
   };
 
-  function demoStandings(n) {
-    const t = []; for (let i = 1; i <= n; i++) t.push({ name: 'Team ' + i, score: (i * 37 + 13) % 100 });
+  function demoStandings(n, stream) {
+    const t = []; for (let i = 0; i < n; i++) t.push({ name: teamNameOf(stream, i), score: ((i + 1) * 37 + 13) % 100, idx: i });
     return t.sort((a, b) => b.score - a.score);
   }
 
@@ -2824,9 +2893,9 @@ const Present = (() => {
     document.body.append(overlay);
     overlay.querySelector('#pvExit').onclick = close;
     overlay.querySelector('#pvDisq').onclick = toggleDisqCurrent;
-    overlay.querySelector('#pvPrev').onclick = prev;
+    overlay.querySelector('#pvPrev').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openJump(); } else prev(); };   // ctrl/⌘ = jump-to-slide
     overlay.querySelector('#pvSkip').onclick = next;
-    overlay.querySelector('#pvBoard').onclick = openConsole;   // private score console (popup); preview mirrors Display
+    overlay.querySelector('#pvBoard').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openLeaderboard(); } else openConsole(); };   // ctrl/⌘ = live leaderboard; else the score console (popup)
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
   }
 
@@ -2885,6 +2954,53 @@ const Present = (() => {
     host.append(el('div', { class: 'pv-locked', text: msg }));
   }
 
+  function slideKindLabel(type) { return type === 'leaderboard' ? 'Leaderboard' : type === 'podium' ? 'Podium' : type === 'answer' ? 'Answer' : type === 'title' ? 'Title' : type === 'reveal-answers' ? 'Answers' : 'Question'; }
+  function slideText(sl) { const d = sl.data || {}; return d.question || d.statement || d.prompt || d.instruction || d.heading || d.title || d.reference || ''; }
+  function gotoSlide(slideId) { const i = steps.findIndex(s => s.slide.id === slideId); if (i >= 0) { idx = i; renderStep(); } }
+  // Ctrl/⌘-click ← Back: jump-to-any-slide panel (slide numbers only — nothing leaks on the projector)
+  function openJump() {
+    if (!curStream) return;
+    const existing = overlay.querySelector('.pv-jump'); if (existing) { existing.remove(); return; }
+    const list = el('div', { class: 'pv-jump-list' });
+    const ov = el('div', { class: 'pv-jump' }, [
+      el('div', { class: 'pv-jump-title', text: '⤧ Jump to slide — ' + curStream.name }),
+      el('div', { class: 'pv-jump-hint', text: 'Numbers only — no questions shown. Click a number to peek, then Go.' }),
+      list,
+      el('button', { class: 'pv-btn', text: '✕ Close', onclick: () => ov.remove(), style: 'margin-top:16px' }),
+    ]);
+    curStream.slides.forEach((sl, i) => {
+      const num = i + 1;
+      const item = el('div', { class: 'pv-jnum' });
+      const head = el('button', { class: 'pv-jnum-head' }, [ el('span', { class: 'pv-jnum-n', text: num }), el('span', { class: 'pv-jnum-k', text: slideKindLabel(sl.type) }) ]);
+      const body = el('div', { class: 'pv-jnum-body' });
+      let shown = false;
+      head.onclick = () => {
+        shown = !shown; item.classList.toggle('open', shown);
+        if (shown) { body.innerHTML = ''; body.append(el('div', { class: 'pv-jnum-q', text: slideText(sl) || '(no text)' }), el('button', { class: 'pv-btn', text: '▶ Go to slide ' + num, onclick: () => { ov.remove(); gotoSlide(sl.id); } })); }
+      };
+      item.append(head, body);
+      list.append(item);
+    });
+    ov.onclick = e => { if (e.target === ov) ov.remove(); };
+    overlay.append(ov);
+  }
+  // Ctrl/⌘-click 🏆 Scores: a full-screen Leaderboard overlay (live scores). Esc · click · Ctrl+Scores to close.
+  function lbEsc(e) { if (e.key === 'Escape') { e.preventDefault(); closeLeaderboard(); } }
+  function closeLeaderboard() { const ov = overlay && overlay.querySelector('.pv-lb-overlay'); if (ov) ov.remove(); document.removeEventListener('keydown', lbEsc); }
+  function openLeaderboard() {
+    if (!curStream) return;
+    if (overlay.querySelector('.pv-lb-overlay')) { closeLeaderboard(); return; }
+    const main = el('div', { class: 'pv-main' }, [ renderers.leaderboard.render({ title: 'Standings' }, { stream: curStream }) ]);
+    const ov = el('div', { class: 'pv-lb-overlay' }, [
+      main,
+      el('button', { class: 'pv-btn pv-lb-close', text: '✕ Close', onclick: closeLeaderboard }),
+      el('div', { class: 'pv-lb-hint', text: 'Esc · click · Ctrl/⌘+Scores to close' }),
+    ]);
+    ov.onclick = e => { if (e.target === ov) closeLeaderboard(); };
+    overlay.append(ov);
+    document.addEventListener('keydown', lbEsc);
+    requestAnimationFrame(() => fitStage(main));
+  }
   function renderStep(opts) {
     flushScore(); // leaving a (possibly scoring) step commits any pending marks
     if (stopTimer) { stopTimer(); stopTimer = null; }
@@ -3057,7 +3173,7 @@ const Present = (() => {
       };
       check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
       cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
-      row.append(cross, el('div', { class: 'pv-tname', text: 'Team ' + (i + 1) }), sc, check);   // ✗ · TEAM · SCORE · ✓
+      row.append(cross, el('div', { class: 'pv-tname', text: teamNameOf(curStream, i) }), sc, check);   // ✗ · TEAM · SCORE · ✓
       list.append(row); paint();
     }
     commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k] * points); }); };
@@ -3082,6 +3198,8 @@ const Present = (() => {
     + '.cc-pm:hover{background:rgba(255,255,255,.2)}'
     + '.cc-set{height:44px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;text-align:center;font-weight:700;font-size:16px;min-width:0}'
     + '@media(max-width:560px){#cc-rows{grid-template-columns:1fr!important;grid-auto-flow:row!important;grid-template-rows:none!important}.cc-row{grid-template-columns:1fr 40px 46px 40px 60px;gap:6px}}'
+    + '#cc-bulk-wrap{margin-top:14px}#cc-bulk-label{font-size:12px;color:#9fb0d0;margin-bottom:6px}'
+    + '#cc-bulk{width:100%;min-height:72px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font:14px ui-monospace,Menlo,Consolas,monospace;padding:8px 10px;resize:vertical}'
     + '</style>';
   function pendingMarkCount() { return overlay ? overlay.querySelectorAll('.pv-trow.plus, .pv-trow.minus').length : 0; }
   function openConsole() {
@@ -3097,11 +3215,23 @@ const Present = (() => {
     const doc = consoleWin.document;
     doc.title = 'Score Console';
     doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1">' + CONSOLE_CSS;
-    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>';
+    doc.body.innerHTML = '<div id="cc-head"></div><div id="cc-note"></div><div id="cc-rows"></div>'
+      + '<div id="cc-bulk-wrap"><div id="cc-bulk-label">Bulk set — one score per line or comma-separated (team 1, 2, 3…). Applies when you click away. Blank or missing = 0; this REPLACES the whole board.</div>'
+      + '<textarea id="cc-bulk" spellcheck="false" placeholder="10&#10;20&#10;30 …  (or: 10, 20, 30)"></textarea></div>';
     doc.body.addEventListener('click', onConsoleClick);
     doc.body.addEventListener('change', onConsoleChange);
+    doc.body.addEventListener('focusout', onConsoleBlur);   // bulk box applies on click-away
     renderConsole();
   }
+  // bulk score entry: a full RESET of the board from the text — team i ← value i; blank/garbage/missing → 0
+  function applyBulkScores(text) {
+    if (!curStream) return;
+    const tokens = String(text).split(/[\n,]/);
+    const n = curStream.teamCount || 8;
+    for (let i = 0; i < n; i++) { const t = (tokens[i] || '').trim(); Scores.set(curStream.id, i, (t === '' || !Number.isFinite(+t)) ? 0 : Math.round(+t)); }
+    refreshScoreUIs();
+  }
+  function onConsoleBlur(e) { if (e.target && e.target.id === 'cc-bulk') applyBulkScores(e.target.value); }
   function renderConsole() {
     if (!consoleWin || consoleWin.closed || !curStream) return;
     const doc = consoleWin.document; const sid = curStream.id, n = curStream.teamCount || 8;
@@ -3122,7 +3252,7 @@ const Present = (() => {
       }
     } else {
       rows.innerHTML = scores.map((sc, i) =>
-        '<div class="cc-row"><span class="cc-team">Team ' + (i + 1) + '</span>'
+        '<div class="cc-row"><span class="cc-team">' + escHtml(teamNameOf(curStream, i)) + '</span>'
         + '<button class="cc-pm" data-act="minus" data-i="' + i + '">−</button>'
         + '<span class="cc-score">' + sc + '</span>'
         + '<button class="cc-pm" data-act="plus" data-i="' + i + '">+</button>'
@@ -3167,7 +3297,8 @@ const Present = (() => {
     confetti.stop();
     if (advanceCtl) { advanceCtl.cancel(); advanceCtl = null; }   // a held button must not fire after Exit
     closeConsole();                                    // the private console belongs to this show
-    overlay.querySelectorAll('.pv-jump').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    overlay.querySelectorAll('.pv-jump, .pv-lb-overlay').forEach(e => e.remove()); // don't leave stale overlays for the next open
+    document.removeEventListener('keydown', lbEsc);
     overlay.classList.remove('open');
     window.removeEventListener('resize', onResize);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
