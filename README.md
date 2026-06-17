@@ -91,7 +91,7 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
    a box pre-filled from the deck (one per line; a blank line keeps that team's `Team N` default), editable
    right here before you go. Then press **▶ Start show**.
 4. **Move through the quiz:**
-   - **Click and hold** the big button (~0.8s) **with your mouse** to advance or reveal the answer.
+   - **Click and hold** the big button (~0.35s) **with your mouse** to advance or reveal the answer.
      Holding prevents accidental clicks. The button always **names the next page**. There are **no keyboard shortcuts** — every action is an on-screen button (Esc does **not** exit).
    - On a timed question the answer unlocks **after the timer ends**. Use **−5 / +5** to adjust, or **⏰ Time's up** to end it now.
    - Use **← Back** to step back. A small **Q 3 / 12** label (top-left) shows which question you're on.

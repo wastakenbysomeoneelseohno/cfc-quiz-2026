@@ -223,14 +223,14 @@
   .pv-media { margin: 0 auto 3vh; max-width: 32vw; }
   .pv-media img { width: 100%; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
 
-  .pv-options { display: grid; gap: clamp(14px,1.4vw,28px); grid-template-columns: repeat(var(--opt-cols, 2), 1fr); width: 100%; margin: 0 auto; }
+  .pv-options { display: grid; gap: clamp(14px,1.4vw,28px); grid-template-columns: repeat(var(--opt-cols, 2), minmax(0, 1fr)); width: 100%; margin: 0 auto; }
   .pv-options.n1 { grid-template-columns: 1fr; max-width: 68vw; }
   .pv-opt { display: flex; align-items: center; gap: clamp(16px,1.6vw,30px); padding: clamp(16px,2.2vh,32px) clamp(24px,2.2vw,48px); text-align: left;
     background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 16px;
     font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 700; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
   .pv-letter { width: 1.5em; height: 1.5em; flex: 0 0 auto; border-radius: .28em; background: var(--accent);
     display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .92em; }
-  .pv-opt-text { flex: 1; }
+  .pv-opt-text { flex: 1; min-width: 0; overflow-wrap: break-word; }
   .pv-opt.correct { background: rgba(47,211,154,.18); border-color: #2fd39a; transform: scale(1.03);
     box-shadow: 0 0 0 3px rgba(47,211,154,.28), 0 16px 44px rgba(47,211,154,.22); }
   .pv-opt.correct .pv-letter { background: #2fd39a; color: #08231a; }
@@ -266,6 +266,17 @@
   .pv-timesup { position: absolute; top: 5vh; left: 50%; transform: translateX(-50%); z-index: 5; white-space: nowrap;
     font-size: clamp(46px, 8vw, 108px); font-weight: 900; color: #ff6b81; letter-spacing: 1px;
     text-shadow: 0 8px 34px rgba(255,107,129,.5); animation: timesupPop .5s cubic-bezier(.2,.9,.3,1.3); }
+  /* "loading bar" timer (bar mode): a full-width strip at the very top that DRAINS left→right as time runs out */
+  /* calm + clear — a solid WHITE bar that smoothly shrinks (no looping animation), a RED dot at the draining tip, turns red in the final 5s */
+  .pv-timerbar { position: absolute; top: 0; left: 0; right: 0; height: clamp(16px, 1.7vh, 30px); z-index: 4; display: none; background: rgba(0,0,0,.40); box-shadow: inset 0 -1px 0 rgba(255,255,255,.12); overflow: hidden; }
+  .pv-timerbar-fill { position: relative; display: block; height: 100%; width: 100%; background: var(--accent); box-shadow: 0 0 20px var(--accent); }
+  .pv-timerbar-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: clamp(16px, 1.7vh, 30px); background: #ff1f1f; box-shadow: 0 0 16px rgba(255,31,31,.95); }   /* bright red square marking the draining tip */
+  .present.timer-bar .pv-timerbar { display: block; }
+  .present.timer-bar .pv-timer { display: none; }
+  .present.timer-bar .pv-timerbar.ended { display: none; }
+  .present.timer-bar .pv-main.has-timer { padding-top: 4.5vh; }
+  .present.timer-bar.branded .pv-main.has-timer { padding-top: calc(4.5vh + 52px); }
+  .present.timer-bar .pv-timesup { top: 50%; transform: translate(-50%, -50%); font-size: clamp(80px, 15vw, 260px); }
   @keyframes timesupPop { from { opacity: 0; transform: translateX(-50%) scale(.7); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 
   /* buzzer */
@@ -362,6 +373,11 @@
   .pv-trow.minus { background: rgba(255,93,115,.18); border-color: #ff5d73; }
   .pv-tname { flex: 1; min-width: 0; font-weight: 800; font-size: clamp(18px,1.7vw,40px); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pv-tscore { font-weight: 900; font-size: clamp(22px,2.1vw,50px); font-variant-numeric: tabular-nums; min-width: 1.6em; text-align: right; }
+  /* editable partial-credit chip: hidden until a team is ticked, then shows + / − N (the points awarded, editable) */
+  .pv-tamt { display: none; align-items: center; gap: 1px; flex: 0 0 auto; font-weight: 900; font-size: clamp(16px,1.5vw,34px); font-variant-numeric: tabular-nums; color: var(--pv-correct); }
+  .pv-tamt.neg { color: #ff5d73; }
+  .pv-tamt-num { width: 2.6em; background: rgba(255,255,255,.12); border: 1px solid currentColor; border-radius: 8px; color: inherit; font: inherit; text-align: center; padding: 2px 4px; -moz-appearance: textfield; }
+  .pv-tamt-num::-webkit-outer-spin-button, .pv-tamt-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .pv-team-card { background: var(--pv-tile, rgba(255,255,255,.06)); border: 1px solid var(--pv-tile-border, rgba(255,255,255,.12)); border-radius: 14px; padding: 14px; text-align: center; transition: background .2s, transform .1s; }
   .pv-team-card.flash { background: var(--pv-correct-soft, rgba(47,211,154,.22)); transform: scale(1.04); }
   .pv-team-name { font-weight: 700; font-size: 15px; opacity: .85; }
@@ -2741,6 +2757,9 @@ const Present = (() => {
       'stroke-dasharray="' + C + '" stroke-dashoffset="0" transform="rotate(-90 ' + c + ' ' + c + ')"/></svg>' +
       '<div class="num"></div>';
     host.append(wrap);
+    // bar-mode twin: a full-width top strip that drains as time runs down. Both are always built and
+    // painted every frame; CSS (.present.timer-bar) decides which is visible. Kept in sync with display.html.
+    const bar = el('div', { class: 'pv-timerbar' }); const barFill = el('span', { class: 'pv-timerbar-fill' }); bar.append(barFill); host.append(bar);
     const prog = wrap.querySelector('.prog'), num = wrap.querySelector('.num');
     // DEADLINE-based clock (wall-clock, not frame deltas) + setInterval fallback, so an occluded
     // window (rAF suspended — e.g. the score-console popup covering the show) can't freeze it,
@@ -2753,11 +2772,15 @@ const Present = (() => {
     function paint() {
       const txt = fmtClock(remaining);
       num.textContent = txt; num.classList.toggle('long', txt.length > 3);
-      prog.style.strokeDashoffset = (C * (displayMax > 0 ? 1 - Math.max(0, remaining) / displayMax : 1)).toString();
-      wrap.classList.toggle('warn', remaining <= 5 && running);
+      const frac = displayMax > 0 ? Math.max(0, remaining) / displayMax : 0;
+      prog.style.strokeDashoffset = (C * (1 - frac)).toString();
+      barFill.style.width = (frac * 100) + '%';
+      const warn = remaining <= 5 && running; wrap.classList.toggle('warn', warn); bar.classList.toggle('warn', warn);
     }
     function stopLoops() { if (raf) { cancelAnimationFrame(raf); raf = null; } if (iv) { clearInterval(iv); iv = null; } }
-    function fire() { running = false; remaining = 0; stopLoops(); paint(); if (!fired) { fired = true; if (soundsOn()) { chime(988, 0.5, 0); chime(1319, 0.6, 0.12); } wrap.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ Time’s up!' })); if (onDone) onDone(); } }   // bright "ti-ring!" bell
+    function fire() { running = false; remaining = 0; stopLoops(); paint(); if (!fired) { fired = true; if (soundsOn()) { chime(988, 0.5, 0); chime(1319, 0.6, 0.12); } wrap.classList.add('ended'); bar.classList.add('ended'); host.append(el('div', { class: 'pv-timesup', text: '⏰ TIME’S UP!' }));
+        if (overlay && timerMode === 'bar') { overlay.classList.remove('timer-bar'); requestAnimationFrame(() => fitStage(host)); }   // time's-up: drop back to the clock layout so the question stays readable
+        if (onDone) onDone(); } }   // bright "ti-ring!" bell
     function step() { if (!running) return; compute();
       if (soundsOn()) { const k = Math.ceil(remaining); if (k >= 1 && k <= 3 && remaining > 0.05 && !beeped[k]) { beeped[k] = 1; pip([0, 784, 659, 587][k]); } }   // beep · beep · beep (rising)
       if (remaining <= 0) { fire(); return; } paint(); }
@@ -2766,7 +2789,7 @@ const Present = (() => {
     function start() { if (fired || running) return; running = true; endAt = now() + remaining * 1000; if (soundsOn()) tone(660, 0.2, 0.2, 'triangle', 0); loops(); }   // single "go" beep
     function addTime(d) {
       Object.keys(beeped).forEach(k => delete beeped[k]);   // ±5 → recompute which 3·2·1 still apply (mirrors countbeep.adjust)
-      if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); running = true; remaining = 0; endAt = now(); }
+      if (fired) { if (d <= 0) return; fired = false; const tu = host.querySelector('.pv-timesup'); if (tu) tu.remove(); wrap.classList.remove('ended'); bar.classList.remove('ended'); if (overlay && timerMode === 'bar') { overlay.classList.add('timer-bar'); requestAnimationFrame(() => fitStage(host)); } running = true; remaining = 0; endAt = now(); }
       if (running) { compute(); remaining = Math.max(0, remaining + d); endAt = now() + remaining * 1000; }
       else remaining = Math.max(0, remaining + d);
       if (remaining > displayMax) displayMax = remaining;
@@ -2845,6 +2868,7 @@ const Present = (() => {
 
   /* ---- controller ---- */
   let overlay = null, steps = [], idx = 0, stopTimer = null, curStream = null, advanceCtl = null;
+  let timerMode = (() => { try { return localStorage.getItem('d_timerMode') === 'bar' ? 'bar' : 'clock'; } catch (e) { return 'clock'; } })();   // 'clock' = stopwatch ring · 'bar' = full-width draining bar; shared key with the Display
   // "additional" = hidden spare; "disqualified" pulls a question out of the count and unhides the next spare. Mirrors qvis.js.
   function spareActive(stream, sl) {
     const qs = stream.slides.filter(s => kindOf(s.type) === 'question');
@@ -2885,6 +2909,7 @@ const Present = (() => {
         el('div', { class: 'pv-step', id: 'pvStep', text: '0 / 0' }),
         el('div', { class: 'pv-advance', id: 'pvAdvance' }),
         el('div', { class: 'pv-timerctl', id: 'pvTimerCtl' }),
+        el('button', { class: 'pv-btn', id: 'pvTimerMode', title: 'Timer display' }),
         el('button', { class: 'pv-btn', id: 'pvDisq', text: '🚫', title: 'Disqualify / re-enable this question' }),
         el('button', { class: 'pv-btn', id: 'pvBoard', text: '🏆 Scores', title: 'Show standings (any time)' }),
         el('button', { class: 'pv-btn pv-skip', id: 'pvSkip', text: '⤳ Skip', title: 'Operator override — jump straight to next (presenter only)' }),
@@ -2897,11 +2922,27 @@ const Present = (() => {
     overlay.querySelector('#pvSkip').onclick = next;
     overlay.querySelector('#pvBoard').onclick = e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openLeaderboard(); } else openConsole(); };   // ctrl/⌘ = live leaderboard; else the score console (popup)
     overlay.querySelector('#pvStream').onchange = e => switchStream(e.target.value);
+    overlay.querySelector('#pvTimerMode').onclick = toggleTimerMode;
+    applyTimerMode();
+  }
+
+  // ⏱ toggle: stopwatch ring ↔ full-width draining bar (which hides the ring so the question fills the screen)
+  function applyTimerMode() {
+    if (!overlay) return;
+    overlay.classList.toggle('timer-bar', timerMode === 'bar');
+    const b = overlay.querySelector('#pvTimerMode');
+    if (b) { b.textContent = timerMode === 'bar' ? '⏱ Bar' : '⏱ Clock'; b.title = timerMode === 'bar' ? 'Timer: loading bar — click for stopwatch' : 'Timer: stopwatch — click for loading bar'; }
+  }
+  function toggleTimerMode() {
+    timerMode = (timerMode === 'bar') ? 'clock' : 'bar';
+    try { localStorage.setItem('d_timerMode', timerMode); } catch (e) {}
+    applyTimerMode();
+    fitStage(overlay && overlay.querySelector('.pv-main'));
   }
 
   /* press-and-hold control — fills over DURATION; releasing early cancels. NO plain click advances. */
   function holdControl(label, onDone) {
-    const DURATION = 800;   // deliberate press-and-hold (~0.8s) so advancing is never accidental, but snappy
+    const DURATION = 350;   // brief press-and-hold (~0.35s) — snappier than 0.8s, still more than a click so it can't fire by accident
     const btn = el('button', { class: 'pv-hold' });
     const fill = el('span', { class: 'pv-hold-fill' });
     btn.append(fill, el('span', { class: 'pv-hold-label', text: label }));
@@ -3061,6 +3102,7 @@ const Present = (() => {
     const dq = overlay.querySelector('#pvDisq');   // the ✗ button is a checkbox for the question on screen
     if (dq) { const q2 = kindOf(step.slide.type) === 'question'; dq.disabled = !q2; dq.classList.toggle('on', !!isDisq); dq.textContent = isDisq ? '↩' : '🚫'; dq.title = !q2 ? 'Only questions can be disqualified' : isDisq ? 'Re-enable this question' : 'Disqualify this question'; }
 
+    applyTimerMode();   // re-assert the stopwatch/bar preference each slide (time's-up may have reverted it for one question)
     const timed = step.phase === 'question' && Number(step.slide.data.timer) > 0;
     main.classList.toggle('has-timer', !!timed);
     if (timed) {
@@ -3165,19 +3207,32 @@ const Present = (() => {
       const sc = el('div', { class: 'pv-tscore', text: scores[i] });
       const check = el('button', { class: 'pv-mark check', text: '✓' });
       const cross = el('button', { class: 'pv-mark cross', text: '✗' });
+      // ticking ✓/✗ reveals an editable "+N / −N" chip (prefilled with the question's points) so partial
+      // credit is a quick edit. marks[i] holds the SIGNED delta and commits verbatim on advance.
+      const amtSign = el('span', { class: 'pv-tamt-sign' });
+      const amtNum = el('input', { class: 'pv-tamt-num', type: 'number', inputmode: 'numeric', title: 'Points to award — edit for partial credit' });
+      const amt = el('div', { class: 'pv-tamt' }, [ amtSign, amtNum ]);
+      const st = { sign: 0, amt: points };               // delta = sign × amt
+      const sync = () => { if (st.sign === 0) delete marks[i]; else marks[i] = st.sign * st.amt; };
       const paint = () => {
-        check.classList.toggle('on', marks[i] === 1);
-        cross.classList.toggle('on', marks[i] === -1);
-        row.classList.toggle('plus', marks[i] === 1);
-        row.classList.toggle('minus', marks[i] === -1);
+        check.classList.toggle('on', st.sign > 0);
+        cross.classList.toggle('on', st.sign < 0);
+        row.classList.toggle('plus', st.sign > 0);
+        row.classList.toggle('minus', st.sign < 0);
+        amt.style.display = st.sign === 0 ? 'none' : 'flex';
+        amt.classList.toggle('neg', st.sign < 0);
+        amtSign.textContent = st.sign < 0 ? '−' : '+';
+        if (document.activeElement !== amtNum) amtNum.value = st.amt;
       };
-      check.onclick = () => { marks[i] === 1 ? delete marks[i] : marks[i] = 1; paint(); renderConsole(); };
-      cross.onclick = () => { marks[i] === -1 ? delete marks[i] : marks[i] = -1; paint(); renderConsole(); };
-      row.append(cross, el('div', { class: 'pv-tname', text: teamNameOf(curStream, i) }), sc, check);   // ✗ · TEAM · SCORE · ✓
+      const tap = s => { st.sign = (st.sign === s) ? 0 : s; if (st.sign !== 0 && !Number.isFinite(st.amt)) st.amt = points; sync(); paint(); renderConsole(); };
+      check.onclick = () => tap(1);
+      cross.onclick = () => tap(-1);
+      amtNum.oninput = () => { const v = Math.round(Math.abs(+amtNum.value)); st.amt = Number.isFinite(v) ? v : 0; sync(); renderConsole(); };
+      row.append(cross, el('div', { class: 'pv-tname', text: teamNameOf(curStream, i) }), sc, amt, check);   // ✗ · TEAM · SCORE · ±N · ✓
       list.append(row); paint();
     }
-    commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k] * points); }); };
-    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ +' + points + '   ✗ −' + points + '   · saved automatically when you advance' }));
+    commitMarks = () => { Object.keys(marks).forEach(k => { if (marks[k]) Scores.add(sid, Number(k), marks[k]); }); };
+    wrap.append(list, el('div', { class: 'pv-award-status', text: '✓ +' + points + '   ✗ −' + points + '   · tick a team, then edit its + / − for partial credit · saved when you advance' }));
     return wrap;
   }
 
