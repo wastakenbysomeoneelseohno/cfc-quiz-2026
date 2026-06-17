@@ -1476,22 +1476,26 @@ window.__CFCScores = Scores;
   // and you drag & drop instead. Prefers quiz/manifest.json (a list), else parses a server directory index.
   async function discoverQuizzes() {
     const sel = $('quizSel'); let files = [];
+    const isJson = n => /\.(?:json|cfcq\.json)$/i.test(n);
+    // 1) quiz/files.txt — one filename per line (blank lines / # comments ignored). Just a same-origin file
+    // fetch, so it works on ANY served host — GitHub Pages, a local server, anything (no CORS, no listing).
     try {
-      const r = await fetch('quiz/manifest.json', { cache: 'no-store' });
-      if (r.ok) { const j = await r.json(); if (Array.isArray(j)) files = j.map(x => (typeof x === 'string' ? x : (x && x.file))).filter(Boolean); }
+      const r = await fetch('quiz/files.txt', { cache: 'no-store' });
+      if (r.ok) { const t = await r.text(); files = t.split(/\r?\n/).map(s => s.trim()).filter(s => s && s[0] !== '#'); }
     } catch (e) {}
+    // 2) otherwise a server's own directory index (python http.server, nginx autoindex) — handy for local dev
     if (!files.length) {
       try {
-        const r = await fetch('quiz/', { cache: 'no-store' });   // a directory listing (python http.server, nginx autoindex, …)
-        if (r.ok) { const html = await r.text(); files = [...new Set([...html.matchAll(/href="([^"?#]+\.(?:json|cfcq\.json))"/gi)].map(m => decodeURIComponent(m[1].split('/').pop())))]; }
+        const r = await fetch('quiz/', { cache: 'no-store' });
+        if (r.ok) { const html = await r.text(); files = [...new Set([...html.matchAll(/href="([^"?#]+)"/gi)].map(m => decodeURIComponent(m[1].split('/').pop())).filter(isJson))].sort(); }
       } catch (e) {}
     }
-    files = files.filter(f => f !== 'manifest.json');
+    files = files.filter(f => f !== 'files.txt');
     sel.innerHTML = '';
-    if (!files.length) { sel.append(el('option', { value: '', text: '— empty (open this page over http to list quiz/, or drag & drop) —' })); sel.disabled = true; return; }
+    if (!files.length) { sel.append(el('option', { value: '', text: '— empty: add quiz/files.txt (one filename per line), or drag & drop —' })); sel.disabled = true; return; }
     sel.disabled = false;
     sel.append(el('option', { value: '', text: '— choose a quiz (' + files.length + ') —' }));
-    files.sort().forEach(f => sel.append(el('option', { value: f, text: f })));
+    files.forEach(f => sel.append(el('option', { value: f, text: f })));   // keep the order from files.txt
   }
   async function loadFromQuizFolder(f) {
     if (!f) return;

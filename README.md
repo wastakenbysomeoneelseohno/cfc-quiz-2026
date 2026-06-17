@@ -80,11 +80,13 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 1. **Open the Display** (link above) on the screen/projector everyone sees.
 2. **Load your quiz file:** pick one from the **📁 quiz-folder dropdown**, *or* **drag & drop** (or click) a
    file — both are always available. Then **type the password** if the deck is encrypted.
-   - The **dropdown auto-lists** every `.json` / `.cfcq.json` in the sibling **`quiz/`** folder, but only when
-     the Display is **served over http** (a local server or the hosted link). If you **double-click
-     `display.html` (file://)** the browser blocks reading the folder, so the dropdown is empty — just drag &
-     drop. To serve it: `python -m http.server 8000` in the project root, then open
-     `http://localhost:8000/display.html`. See [`quiz/README.md`](quiz/README.md).
+   - The dropdown lists the decks named in **[`quiz/files.txt`](quiz/files.txt)** — **one filename per line**
+     (blank lines and `#comments` ignored). It's just a same-origin file fetch, so it works on **any** served
+     host: GitHub Pages, a local server, anywhere. Add a deck, then either add its filename to `files.txt` by
+     hand **or run `quiz/make-quiz-list`** (`.bat` on Windows, `.sh` elsewhere) to regenerate it.
+   - Served **`file://`** (double-clicking `display.html`) can't read the folder at all, so the dropdown is
+     empty — just **drag & drop**. A local `python -m http.server 8000` *also* lists the folder on its own, so
+     there you don't even need `files.txt`.
 3. **Choose the stream**, the **number of teams** (shared by all streams), and **review the team names** —
    a box pre-filled from the deck (one per line; a blank line keeps that team's `Team N` default), editable
    right here before you go. Then press **▶ Start show**.
