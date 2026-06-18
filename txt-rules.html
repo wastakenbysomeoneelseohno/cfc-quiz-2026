@@ -191,6 +191,10 @@ type</strong>.</p>
 <td>poll (no <code>*</code>)</td>
 </tr>
 <tr>
+<td><code>&lt; Spirit | grace | Lord</code> <strong>+</strong> an <code>answer:</code> line</td>
+<td><strong>Options + Answer</strong> — options shown (auto-lettered A/B/C), free-text answer (§6.1)</td>
+</tr>
+<tr>
 <td><code>&lt; *Noah | Moses | David</code></td>
 <td>choices — one <code>*</code></td>
 </tr>
@@ -419,6 +423,16 @@ image: data:image/svg+xml;base64,…    (embedded — no external files)
 &lt; Peter
 &gt; 10s, unscored, no-reveal
 </code></pre>
+<hr>
+<h3>6.1 Options + Answer (a list with a free-text answer)</h3>
+<p>A <code>&lt;</code> options list with <strong>no <code>*</code></strong> plus an <strong><code>answer:</code></strong> line is an <strong>Options + Answer</strong> question. The options show as
+<strong>auto-lettered tiles</strong> (A, B, C…) like multiple choice, but there&#39;s no correct option to pick — instead the <strong>free-text answer</strong> on the
+<code>answer:</code> line is revealed (replacing the options) when you advance. Perfect for &quot;arrange in order&quot; or &quot;identify each one&quot;.</p>
+<pre><code>### Arrange the &quot;one&quot; attributes of Ephesians 4:4-6 in order.
+&lt; Spirit | grace | Lord | body | God and Father | hope | baptism | faith | peace
+answer: D, A, F, C, H, G, E
+</code></pre>
+<p>A list with <strong>no <code>*</code> and no <code>answer:</code></strong> stays a <strong>poll</strong> (unchanged) — adding the <code>answer:</code> line is what makes it Options + Answer.</p>
 <hr>
 <h2>7. Themes</h2>
 <p>Reference a theme by name with <code>theme:</code> on the deck (<code>#</code>) or a stream (<code>##</code>).</p>

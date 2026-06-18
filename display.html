@@ -76,7 +76,7 @@
   .pv-options.n1 { grid-template-columns: 1fr; max-width: 68vw; }
   .pv-opt { display: flex; align-items: center; gap: clamp(16px,1.6vw,30px); padding: clamp(16px,2.2vh,32px) clamp(24px,2.2vw,48px); text-align: left;
     background: var(--pv-tile); border: 2px solid var(--pv-tile-border); border-radius: 16px;
-    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 700; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
+    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 800; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
   .pv-letter { width: 1.5em; height: 1.5em; flex: 0 0 auto; border-radius: .28em; background: var(--pv-accent); color: var(--pv-on-accent);
     display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .92em; }
   .pv-opt-text { flex: 1; min-width: 0; overflow-wrap: break-word; }
@@ -100,7 +100,10 @@
   .pv-ra-prog-fill { height: 100%; width: 0%; background: currentColor; opacity: .75; }
   .pv-ra-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; font-size: 17px; cursor: pointer; }
   .pv-ra-pause:hover { background: rgba(255,255,255,.2); }
-  .pv-passage { font-size: calc(clamp(26px, 3.8vw, 78px) * var(--qscale, 1)); font-weight: 600; line-height: 1.28; width: fit-content; max-width: 100%; margin: 0 auto; white-space: pre-line; }
+  .pv-passage { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.2; width: fit-content; max-width: 100%; margin: 0 auto; white-space: pre-line; }   /* matches .pv-q — title and body are equally important to read */
+  /* titled question: the TITLE is a smaller bold heading (same colour as the body), with a simple divider line between */
+  .pv-tq-title { font-size: calc(clamp(20px, 2.4vw, 46px) * var(--qscale, 1)); margin: 0 auto 2.2vh; }
+  .pv-tq-rule { width: 100%; height: 2px; border-radius: 2px; background: currentColor; opacity: .25; margin: 0 auto 2.2vh; }   /* full-width rule between the title and body — not a short underline */
 
   /* timer */
   .pv-timer { position: absolute; top: 1.6vh; left: 50%; transform: translateX(-50%); width: 176px; height: 176px; z-index: 4; }
@@ -130,14 +133,16 @@
 
   /* matching */
   /* matching — two clearly DIVIDED halves; each half breaks into 1/2/3 columns by item count */
-  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); width: 100%; position: relative; align-items: start; }
+  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(18px,2.6vw,44px); width: 100%; position: relative; align-items: start; }
   .pv-cols::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); opacity: .25; background: linear-gradient(to bottom, transparent, currentColor 15%, currentColor 85%, transparent); }
-  .pv-col { display: grid; grid-auto-flow: column; gap: 10px 14px; align-content: start; min-width: 0; }
-  .pv-mitem { background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 14px; padding: clamp(13px,1.5vh,22px) clamp(18px,1.6vw,30px); font-weight: 600; min-width: 0; font-size: clamp(20px,2.4vw,48px); animation: optIn .4s both; overflow-wrap: break-word; }
-  .pv-pairlist { display: grid; gap: 12px clamp(28px,4vw,64px); max-width: 57vw; margin: 0 auto; justify-items: center; }
-  .pv-pairlist.two { grid-auto-flow: column; max-width: 83vw; }   /* long answer lists read in two columns */
-  .pv-pair-row { display: flex; align-items: center; gap: 16px; justify-content: center; font-size: clamp(20px,2.6vw,52px); font-weight: 600; animation: optIn .4s both; }
-  .pv-pair-row .ar { color: var(--pv-correct); font-weight: 900; }
+  .pv-col { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px 14px; align-content: start; min-width: 0; }   /* tiles STRETCH to fill the column (no floating in the middle) */
+  .pv-mitem { background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 14px; padding: clamp(10px,1.1vh,18px) clamp(14px,1.3vw,26px); font-weight: 800; min-width: 0; font-size: calc(clamp(24px,2.9vw,64px) * var(--qscale, 1)); line-height: 1.15; animation: optIn .4s both; overflow-wrap: break-word; text-align: center; }
+  .pv-pairlist { display: grid; gap: clamp(10px,1.4vh,22px) clamp(20px,2.5vw,44px); max-width: 94vw; width: 100%; margin: 0 auto; justify-items: stretch; }
+  .pv-pairlist.two { grid-auto-flow: column; max-width: 94vw; }   /* long answer lists read in two columns */
+  /* each matched pair is its own card/block (like the option tiles), so the answer screen reads cleanly */
+  .pv-pair-row { display: flex; align-items: center; gap: clamp(10px,1.2vw,22px); justify-content: center; background: var(--pv-tile); border: 1px solid var(--pv-tile-border); border-radius: 14px; padding: clamp(10px,1.3vh,20px) clamp(16px,1.6vw,32px); font-size: calc(clamp(22px,2.6vw,54px) * var(--qscale, 1)); font-weight: 800; line-height: 1.2; animation: optIn .4s both; }
+  .pv-pair-row > span { min-width: 0; overflow-wrap: break-word; }   /* let a long matched description wrap instead of overflowing */
+  .pv-pair-row .ar { color: var(--pv-correct); font-weight: 900; flex: 0 0 auto; }
 
   /* leaderboard slide (bars) */
   .pv-board { max-width: 41vw; margin: 0 auto; text-align: left; display: flex; flex-direction: column; gap: 11px; }
@@ -557,7 +562,7 @@ const Show = (() => {
     // Skipped when the slide carries a non-scalable grid/board (matching, podium, leaderboard, tally) — those
     // stay on the transform path below so a small label can't balloon over the layout it sits above.
     const hasText = st.querySelector('.pv-q, .pv-passage, .pv-opt');
-    const hasGrid = st.querySelector('.pv-cols, .pv-pairlist, .pv-podium-wrap, .pv-board, .pv-tally, .pv-sgrid');
+    const hasGrid = st.querySelector('.pv-podium-wrap, .pv-board, .pv-tally, .pv-sgrid');   // matching (question .pv-cols + reveal .pv-pairlist) is pure text → let it font-fit (grow) to fill the screen like the options
     if (hasText && !hasGrid) {
       const fits = s => { st.style.setProperty('--qscale', s); const b = box(); return b.h <= availH && b.w <= availW + 1; };
       let lo = 0.5, hi = 3.0;
@@ -679,7 +684,7 @@ const Show = (() => {
     'choices': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'question' ? ocap([ d.choice && d.choice.multiple ? 'Select all that apply' : null ]) : null, optionsGrid((d.choice && d.choice.options) || [], { reveal: ctx.phase === 'reveal' }) ]) },
     'true-false': { phases: Q2, render: (d, ctx) => { const opts = [ { text: 'True', correct: d.answer === true }, { text: 'False', correct: d.answer === false } ]; return stage([ q(d.statement), optionsGrid(opts, { reveal: ctx.phase === 'reveal' }) ]); } },
     'short-answer': { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
-    'titled-question': { phases: Q2, render: (d, ctx) => stage([ d.title ? q(d.title) : null, d.question ? el('div', { class: 'pv-passage', text: d.question }) : null, ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
+    'titled-question': { phases: Q2, render: (d, ctx) => stage([ d.title ? el('div', { class: 'pv-q pv-tq-title', text: d.title }) : null, (ctx.phase !== 'reveal' && d.title && d.question) ? el('div', { class: 'pv-tq-rule' }) : null, d.question ? el('div', { class: 'pv-passage', text: d.question }) : null, ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
     'image-question': { phases: Q2, render: (d, ctx) => stage([ media(d.media), q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
     matching: { phases: Q2, render: (d, ctx) => {
       const pairs = Array.isArray(d.pairs) ? d.pairs : [];
@@ -697,6 +702,8 @@ const Show = (() => {
       return stage([ q(d.instruction), el('div', { class: 'pv-cols' }, [ lefts, rights ]) ]);
     } },
     poll: { phases: ['question'], render: d => stage([ badge('Poll'), q(d.question), optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
+    // Title with Options: lettered option tiles (no correct choice); the free-text answer REPLACES the options on reveal
+    'open-options': { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
     buzzer: { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'question' ? el('div', { class: 'pv-buzz', text: '🔔 BUZZ!' }) : answer(d.answer) ]) },
     'reveal-answers': { phases: SOLO, render: (d, ctx) => {
       // the answer browser: pages through the reveal screens of the questions BEFORE this

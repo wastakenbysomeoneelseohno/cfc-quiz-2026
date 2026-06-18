@@ -227,7 +227,7 @@
   .pv-options.n1 { grid-template-columns: 1fr; max-width: 68vw; }
   .pv-opt { display: flex; align-items: center; gap: clamp(16px,1.6vw,30px); padding: clamp(16px,2.2vh,32px) clamp(24px,2.2vw,48px); text-align: left;
     background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 16px;
-    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 700; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
+    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--qscale, 1)); font-weight: 800; animation: optIn .45s both; transition: all .45s cubic-bezier(.2,.8,.2,1); }
   .pv-letter { width: 1.5em; height: 1.5em; flex: 0 0 auto; border-radius: .28em; background: var(--accent);
     display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .92em; }
   .pv-opt-text { flex: 1; min-width: 0; overflow-wrap: break-word; }
@@ -252,7 +252,10 @@
   .pv-ra-prog-fill { height: 100%; width: 0%; background: currentColor; opacity: .75; }
   .pv-ra-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; font-size: 17px; cursor: pointer; }
   .pv-ra-pause:hover { background: rgba(255,255,255,.2); }
-  .pv-passage { font-size: calc(clamp(26px, 3.8vw, 78px) * var(--qscale, 1)); font-weight: 600; line-height: 1.28; width: fit-content; max-width: 100%; margin: 0 auto; white-space: pre-line; }
+  .pv-passage { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.2; width: fit-content; max-width: 100%; margin: 0 auto; white-space: pre-line; }   /* matches .pv-q — title and body are equally important to read */
+  /* titled question: the TITLE is a smaller bold heading (same colour as the body), with a simple divider line between */
+  .pv-tq-title { font-size: calc(clamp(20px, 2.4vw, 46px) * var(--qscale, 1)); margin: 0 auto 2.2vh; }
+  .pv-tq-rule { width: 100%; height: 2px; border-radius: 2px; background: currentColor; opacity: .25; margin: 0 auto 2.2vh; }   /* full-width rule between the title and body — not a short underline */
 
   /* timer ring — big & centered */
   .pv-timer { position: absolute; top: 1.6vh; left: 50%; transform: translateX(-50%); width: 176px; height: 176px; z-index: 4; }
@@ -296,16 +299,18 @@
   .pv-score { width: 66px; text-align: right; font-weight: 800; font-size: 20px; }
 
   /* matching — two clearly DIVIDED halves; each half breaks into 1/2/3 columns by item count */
-  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); width: 100%; position: relative; align-items: start; }
+  .pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(18px,2.6vw,44px); width: 100%; position: relative; align-items: start; }
   .pv-cols::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); opacity: .25; background: linear-gradient(to bottom, transparent, currentColor 15%, currentColor 85%, transparent); }
-  .pv-col { display: grid; grid-auto-flow: column; gap: 10px 14px; align-content: start; min-width: 0; }
+  .pv-col { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px 14px; align-content: start; min-width: 0; }
   .pv-mitem { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
-    padding: clamp(13px,1.5vh,22px) clamp(18px,1.6vw,30px); font-weight: 600; min-width: 0; font-size: clamp(20px,2.4vw,48px); animation: optIn .4s both; overflow-wrap: break-word; }
-  .pv-pairlist { display: grid; gap: 12px clamp(28px,4vw,64px); max-width: 57vw; margin: 0 auto; justify-items: center; }
-  .pv-pairlist.two { grid-auto-flow: column; max-width: 83vw; }   /* long answer lists read in two columns */
-  .pv-pair-row { display: flex; align-items: center; gap: 16px; justify-content: center; font-size: clamp(20px,2.6vw,52px);
-    font-weight: 600; animation: optIn .4s both; }
-  .pv-pair-row .ar { color: #2fd39a; font-weight: 900; }
+    padding: clamp(10px,1.1vh,18px) clamp(14px,1.3vw,26px); font-weight: 800; min-width: 0; font-size: calc(clamp(24px,2.9vw,64px) * var(--qscale, 1)); line-height: 1.15; animation: optIn .4s both; overflow-wrap: break-word; text-align: center; }
+  .pv-pairlist { display: grid; gap: clamp(10px,1.4vh,22px) clamp(20px,2.5vw,44px); max-width: 94vw; width: 100%; margin: 0 auto; justify-items: stretch; }
+  .pv-pairlist.two { grid-auto-flow: column; max-width: 94vw; }   /* long answer lists read in two columns */
+  /* each matched pair is its own card/block (like the option tiles), so the answer screen reads cleanly */
+  .pv-pair-row { display: flex; align-items: center; gap: clamp(10px,1.2vw,22px); justify-content: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: clamp(10px,1.3vh,20px) clamp(16px,1.6vw,32px); font-size: calc(clamp(22px,2.6vw,54px) * var(--qscale, 1));
+    font-weight: 800; line-height: 1.2; animation: optIn .4s both; }
+  .pv-pair-row > span { min-width: 0; overflow-wrap: break-word; }
+  .pv-pair-row .ar { color: #2fd39a; font-weight: 900; flex: 0 0 auto; }
 
   /* controls */
   .pv-controls { display: flex; align-items: center; justify-content: safe center; gap: 12px; padding: 13px;
@@ -646,6 +651,7 @@
     <div class="spacer"></div>
     <div class="saved" id="savedInd"><span class="pulse"></span> Saved locally</div>
     <button class="btn" id="resetBtn" title="Clear all local data and reload the fresh sample deck">🗑 <span class="lbl">Reset</span></button>
+    <button class="btn" id="deleteAllBtn" title="Delete EVERYTHING and start from a blank, empty deck (no sample)">🧹 <span class="lbl">Delete all</span></button>
     <button class="btn" id="themeBtn" title="Edit themes">🎨 <span class="lbl">Theme</span></button>
     <button class="btn" id="presentBtn" title="Preview / present this stream (P)">▶ <span class="lbl">Present</span></button>
     <button class="btn" id="importBtn">⬆ <span class="lbl">Import</span></button>
@@ -1025,6 +1031,15 @@ SlideTypes.register({ type: 'poll', label: 'Poll', group: 'Questions', icon: '�
             TF ],
   summary: d => d.question });
 
+SlideTypes.register({ type: 'open-options', label: 'Options + Answer', group: 'Questions', icon: '🔠',
+  desc: 'Show a lettered list of options (A, B, C…), but the answer is FREE TEXT — revealed in place of the options',
+  createDefault: () => ({ question: '', options: [ { text: '' }, { text: '' } ], answer: '', timer: T }),
+  fields: [ { key: 'question', label: 'Question', type: 'textarea' },
+            { key: 'options', label: 'Options', type: 'choices', variant: 'none' },
+            { key: 'answer', label: 'Answer', type: 'text', placeholder: 'free text — e.g. D, A, F, C, H, G, E' },
+            TF ],
+  summary: d => d.question });
+
 SlideTypes.register({ type: 'buzzer', label: 'Buzzer', group: 'Questions', icon: '🔔',
   desc: 'First team to buzz answers',
   createDefault: () => ({ question: '', answer: '', timer: 0 }),
@@ -1040,7 +1055,7 @@ function kindOf(type) {
   return type === 'leaderboard' ? 'leaderboard' : (type === 'title' || type === 'answer' || type === 'podium') ? 'title' : 'question';
 }
 /* the main-prompt field key per question format — lets you switch format and keep the question text */
-const PROMPT_KEY = { choices: 'question', 'true-false': 'statement', 'short-answer': 'question', 'titled-question': 'question', 'image-question': 'question', matching: 'instruction', poll: 'question', buzzer: 'question' };
+const PROMPT_KEY = { choices: 'question', 'true-false': 'statement', 'short-answer': 'question', 'titled-question': 'question', 'image-question': 'question', matching: 'instruction', poll: 'question', 'open-options': 'question', buzzer: 'question' };
 
 /* ================================================================
    THEME DATA — offline-safe font stacks + a starter theme library.
@@ -1221,6 +1236,15 @@ const Store = (() => {
     setBranding(patch) { state.project.branding = Object.assign({}, state.project.branding, patch); persist(); },
     setSounds(on) { state.project.sounds = !!on; persist(); },   // deck-level countdown sounds
     reset() { try { Object.keys(localStorage).filter(k => k.startsWith('m_')).forEach(k => localStorage.removeItem(k)); } catch (e) {} location.reload(); },
+    // Delete all: a true empty slate — wipe ALL local/session storage for this site (every key, not
+    // just m_), then write back ONLY a blank deck (no streams, no sample) so the reload shows nothing.
+    deleteAll() {
+      try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}   // nuke everything — no cache left behind
+      const p = normalize(blankProject());   // blankProject has streams: []
+      state = { project: p, selStream: null, selSlide: null };
+      persist();   // the only thing re-written: an empty deck, so the reload is blank, not buildDemo()
+      location.reload();
+    },
 
     /* streams */
     addStream() {
@@ -2130,7 +2154,7 @@ const CsvIO = (() => {
    ================================================================ */
 const QlIO = (() => {
   const SPECIAL = new Set(['title', 'leaderboard', 'podium', 'reveal-answers', 'note', 'buzzer']);
-  const QUESTION = new Set(['choices', 'true-false', 'short-answer', 'titled-question', 'image-question', 'matching', 'poll', 'buzzer']);
+  const QUESTION = new Set(['choices', 'true-false', 'short-answer', 'titled-question', 'image-question', 'matching', 'poll', 'buzzer', 'open-options']);
   const DEF = { timer: 20, autoStart: true, points: 1, reveal: false, scored: true, autoNext: false };
   const unesc = s => s.replace(/\\(.)/g, '$1').trim();
   function splitTop(s, delim) {   // split on an UNescaped delimiter (char-scan tells "\\" from "\|")
@@ -2216,12 +2240,13 @@ const QlIO = (() => {
         if ((m = line.match(/^heading-font\s*:\s*(.+)$/i))) { themeBlock.headingFont = m[1].trim(); return; }
         if ((m = line.match(/^body-font\s*:\s*(.+)$/i))) { themeBlock.bodyFont = m[1].trim(); return; }
       }
-      if ((m = line.match(/^(teams|theme|image|sounds|sub|header-logo|footer-logo|header|footer)\s*:\s*(.+)$/i))) {
+      if ((m = line.match(/^(teams|theme|image|sounds|sub|answer|header-logo|footer-logo|header|footer)\s*:\s*(.+)$/i))) {
         const k = m[1].toLowerCase(), v = m[2].trim();
         if (k === 'teams') deck.teams = +v || deck.teams;
         else if (k === 'theme') { if (slide) errors.push('Line ' + ln + ': theme: inside a slide (put it before the slides)'); else (stream || deck).theme = v; }
         else if (k === 'image') { if (slide) slide.image = v; else errors.push('Line ' + ln + ': image: outside a slide'); }
         else if (k === 'sub') { if (slide) slide.sub = v; else errors.push('Line ' + ln + ': sub: outside a slide'); }
+        else if (k === 'answer') { if (slide) slide.openAnswer = v; else errors.push('Line ' + ln + ': answer: outside a slide'); }   // free-text answer for "Title with Options"
         else if (k === 'sounds') deck.sounds = /^(on|yes|true|1)$/i.test(v);
         else { deck.branding || (deck.branding = {}); if (k === 'header') deck.branding.title = v; else if (k === 'footer') deck.branding.footer = v; else if (k === 'header-logo') deck.branding.logo = v; else if (k === 'footer-logo') deck.branding.footerLogo = v; }
         return;
@@ -2231,6 +2256,8 @@ const QlIO = (() => {
       if (slide) slide.body = slide.body ? slide.body + '\n' + raw : raw;
       else errors.push('Line ' + ln + ': stray text "' + line.slice(0, 30) + '"');
     });
+    // a list with NO * plus an `answer:` field = "Title with Options" (options shown, free-text answer)
+    deck.streams.forEach(s => s.slides.forEach(sl => { if (sl.openAnswer != null && sl.answer && sl.answer.kind === 'poll') sl.answer = { kind: 'open-options', options: sl.answer.options, answer: sl.openAnswer }; }));
     return { deck, errors };
   }
 
@@ -2253,6 +2280,7 @@ const QlIO = (() => {
     if (a.kind === 'poll') { if (q.image) throw new Error('Poll "' + (q.title || '').slice(0, 30) + '": a poll can\'t carry an image.'); return mk('poll', qd({ question: q.title, options: a.options.map(o => ({ text: o.text })) })); }
     if (a.kind === 'true-false') { const sl = mk('true-false', qd({ statement: q.title, answer: !!a.options.find(o => o.correct && /^true$/i.test(o.text)) })); sl.__tfNoStar = !a.options.some(o => o.correct); return sl; }
     if (a.kind === 'choices') return mk('choices', qd({ question: q.title, media: q.image || '', choice: { options: a.options, multiple: a.multiple } }));
+    if (a.kind === 'open-options') return mk('open-options', qd({ question: q.title, options: a.options.map(o => ({ text: o.text })), answer: a.answer }));
     if (q.image && q.body) throw new Error('Question "' + (q.title || '').slice(0, 30) + '": a question can\'t have both an image and a body line.');
     if (q.image) return mk('image-question', qd({ question: q.title, media: q.image, answer: a.answer }));
     if (q.body) return mk('titled-question', qd({ title: q.title, question: q.body, answer: a.answer }));
@@ -2342,6 +2370,7 @@ const QlIO = (() => {
       case 'image-question': head('', d.question); if (d.media) L.push('image: ' + d.media); ans(escOpt(d.answer)); settings(); return L;
       case 'matching': head('', d.instruction); ans((d.pairs || []).map(p => escOpt(p.left) + ' -> ' + escOpt(p.right)).join(' | ')); settings(); return L;
       case 'poll': head('', d.question); ans((d.options || []).map(o => escOpt(o.text)).join(' | ')); settings(); return L;
+      case 'open-options': head('', d.question); ans((d.options || []).map(o => escOpt(o.text)).join(' | ')); L.push('answer: ' + (d.answer == null ? '' : d.answer)); settings(); return L;
     }
     return L;
   }
@@ -2460,7 +2489,7 @@ const Present = (() => {
     // Skipped when the slide carries a non-scalable grid/board (matching, podium, leaderboard, tally) — those
     // stay on the transform path below so a small label can't balloon over the layout it sits above.
     const hasText = st.querySelector('.pv-q, .pv-passage, .pv-opt');
-    const hasGrid = st.querySelector('.pv-cols, .pv-pairlist, .pv-podium-wrap, .pv-board, .pv-tally, .pv-sgrid');
+    const hasGrid = st.querySelector('.pv-podium-wrap, .pv-board, .pv-tally, .pv-sgrid');   // matching (question .pv-cols + reveal .pv-pairlist) is pure text → let it font-fit (grow) to fill the screen like the options
     if (hasText && !hasGrid) {
       const fits = s => { st.style.setProperty('--qscale', s); const b = box(); return b.h <= availH && b.w <= availW + 1; };
       let lo = 0.5, hi = 3.0;
@@ -2608,7 +2637,8 @@ const Present = (() => {
       q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
 
     'titled-question': { phases: Q2, render: (d, ctx) => stage([
-      d.title ? q(d.title) : null,
+      d.title ? el('div', { class: 'pv-q pv-tq-title', text: d.title }) : null,
+      (ctx.phase !== 'reveal' && d.title && d.question) ? el('div', { class: 'pv-tq-rule' }) : null,
       d.question ? el('div', { class: 'pv-passage', text: d.question }) : null,
       ctx.phase === 'reveal' ? answer(d.answer) : null ]) },
 
@@ -2635,6 +2665,9 @@ const Present = (() => {
 
     poll: { phases: ['question'], render: d => stage([
       badge('Poll'), q(d.question), optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
+
+    // Title with Options: lettered option tiles (no correct choice); the free-text answer REPLACES the options on reveal
+    'open-options': { phases: Q2, render: (d, ctx) => stage([ q(d.question), ctx.phase === 'reveal' ? answer(d.answer) : optionsGrid((d.options || []).map(o => ({ text: o.text })), { reveal: false }) ]) },
 
     buzzer: { phases: Q2, render: (d, ctx) => stage([
       q(d.question),
@@ -3577,6 +3610,7 @@ function init() {
   document.getElementById('presentBtn').onclick = present;
   document.getElementById('themeBtn').onclick = () => Theme.open();
   document.getElementById('resetBtn').onclick = () => { if (confirm('Clear ALL local data (deck, slides, themes, scores) and reload the fresh sample deck?\n\nExport first if you want to keep your work — this cannot be undone.')) Store.reset(); };
+  document.getElementById('deleteAllBtn').onclick = () => { if (confirm('Delete EVERYTHING and start from a blank, EMPTY deck (no streams, no sample)?\n\nThis wipes ALL local storage for this site — every slide, stream, theme and score, plus any saved Display session. Export first if you want to keep your work — this cannot be undone.')) Store.deleteAll(); };
 
   // keyboard niceties
   document.addEventListener('keydown', e => {
