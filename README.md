@@ -44,7 +44,9 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 3. **Add slides** with **+ Slide**:
    - **Question** — pick a **format** and switch it any time:
      **Multiple choice**, **True / False**, **Short Answer** (type a word or a number),
-     **Question with Title**, **Picture**, **Matching**, **Poll**, **Buzzer**.
+     **Question with Title**, **Picture**, **Matching**, **Poll**, **Buzzer**,
+     **Options + Answer** (a lettered list of options — A, B, C… — with a **free-text answer** that
+     replaces the options on reveal; great for "arrange in order" / "identify each one").
    - **Title** — a heading or round divider. Its **subheading** is a multi-line box — good for instructions/rules.
    - **Leaderboard** — shows every team and its score as a clean table.
    - **Podium (Winners)** — the finale: top 3 on a gold/silver/bronze podium (with a 👑 crown) and
@@ -54,7 +56,8 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
      with **◀ ▶ arrows**, a **“4 / 12” counter**, an optional **auto-advance every N seconds** (default 10,
      0 = manual; **⏸/▶** to pause; a **loading bar** fills toward the next answer — on the **last** answer
      the countdown stops, and **▶** there plays again from the first) and a **Loop** option that starts
-     over automatically.
+     over automatically. An **Include reserve answers: Yes / No** toggle (default **No**) decides whether the
+     **additional / reserve** questions' answers are browsed too, or only the standard ones.
      Perfect with “Show answer screen: No” questions — their answers appear here instead.
 4. **Fill in the question and answer.** Per question you can set (new questions inherit the stream's defaults):
    - the **timer** (on/off; 10s up to 7 minutes) and whether it **auto-starts** or **starts on a button**,
@@ -69,7 +72,8 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
 6. **Save it — always Export:** **Export** offers **★ 🔒 JSON** (the recommended save: password-locked, hides the answers) or **📄 Text (.txt)** — a plain, human-editable text file that carries questions, answers, defaults, themes and branding. The text format is line-oriented and easy to hand-write — see the formatted spec **[`txt-rules.html`](txt-rules.html)** (or [`txt-rules.md`](txt-rules.md)), with a worked example in [`sample-deck.txt`](sample-deck.txt). **Import** reads either back, and **Merge is smart**: a stream with the **same name replaces** the old one, new names are added — so you can build one deck from several files and re-import after edits without duplicates.
 
 > Your work is auto-saved in the browser. **🗑 Reset** wipes the Maker's own data and reloads the sample deck
-> (it never touches a Display running in the same browser).
+> (it never touches a Display running in the same browser). **🧹 Delete all** (next to Reset) is a harder wipe:
+> it clears **all** local storage and starts from a **blank, empty deck** — no streams, no sample.
 >
 > **On a phone/tablet** the Maker becomes a drill-down: **Streams → tap a stream → its questions → tap a question → edit**, with **← back** buttons.
 
@@ -94,10 +98,15 @@ The Maker has **three panels**: **Streams** (left) · **Slides** (middle) · **S
    - **Click and hold** the big button (~0.35s) **with your mouse** to advance or reveal the answer.
      Holding prevents accidental clicks. The button always **names the next page**. There are **no keyboard shortcuts** — every action is an on-screen button (Esc does **not** exit).
    - On a timed question the answer unlocks **after the timer ends**. Use **−5 / +5** to adjust, or **⏰ Time's up** to end it now.
+   - The **⏱ timer button** flips the countdown between the **stopwatch ring** and a **full-width draining bar**
+     across the top (which hides the ring so the question + options fill the whole screen). A big **TIME'S UP**
+     shows at zero. The choice is remembered across slides.
    - Use **← Back** to step back. A small **Q 3 / 12** label (top-left) shows which question you're on.
    - The bottom control bar **scrolls left/right** if it's wider than the screen.
 5. **Give points:** after a question, tap each team **✓** or **✗** (worth the question's **Points**) — marked teams light up
-   **green / red**. No submit step: marks are **saved automatically when you move on** (advance, switch streams, or exit). The score console shows committed scores only — it notes when marks are still pending on the current slide.
+   **green / red**. Each tap reveals an editable **+N / −N** chip (prefilled with the question's points) you can change for
+   **partial credit** — e.g. a 3-blank question worth 30, give one team **+20**. No submit step: marks are **saved automatically
+   when you move on** (advance, switch streams, or exit). The score console shows committed scores only — it notes when marks are still pending on the current slide.
 6. **Switch streams** with the dropdown — it remembers where you left off in each; the scoreboard carries across them.
 7. **Resume:** reopening the same file later offers **⏯ Continue where you left off** (scores kept) or **↺ Start fresh**.
 
@@ -119,6 +128,10 @@ The projector mirrors your screen, so you should **never edit scores on the proj
 > **🏆 Live leaderboard.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click 🏆 Scores** → a full-screen **standings
 > overlay** drops over whatever's projected (current scores, top-3 highlighted). Close it with **Esc**, a click,
 > or **Ctrl+Scores** again.
+
+> **⇅ Sort the scoreboard.** The Leaderboard slide has a small toggle (top-right) to switch between **rank**
+> order and **Team 1 → N** order — only the ordering changes; the gold/silver/bronze stay on the rank-leaders.
+> The live overlay follows the same choice.
 
 > **🔑 Secret: jump to any slide.** Hold **Ctrl** (**⌘ Cmd** on Mac) and **click ← Back**. A panel shows
 > **slide numbers only** (no questions, so nothing leaks). Click a number to peek, then **▶ Go** to jump there.
