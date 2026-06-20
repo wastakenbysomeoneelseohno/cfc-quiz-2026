@@ -211,6 +211,9 @@
     padding: 4vh 1.5vw; overflow: hidden; position: relative; }
   .pv-stage { width: 100%; max-width: 97vw; text-align: center; animation: pvIn .5s cubic-bezier(.2,.85,.25,1); }   /* viewport-relative only — NO px ceiling, so it fills 4K/8K, not just 1080p */
   .pv-stage.pv-fitting, .pv-stage.pv-fitting * { transition: none !important; animation: none !important; }   /* exact measurement while binary-searching the fit — freeze the entry animation too, or box() reads a mid-animation size */
+  /* "no animations" mode (operator toggle) — freeze every present-mode animation/transition + hide confetti */
+  .present.no-anim *, .present.no-anim *::before, .present.no-anim *::after { animation: none !important; transition: none !important; }
+  .present.no-anim .pv-confetti { display: none !important; }
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
     color: #9fb0d0; border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.12; letter-spacing: -.5px; margin: 0 auto 3vh; width: fit-content; max-width: 100%; white-space: pre-line; }
@@ -963,8 +966,10 @@ SlideTypes.register({ type: 'leaderboard', label: 'Leaderboard', group: 'Content
 
 SlideTypes.register({ type: 'podium', label: 'Podium (Winners)', group: 'Content', icon: '🏅',
   desc: 'Top 3 teams on a podium — the grand finale',
-  createDefault: () => ({ title: 'Winners!' }),
-  fields: [ { key: 'title', label: 'Title', type: 'text', placeholder: 'Winners!' } ],
+  createDefault: () => ({ title: 'Winners!', noAnim: true, noSound: true }),
+  fields: [ { key: 'title', label: 'Title', type: 'text', placeholder: 'Winners!' },
+            { key: 'noAnim', label: 'Disable animations', type: 'boolean', trueLabel: 'Yes', falseLabel: 'No', hint: 'no confetti / motion on the podium' },
+            { key: 'noSound', label: 'Disable sound', type: 'boolean', trueLabel: 'Yes', falseLabel: 'No', hint: 'no crowd cheer when the podium shows' } ],
   summary: d => d.title });
 
 SlideTypes.register({ type: 'reveal-answers', kind: 'content', label: 'Reveal Answers', group: 'Content', icon: '🗂️',
@@ -2206,6 +2211,10 @@ const QlIO = (() => {
       else if (/^loop-disabled$/.test(t)) out.loop = false;
       else if (/^additional$/.test(t)) out.additional = true;
       else if (/^standard$/.test(t)) out.additional = false;   // normal, always-in-play question (opposite of additional)
+      else if (/^no-anim$/.test(t)) out.noAnim = true;         // (podium) freeze confetti/motion
+      else if (/^anim$/.test(t)) out.noAnim = false;           // (podium) animations on (default)
+      else if (/^no-sound$/.test(t)) out.noSound = true;       // (podium) no crowd cheer on entry
+      else if (/^sound$/.test(t)) out.noSound = false;         // (podium) cheer on (default)
       else errors.push('Line ' + ln + ': unknown setting "' + t + '"');
     }
     return out;
@@ -2277,7 +2286,7 @@ const QlIO = (() => {
       case 'title': return { id: 'sl_' + uid(), type: 'title', data: { heading: q.title, subheading: q.sub || '', body: q.body || '', media: q.image || '' }, options: {}, __set: {} };
       case 'note': return { id: 'sl_' + uid(), type: 'answer', data: { heading: q.title, body: q.body || '' }, options: {}, __set: {} };
       case 'leaderboard': return { id: 'sl_' + uid(), type: 'leaderboard', data: { title: q.title }, options: {}, __set: {} };
-      case 'podium': return { id: 'sl_' + uid(), type: 'podium', data: { title: q.title }, options: {}, __set: {} };
+      case 'podium': { const pd = { title: q.title }; if (set.noAnim) pd.noAnim = true; if (set.noSound) pd.noSound = true; return { id: 'sl_' + uid(), type: 'podium', data: pd, options: {}, __set: {} }; }
       case 'reveal-answers': return { id: 'sl_' + uid(), type: 'reveal-answers', data: { title: q.title, auto: 'timer' in set ? set.timer : 10, loop: !!set.loop, additional: !!set.additional }, options: {}, __set: {} };
       case 'buzzer': return mk('buzzer', qd({ question: q.title, answer: ansText(q.answer) }));
     }
@@ -2366,7 +2375,7 @@ const QlIO = (() => {
       case 'title': head('title', d.heading); if (d.media) L.push('image: ' + d.media); if (d.subheading) L.push('sub: ' + d.subheading); if (d.body) L.push(escBody(d.body)); return L;
       case 'answer': head('note', d.heading); if (d.body) L.push(escBody(d.body)); return L;
       case 'leaderboard': head('leaderboard', d.title); return L;
-      case 'podium': head('podium', d.title); return L;
+      case 'podium': head('podium', d.title); { const t = []; if (d.noAnim) t.push('no-anim'); if (d.noSound) t.push('no-sound'); if (t.length) L.push('> ' + t.join(', ')); } return L;
       case 'reveal-answers': head('reveal-answers', d.title); settings(); return L;
       case 'buzzer': head('buzzer', d.question); ans(escOpt(d.answer)); settings(); return L;
       case 'choices': head('', d.question); if (d.media) L.push('image: ' + d.media); ans(((d.choice && d.choice.options) || []).map(o => (o.correct ? '*' : '') + escOpt(o.text)).join(' | ')); settings(); return L;
@@ -2610,7 +2619,7 @@ const Present = (() => {
     leaderboard: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i)) : null;
-      const ranked = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n, ctx.stream);   // ALL teams, by score (negative scores count — match the podium guard)
+      const ranked = real || demoStandings(n, ctx.stream);   // ALL teams, by score (an empty board shows real zeros — no demo/placeholder fill)
       ranked.forEach((t, r) => t.rank = r);   // remember each team's RANK so medals/stars stay rank-based in any order
       const byTeam = scoreSort === 'team';
       const teams = byTeam ? ranked.slice().sort((a, b) => a.idx - b.idx) : ranked;
@@ -2630,7 +2639,7 @@ const Present = (() => {
     podium: { phases: SOLO, render: (d, ctx) => {
       const n = (ctx.stream && ctx.stream.teamCount) || 8;
       const real = (ctx.stream && Scores) ? Scores.standings(ctx.stream.id, n, i => teamNameOf(ctx.stream, i)) : null;
-      const teams = (real && real.some(t => t.score !== 0)) ? real : demoStandings(n, ctx.stream);
+      const teams = real || demoStandings(n, ctx.stream);   // empty board → real zeros, not demo/placeholder scores
       return stage([ el('div', { class: 'pv-q', text: d.title || 'Winners!' }), buildPodium(teams) ]);
     } },
 
@@ -2899,7 +2908,7 @@ const Present = (() => {
     return {
       start(host) {
         if (cv) return;
-        cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;';
+        cv = document.createElement('canvas'); cv.className = 'pv-confetti'; cv.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;';
         host.append(cv); ctx = cv.getContext('2d'); size();
         acc = 0; fire(true);   // the opening "hurray" volley
         last = 0; raf = requestAnimationFrame(frame);
@@ -3173,7 +3182,7 @@ const Present = (() => {
       mountAdvance();
     }
     if (step.phase === 'reveal' && !(opts && opts.quiet)) requestAnimationFrame(() => burst(main));   // quick one-shot pop on a correct-answer reveal
-    if (step.slide.type === 'podium') { if (!confetti.active()) crowdCheer(); confetti.start(overlay); } else if (confetti.active()) confetti.stop();   // sustained podium confetti + the crowd cheer once on entry (survives a quiet score refresh)
+    if (step.slide.type === 'podium') { const pd = step.slide.data || {}; overlay.classList.toggle('no-anim', !!pd.noAnim); if (!confetti.active()) { if (!pd.noSound) crowdCheer(); } if (!pd.noAnim) confetti.start(overlay); } else { overlay.classList.remove('no-anim'); if (confetti.active()) confetti.stop(); }   // sustained podium confetti + the crowd cheer once on entry (survives a quiet score refresh)
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
     renderConsole();   // keep the private console in sync with the current stream/slide

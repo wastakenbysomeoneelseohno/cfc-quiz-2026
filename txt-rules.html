@@ -348,7 +348,7 @@ overrides them. Omitted tokens keep their default.</p>
 <tr>
 <td><code>### (podium) [text]</code></td>
 <td>top-3 finale</td>
-<td>—</td>
+<td>a <code>&gt;</code> line (§5.2)</td>
 </tr>
 <tr>
 <td><code>### (reveal-answers) [text]</code></td>
@@ -403,6 +403,35 @@ before the team answers
 <p><strong>Example</strong></p>
 <pre><code>### (reveal-answers) The Answers
 &gt; 8s, loop-enabled
+</code></pre>
+<h3>5.2 Podium settings (its <code>&gt;</code> line)</h3>
+<p>The podium finale plays with <strong>falling confetti</strong> and a <strong>crowd cheer</strong> on entry. An optional <code>&gt;</code>
+line silences either — handy when you&#39;re recording the deck to video, or want a calmer reveal.</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Means</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>no-anim</code> / <code>anim</code></td>
+<td>freeze the confetti + podium motion</td>
+<td><code>anim</code> (animated)</td>
+</tr>
+<tr>
+<td><code>no-sound</code> / <code>sound</code></td>
+<td>mute the crowd cheer that plays when the podium appears</td>
+<td><code>sound</code> (cheer plays)</td>
+</tr>
+</tbody></table>
+<p>In the <strong>Maker</strong> these are the Podium slide&#39;s <strong>Disable animations</strong> / <strong>Disable sound</strong> fields; in
+the <strong>Display</strong> they gate that slide&#39;s confetti + cheer at runtime. A bare <code>### (podium)</code> with no <code>&gt;</code>
+line keeps both on (so older decks are unchanged).</p>
+<p><strong>Example</strong></p>
+<pre><code>### (podium) Champions!
+&gt; no-anim, no-sound
 </code></pre>
 <hr>
 <h2>6. Questions</h2>

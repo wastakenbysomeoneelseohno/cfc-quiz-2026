@@ -62,6 +62,9 @@
   .pv-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4vh 1.5vw; overflow: hidden; position: relative; }
   .pv-stage { width: 100%; max-width: 97vw; text-align: center; animation: pvIn .5s cubic-bezier(.2,.85,.25,1); }   /* viewport-relative only — NO px ceiling, so it fills 4K/8K, not just 1080p */
   .pv-stage.pv-fitting, .pv-stage.pv-fitting * { transition: none !important; animation: none !important; }   /* exact measurement while binary-searching the fit — freeze the entry animation too, or box() reads a mid-animation size */
+  /* "no animations" mode (operator toggle) — freeze every present-mode animation/transition + hide confetti */
+  .present.no-anim *, .present.no-anim *::before, .present.no-anim *::after { animation: none !important; transition: none !important; }
+  .present.no-anim .pv-confetti { display: none !important; }
   .pv-badge { display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--pv-ink-soft);
     border: 1px solid var(--pv-tile-border); padding: 6px 14px; border-radius: 20px; margin-bottom: 3vh; }
   .pv-q { font-size: calc(clamp(30px, 4.0vw, 84px) * var(--qscale, 1)); font-weight: 800; line-height: 1.12; letter-spacing: -.5px; margin: 0 auto 3vh; width: fit-content; max-width: 100%; font-family: var(--pv-heading-font); white-space: pre-line; }
@@ -833,7 +836,7 @@ const Show = (() => {
     return {
       start(host) {
         if (cv) return;
-        cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;';
+        cv = document.createElement('canvas'); cv.className = 'pv-confetti'; cv.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;';
         host.append(cv); ctx = cv.getContext('2d'); size();
         acc = 0; fire(true);   // the opening "hurray" volley
         last = 0; raf = requestAnimationFrame(frame);
@@ -1317,7 +1320,7 @@ const Show = (() => {
       }
     } else { mountAdvance(); }
     if (step.phase === 'reveal' && !(opts && opts.quiet)) requestAnimationFrame(() => burst(main));   // quick one-shot pop on a correct-answer reveal
-    if (step.slide.type === 'podium') { if (!confetti.active()) crowdCheer(); confetti.start(overlay); } else if (confetti.active()) confetti.stop();   // sustained podium confetti + the crowd cheer once on entry (idempotent — survives a quiet score refresh)
+    if (step.slide.type === 'podium') { const pd = step.slide.data || {}; overlay.classList.toggle('no-anim', !!pd.noAnim); if (!confetti.active()) { if (!pd.noSound) crowdCheer(); } if (!pd.noAnim) confetti.start(overlay); } else { overlay.classList.remove('no-anim'); if (confetti.active()) confetti.stop(); }   // sustained podium confetti + the crowd cheer once on entry (idempotent — survives a quiet score refresh)
     main.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitStage(main)));
     requestAnimationFrame(() => fitStage(main));
     saveSession();
